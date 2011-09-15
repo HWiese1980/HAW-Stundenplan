@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HAW_Tool", "HAW_Tool\HAW_Tool.csproj", "{48B85D8D-EFCA-4027-838F-A23220344CB7}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "HAWToolSetup", "HAWToolSetup\HAWToolSetup.vdproj", "{0839BD74-1A5F-40EB-B4EF-9DC9723EC407}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LittleHelpers", "LittleHelpers\LittleHelpers.csproj", "{DBC10794-05CB-42D7-BF4B-C9872F45D4FA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SeveQsCustomControls", "SeveQsCustomControls\SeveQsCustomControls.csproj", "{EB5DAC10-1D27-47F7-BEF0-7E067B03CCAC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{48B85D8D-EFCA-4027-838F-A23220344CB7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{48B85D8D-EFCA-4027-838F-A23220344CB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{48B85D8D-EFCA-4027-838F-A23220344CB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{48B85D8D-EFCA-4027-838F-A23220344CB7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0839BD74-1A5F-40EB-B4EF-9DC9723EC407}.Debug|Any CPU.ActiveCfg = Debug
+		{0839BD74-1A5F-40EB-B4EF-9DC9723EC407}.Release|Any CPU.ActiveCfg = Release
+		{DBC10794-05CB-42D7-BF4B-C9872F45D4FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DBC10794-05CB-42D7-BF4B-C9872F45D4FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DBC10794-05CB-42D7-BF4B-C9872F45D4FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DBC10794-05CB-42D7-BF4B-C9872F45D4FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EB5DAC10-1D27-47F7-BEF0-7E067B03CCAC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB5DAC10-1D27-47F7-BEF0-7E067B03CCAC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB5DAC10-1D27-47F7-BEF0-7E067B03CCAC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB5DAC10-1D27-47F7-BEF0-7E067B03CCAC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(SubversionScc) = preSolution
+		Svn-Managed = True
+		Manager = AnkhSVN - Subversion Support for Visual Studio
+	EndGlobalSection
+EndGlobal

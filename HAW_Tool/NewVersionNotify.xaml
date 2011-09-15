@@ -1,0 +1,21 @@
+﻿<Window
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:haw="clr-namespace:HAW_Tool"
+    xmlns:svq="clr-namespace:SeveQsCustomControls;assembly=SeveQsCustomControls"
+    xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity" x:Class="HAW_Tool.NewVersionNotify"
+    Title="Neue Version" WindowStyle="None" AllowsTransparency="True" WindowStartupLocation="CenterScreen" Height="162" Width="772" Background="{x:Null}">
+    <Grid>
+        <Border Padding="5" Background="#FF77AA77" Margin="5" BorderBrush="Black" BorderThickness="2" CornerRadius="2">
+            <Border.Effect>
+                <DropShadowEffect Opacity="0.5" />
+            </Border.Effect>
+            <Grid>
+                <svq:FramelessTitleBar Height="35" VerticalAlignment="Top" Foreground="White" />
+                <TextBlock Margin="8,43,8,0" TextWrapping="Wrap" Foreground="White"><Run Text="Eine neue Version des Tools steht zum Download bereit."/><LineBreak/><Run Text="Dort kannst du sie herunterladen: "/><Hyperlink Click="OpenLinkClick" NavigateUri="http://www.intelligensbestien.de/haw-stundenplan-tool/"><Run Text="HAW Stundenplan Tool"/></Hyperlink></TextBlock>
+                <Button VerticalAlignment="Bottom" Click="CloseMeClick" HorizontalAlignment="Right" Margin="0,0,8,8" Content="Okay">
+                </Button>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

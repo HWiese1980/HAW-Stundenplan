@@ -1,0 +1,267 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:SeveQsCustomControls" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d">
+
+    <Style x:Key="TitleBarButtonStyle" TargetType="{x:Type Button}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <Grid Margin="2">
+                        <Rectangle x:Name="rectangle" Fill="{TemplateBinding Background}" Stroke="Black" StrokeThickness="0" Opacity="0.495" RadiusX="5" RadiusY="5"/>
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" RecognizesAccessKey="True"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsFocused" Value="True"/>
+                        <Trigger Property="IsDefaulted" Value="True"/>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Opacity" TargetName="rectangle" Value="0.75"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter Property="Opacity" TargetName="rectangle" Value="1"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False"/>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="NumericBoxButton" TargetType="{x:Type Button}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Button}">
+                    <Grid x:Name="grid" Background="#19FFFFFF">
+                        <ContentPresenter ContentSource="Content" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" TargetName="grid" Value="#4BFFFFFF"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter Property="Background" TargetName="grid" Value="#B1FFFFFF"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+    <Style TargetType="{x:Type local:SeekFile}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:SeekFile}">
+                    <Grid Width="{TemplateBinding Width}" Height="{TemplateBinding Height}">
+                        <Label Content="{TemplateBinding Header}" HorizontalAlignment="Left" Margin="0,2" Foreground="White" VerticalAlignment="Center"/>
+                        <TextBox Text="{Binding Content, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" Margin="137.773,4,34,4" TextWrapping="NoWrap" VerticalAlignment="Center"/>
+                        <!--{Binding Content, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}-->
+                        <Button Command="{x:Static local:SeekFile.BrowseButtonCommand}"  x:Name="BrowseButton" HorizontalAlignment="Right" Style="{DynamicResource TitleBarButtonStyle}" ToolTip="EXE suchen..." Width="30" Height="30" VerticalAlignment="Center">
+                            <Image Width="16" Height="16" Source="/SeveQsCustomControls;Component/images/folder.png" Stretch="Fill"/>
+                        </Button>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="{x:Type local:NumberBox}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:NumberBox}">
+                    <Grid Background="#19FFFFFF" MaxWidth="{TemplateBinding Width}" MaxHeight="{TemplateBinding Height}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="0.84*"/>
+                            <ColumnDefinition Width="20"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <Label Foreground="{TemplateBinding Foreground}" Content="{TemplateBinding Header}" HorizontalAlignment="Left" MaxWidth="60" VerticalAlignment="Center" Margin="2,0,0,0" d:LayoutOverrides="Width" Grid.RowSpan="2" />
+                        <TextBox VerticalContentAlignment="Center" Text="{Binding Value, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" Margin="0,2,2,2" HorizontalAlignment="Right" Background="#19FFFFFF" Foreground="{TemplateBinding Foreground}" BorderBrush="{x:Null}" BorderThickness="0" FontWeight="Bold" Grid.RowSpan="2" Width="48" />
+                        <Button Command="{x:Static local:NumberBox.ChangeValueCommand}" Tag="Increase" Style="{StaticResource NumericBoxButton}" Width="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="Auto" Content="+" FontSize="8" Margin="2" Grid.Column="1" />
+                        <Button Command="{x:Static local:NumberBox.ChangeValueCommand}" Tag="Decrease" Style="{StaticResource NumericBoxButton}" Width="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="Auto" Content="-" FontSize="8" Grid.Row="1" Margin="2" Grid.Column="1" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="{x:Type local:DeviceList}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:DeviceList}">
+                    <Grid x:Name="LayoutRoot" d:DesignWidth="466" d:DesignHeight="389">
+                        <Label Margin="8,8,8,0" VerticalAlignment="Top" Content="GerÃ¤teliste" Background="#19FFFFFF" Foreground="White"/>
+                        <Grid Margin="8,47,8,8" Background="#19FFFFFF">
+                            <Border HorizontalAlignment="Stretch" Margin="8,8,8,38.183" Width="Auto" Background="#18FFFFFF" BorderThickness="2" CornerRadius="5" BorderBrush="#24FFFFFF" Padding="2">
+                                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                    <ItemsPresenter Name="PART_ItemsPresenter" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" />
+                                </ScrollViewer>
+                            </Border>
+                            <Button Command="{x:Static local:DeviceList.AddDeviceCommand}" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="30" Height="30" Margin="8,0,0,4.183" Style="{DynamicResource TitleBarButtonStyle}">
+                                <Image Width="16" Height="16" Source="/SeveQsCustomControls;Component/images/add.png" Stretch="Fill"/>
+                            </Button>
+                            <Button Command="{x:Static local:DeviceList.RemoveDeviceCommand}" Margin="42,0,0,4.183" VerticalAlignment="Bottom" Width="30" Height="30" HorizontalAlignment="Left" Style="{DynamicResource TitleBarButtonStyle}" d:LayoutOverrides="Width">
+                                <Image Width="16" Height="16" Source="/SeveQsCustomControls;Component/images/delete.png" Stretch="Fill"/>
+                            </Button>
+                            <Button Command="{x:Static local:DeviceList.MountDeviceCommand}" Margin="76,0,78,4.183" VerticalAlignment="Bottom" Width="30" Height="30" Style="{DynamicResource TitleBarButtonStyle}" ToolTip="GerÃƒÂ¤t mounten">
+                                <Image Width="16" Height="16" Source="/SeveQsCustomControls;Component/images/drive_go.png" Stretch="Fill"/>
+                            </Button>
+                            <Button Command="{x:Static local:DeviceList.UnmountDeviceCommand}" Margin="0,0,44,4.183" VerticalAlignment="Bottom" Width="30" Height="30" HorizontalAlignment="Right" Style="{DynamicResource TitleBarButtonStyle}" ToolTip="GerÃƒÂ¤t unmounten" d:LayoutOverrides="Width">
+                                <Image Width="16" Height="16" Source="/SeveQsCustomControls;Component/images/drive_delete.png" Stretch="Fill"/>
+                            </Button>
+                            <Button Command="{x:Static local:DeviceList.LoadTCFavsCommand}" Margin="76,0,0,4.183" VerticalAlignment="Bottom" Width="30" Height="30" Style="{DynamicResource TitleBarButtonStyle}" ToolTip="Favoriten aus TC laden" HorizontalAlignment="Left" d:LayoutOverrides="Width">
+                                <Image Width="16" Height="16" Source="/SeveQsCustomControls;Component/images/award_star_gold.png" Stretch="Fill"/>
+                            </Button>
+                        </Grid>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="{x:Type local:RadioBox}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:RadioBox}">
+                    <ControlTemplate.Resources>
+                        <Style x:Key="{x:Type ListBoxItem}" TargetType="{x:Type ListBoxItem}" >
+                            <Setter Property="Margin" Value="2, 2, 2, 0" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate>
+                                        <Border Background="Transparent">
+                                            <RadioButton IsHitTestVisible="false" Foreground="{TemplateBinding Foreground}"  Focusable="false" Content="{TemplateBinding ContentPresenter.Content}"  IsChecked="{Binding Path=IsSelected, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ControlTemplate.Resources>
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                        <ItemsPresenter VerticalAlignment="Stretch">
+                        </ItemsPresenter>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="{x:Type local:FramelessTitleBar}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:FramelessTitleBar}">
+                    <Border Background="#19FFFFFF" BorderBrush="Black" BorderThickness="0" Margin="8,8,8,0">
+                        <UniformGrid Rows="1">
+                            <Label x:Name="PART_Title" FontWeight="{TemplateBinding FontWeight}" FontStyle="{TemplateBinding FontStyle}" FontSize="{TemplateBinding FontSize}" FontFamily="{TemplateBinding FontFamily}" Foreground="{TemplateBinding Foreground}" />
+                            <StackPanel HorizontalAlignment="Right" Margin="0,5,8,5" ScrollViewer.VerticalScrollBarVisibility="Disabled" Orientation="Horizontal" d:LayoutOverrides="Height">
+                                <Button Command="{x:Static local:FramelessTitleBar.MinimizeCommand}" MaxHeight="14" MaxWidth="14" MinHeight="14" MinWidth="14" Style="{DynamicResource TitleBarButtonStyle}" VerticalAlignment="Center" Content="" />
+                                <Button Command="{x:Static local:FramelessTitleBar.MaximizeCommand}" MaxHeight="14" MaxWidth="14" MinHeight="14" MinWidth="14" Style="{DynamicResource TitleBarButtonStyle}" VerticalAlignment="Center" Content="" />
+                                <Button Command="{x:Static local:FramelessTitleBar.CloseCommand}" MaxHeight="14" MaxWidth="14" MinHeight="14" MinWidth="14" Style="{DynamicResource TitleBarButtonStyle}" Background="LightSalmon" VerticalAlignment="Center" Content=""  />
+                            </StackPanel>
+                        </UniformGrid>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="{x:Type local:HeaderContentField}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:HeaderContentField}">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}" VerticalAlignment="Stretch">
+                        <DockPanel VerticalAlignment="Center">
+                    		<Label Content="{TemplateBinding Header}" Foreground="{TemplateBinding Foreground}" FontFamily="{TemplateBinding FontFamily}" FontSize="{TemplateBinding FontSize}" FontWeight="{TemplateBinding FontWeight}" FontStyle="{TemplateBinding FontStyle}" VerticalAlignment="Center" HorizontalAlignment="Left" />
+                    		<ContentPresenter Height="Auto" VerticalAlignment="Center"/>
+                    	</DockPanel>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="{x:Type local:CheckBoxedList}">
+        <Setter Property="SelectionMode" Value="Multiple" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:CheckBoxedList}">
+                    <ControlTemplate.Resources>
+                        <Style x:Key="{x:Type ListBoxItem}" TargetType="{x:Type ListBoxItem}" >
+                            <Setter Property="Margin" Value="2, 2, 2, 0" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate>
+                                        <Border Background="Transparent">
+                                            <CheckBox IsHitTestVisible="false" Foreground="{TemplateBinding Foreground}" Focusable="false" Content="{TemplateBinding ContentPresenter.Content}"  IsChecked="{Binding Path=IsSelected, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ControlTemplate.Resources>
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                        <ScrollViewer VerticalAlignment="Stretch" VerticalScrollBarVisibility="Auto">
+                            <ItemsPresenter Width="Auto"/>
+                        </ScrollViewer>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="{x:Type local:RasteredItemsControl}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:RasteredItemsControl}">
+                    <Grid>
+                        <Label HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="5,5,0,0" 
+                               FontSize="{TemplateBinding FontSize}" 
+                               FontWeight="{TemplateBinding FontWeight}" Foreground="{TemplateBinding Foreground}" Content="{TemplateBinding Header}" />
+                        <Canvas x:Name="PART_RasterCanvas" />
+                        <ScrollViewer VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Auto">
+                            <ItemsPresenter/>
+                        </ScrollViewer>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="{x:Type local:RasteredGroup}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:RasteredGroup}">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                        <ContentPresenter />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="{x:Type local:Accordion}"></Style>
+
+    <Style TargetType="{x:Type local:LineGraph}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:LineGraph}">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                        <Canvas x:Name="PART_GraphCanvas" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

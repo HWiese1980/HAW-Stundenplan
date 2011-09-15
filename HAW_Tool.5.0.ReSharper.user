@@ -1,0 +1,97 @@
+<Configuration>
+  <SettingsComponent>
+    <string />
+    <integer />
+    <boolean>
+      <setting name="SolutionAnalysisEnabled">False</setting>
+    </boolean>
+  </SettingsComponent>
+  <RecentFiles>
+    <RecentFiles>
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:HAW/f:Day.cs" caret="4811" fromTop="25" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:HAW/f:ColorTag.cs" caret="653" fromTop="16" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:Bittorrent/f:RESTTorrent.cs" caret="225" fromTop="8" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:HAW/f:CalendarWeek.cs" caret="2082" fromTop="11" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:HAW/f:Event.cs" caret="2376" fromTop="38" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:Aspects/f:TracingAttribute.cs" caret="1960" fromTop="8" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:HAW/f:Change.cs" caret="4672" fromTop="22" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:HAW/f:PlanFile.cs" caret="2241" fromTop="42" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/f:Window1.xaml" caret="17793" fromTop="0" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/f:Misc.xaml" caret="0" fromTop="0" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:Themes/f:Generic.xaml" caret="10983" fromTop="20" />
+    </RecentFiles>
+    <RecentEdits>
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:HAW/f:PlanFile.cs" caret="14782" fromTop="22" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:HAW/f:PlanFile.cs" caret="15504" fromTop="43" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:HAW/f:PlanFile.cs" caret="16412" fromTop="33" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:HAW/f:PlanFile.cs" caret="15033" fromTop="23" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:HAW/f:PlanFile.cs" caret="17283" fromTop="22" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:HAW/f:PlanFile.cs" caret="18145" fromTop="25" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:HAW/f:PlanFile.cs" caret="18335" fromTop="21" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:HAW/f:PlanFile.cs" caret="18750" fromTop="22" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:HAW/f:PlanFile.cs" caret="20416" fromTop="22" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:HAW/f:PlanFile.cs" caret="20732" fromTop="23" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:HAW/f:PlanFile.cs" caret="21144" fromTop="18" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:HAW/f:PlanFile.cs" caret="22429" fromTop="22" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:HAW/f:PlanFile.cs" caret="22529" fromTop="26" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:HAW/f:PlanFile.cs" caret="25042" fromTop="22" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:HAW/f:PlanFile.cs" caret="25789" fromTop="23" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:HAW/f:PlanFile.cs" caret="26626" fromTop="23" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:HAW/f:PlanFile.cs" caret="26945" fromTop="32" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:HAW/f:PlanFile.cs" caret="27770" fromTop="39" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:HAW/f:PlanFile.cs" caret="30604" fromTop="22" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:HAW/f:PlanFile.cs" caret="9104" fromTop="22" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:HAW/f:PlanFile.cs" caret="174" fromTop="5" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/f:Window1.xaml" caret="3433" fromTop="12" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/f:Window1.xaml" caret="32359" fromTop="19" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/f:Window1.xaml" caret="33478" fromTop="30" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/f:Window1.xaml" caret="22096" fromTop="20" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/f:Window1.xaml" caret="20258" fromTop="22" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/f:Window1.xaml" caret="18189" fromTop="8" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:Themes/f:Generic.xaml" caret="14146" fromTop="37" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:Themes/f:Generic.xaml" caret="13478" fromTop="22" />
+      <File id="48B85D8D-EFCA-4027-838F-A23220344CB7/d:Themes/f:Generic.xaml" caret="11483" fromTop="13" />
+    </RecentEdits>
+  </RecentFiles>
+  <NAntValidationSettings>
+    <NAntPath value="" />
+  </NAntValidationSettings>
+  <UnitTestRunner>
+    <Providers />
+  </UnitTestRunner>
+  <UnitTestRunnerNUnit>
+    <NUnitInstallDir>C:\Program Files (x86)\NUnit 2.5.3\bin\net-2.0\</NUnitInstallDir>
+    <UseAddins>Never</UseAddins>
+  </UnitTestRunnerNUnit>
+  <CompletionStatisticsManager>
+    <ItemStatistics item="Default">
+      <Item value="if" priority="0" />
+      <Item value="baseElement" priority="1" />
+      <Item value="throw" priority="0" />
+      <Item value="new" priority="1" />
+      <Item value="Exception" priority="0" />
+      <Item value="public" priority="0" />
+      <Item value="NotifyingPropertyAttribute`0" priority="0" />
+      <Item value="bool" priority="0" />
+      <Item value="false" priority="2" />
+      <Item value="params" priority="0" />
+      <Item value="string" priority="0" />
+      <Item value="OnlyOthers" priority="0" />
+      <Item value="onlyOthers" priority="0" />
+      <Item value="_mOthers" priority="0" />
+      <Item value="List&lt;string&gt;" priority="0" />
+      <Item value="otherProperties" priority="0" />
+      <Item value="return" priority="0" />
+      <Item value="PlanFile`0" priority="0" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:System.Xml.Linq.XElement">
+      <Item value="Element`0" priority="0" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:@HAW_Tool.HAW.PlanFile">
+      <Item value="Instance" priority="1" />
+    </ItemStatistics>
+    <ItemStatistics item="Qualified:HAW_Tool.HAW.PlanFile">
+      <Item value="IsNotifyingChanges" priority="1" />
+    </ItemStatistics>
+  </CompletionStatisticsManager>
+</Configuration>

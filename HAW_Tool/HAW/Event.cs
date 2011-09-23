@@ -21,13 +21,13 @@ namespace HAW_Tool.HAW
     {
         #region Fields (10)
 
-        bool bEnabled = true;
-        bool bOff = true;
-        EventCode m_Code;
-        DateTime m_Date;
-        int m_KW = 0;
-        string m_Room;
-        string m_Tag;
+        private bool bEnabled = true;
+        private bool bOff = true;
+        private EventCode m_Code;
+        private DateTime m_Date;
+        private int m_KW = 0;
+        private string m_Room;
+        private string m_Tag;
         //[NotifyingProperty(true, "Till", "Info")]
         //public TimeSpan TillTime
         //{
@@ -39,9 +39,9 @@ namespace HAW_Tool.HAW
         //        Till = tNewTill;
         //    }
         //}
-        string m_Tutor;
+        private string m_Tutor;
         private Day mDay = null;
-        string mHash = String.Empty;
+        private string mHash = String.Empty;
 
         #endregion Fields
 
@@ -49,7 +49,7 @@ namespace HAW_Tool.HAW
 
         public Event(CalendarWeek KW, XElement BaseElement)
         {
-            m_BaseElement = BaseElement;
+            MBaseElement = BaseElement;
 
             m_Code = ParseCode(BaseElement.Element("code").Value);
 
@@ -81,14 +81,8 @@ namespace HAW_Tool.HAW
         [NotifyingProperty("Code", "Info", "IsObligatory")]
         public string BasicCode
         {
-            get
-            {
-                return m_Code.Code;
-            }
-            set
-            {
-                m_Code.Code = value;
-            }
+            get { return m_Code.Code; }
+            set { m_Code.Code = value; }
         }
 
         public string Code
@@ -109,10 +103,7 @@ namespace HAW_Tool.HAW
 
         public IEnumerable<DateTime> OtherDates
         {
-            get
-            {
-                return new DateTime[] { };
-            }
+            get { return new DateTime[] {}; }
         }
 
         public Day Day
@@ -127,17 +118,10 @@ namespace HAW_Tool.HAW
 
         public int DayOfWeek
         {
-            get
-            {
-                return WeekHelper.DOW[m_Tag.ToLower()];
-            }
+            get { return WeekHelper.DOW[m_Tag.ToLower()]; }
         }
 
-        public IEnumerable<RESTTorrent> Files
-        {
-            get;
-            set;
-        }
+        public IEnumerable<RESTTorrent> Files { get; set; }
 
         [NotifyingProperty]
         public TimeSpan From
@@ -145,7 +129,7 @@ namespace HAW_Tool.HAW
             get { return m_From; }
             set
             {
-                IEvent occupiedBy = Day.MinuteOccupiedBy((uint)value.TotalMinutes);
+                IEvent occupiedBy = Day.MinuteOccupiedBy((uint) value.TotalMinutes);
                 if (occupiedBy == null || occupiedBy == this)
                     m_From = value;
             }
@@ -154,10 +138,7 @@ namespace HAW_Tool.HAW
         [NotifyingProperty("Code", "Info", "IsObligatory")]
         public GroupID Group
         {
-            get
-            {
-                return m_Code.Group;
-            }
+            get { return m_Code.Group; }
             set
             {
                 m_Code.Group = value;
@@ -167,11 +148,7 @@ namespace HAW_Tool.HAW
 
         public bool HasChanges
         {
-            get
-            {
-                return PlanFile.Instance.HasChangesByHash(this.Hash);
-            }
-
+            get { return PlanFile.Instance.HasChangesByHash(this.Hash); }
         }
 
         public string Hash
@@ -188,18 +165,12 @@ namespace HAW_Tool.HAW
 
         private byte[] ID
         {
-            get
-            {
-                return Encoding.ASCII.GetBytes(this.Info);
-            }
+            get { return Encoding.ASCII.GetBytes(this.Info); }
         }
 
         public string Info
         {
-            get
-            {
-                return String.Format("{0};{1};{2}", this.Code, this.m_KW, this.DayOfWeek);
-            }
+            get { return String.Format("{0};{1};{2}", this.Code, this.m_KW, this.DayOfWeek); }
         }
 
         [NotifyingProperty]
@@ -214,7 +185,7 @@ namespace HAW_Tool.HAW
             get
             {
                 if (PlanFile.Instance.ObligatoryRegexPatterns == null) return false;
-                
+
                 int matchingCount = (from p in PlanFile.Instance.ObligatoryRegexPatterns
                                      let q = new Regex(p)
                                      where q.IsMatch(Code)
@@ -241,11 +212,7 @@ namespace HAW_Tool.HAW
             set { m_Room = value; }
         }
 
-        public int RowIndex
-        {
-            get;
-            set;
-        }
+        public int RowIndex { get; set; }
 
         public string SeminarGroup
         {
@@ -270,7 +237,7 @@ namespace HAW_Tool.HAW
             get { return m_Till; }
             set
             {
-                IEvent occupiedBy = Day.MinuteOccupiedBy((uint)value.TotalMinutes);
+                IEvent occupiedBy = Day.MinuteOccupiedBy((uint) value.TotalMinutes);
                 if (occupiedBy == null || occupiedBy == this)
                     m_Till = value;
             }
@@ -280,7 +247,8 @@ namespace HAW_Tool.HAW
         {
             get
             {
-                return String.Format("{0} - Von {1:t} bis {2:t} im Raum {3} [{4}]", this.Code, this.From, this.Till, this.Room, this.BasicCode);
+                return String.Format("{0} - Von {1:t} bis {2:t} im Raum {3} [{4}]", this.Code, this.From, this.Till,
+                                     this.Room, this.BasicCode);
             }
         }
 
@@ -301,6 +269,7 @@ namespace HAW_Tool.HAW
         {
             return this.Code;
         }
+
         // Private Methods (3) 
 
         private void CalculateRowIndex()
@@ -323,9 +292,9 @@ namespace HAW_Tool.HAW
             string[] tParts = XMLCode.Split('/');
             if (tParts != null && tParts.Count() > 1 && GroupID.IsValidGroup(tParts[1]))
             {
-                return new EventCode() { Code = tParts[0], Group = new GroupID(tParts[1]) };
+                return new EventCode() {Code = tParts[0], Group = new GroupID(tParts[1])};
             }
-            return new EventCode() { Code = XMLCode, Group = GroupID.Empty };
+            return new EventCode() {Code = XMLCode, Group = GroupID.Empty};
         }
 
         private void ReGenerateHash()
@@ -336,20 +305,20 @@ namespace HAW_Tool.HAW
 
         #endregion Methods
 
-
         internal class EventCode
         {
-            string _code;
-            public string Code 
+            private string _code;
+
+            public string Code
             {
                 get { return _code.ConvertUmlauts(UmlautConvertDirection.FromCrossWordFormat); }
-                set { _code = value.ConvertUmlauts(UmlautConvertDirection.ToCrossWordFormat); } 
+                set { _code = value.ConvertUmlauts(UmlautConvertDirection.ToCrossWordFormat); }
             }
+
             public GroupID Group { get; set; }
         }
 
-        TimeSpan m_From, m_Till;
-
+        private TimeSpan m_From, m_Till;
 
         #region INotifyValueChanged Members
 
@@ -378,10 +347,7 @@ namespace HAW_Tool.HAW
 
         public bool IsNotifyingChanges
         {
-            get
-            {
-                return PlanFile.Instance.IsNotifyingChanges;
-            }
+            get { return PlanFile.Instance.IsNotifyingChanges; }
         }
 
         #endregion

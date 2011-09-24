@@ -664,7 +664,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:HAW Stundenplan Tool"
         "ProductCode" = "8:{42A99133-CEF8-4617-9741-F8861BD2066E}"
-        "PackageCode" = "8:{A3AE448B-F487-4D33-801B-C21C6445477F}"
+        "PackageCode" = "8:{B37CD20F-7DB3-454B-8421-A8B42C4EEC10}"
         "UpgradeCode" = "8:{95E53DC6-B66A-4C43-8D6B-8D14C1122791}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"

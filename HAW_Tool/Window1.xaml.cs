@@ -1,34 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 using HAW_Tool.HAW;
 using System.ComponentModel;
 using SeveQsCustomControls;
-using System.IO.IsolatedStorage;
-using System.Xml.Linq;
-using System.Xml;
 using System.Reflection;
 using System.Printing;
-using System.Net;
 using LittleHelpers;
-using SysVersion = System.Version;
 using System.Threading;
 using Microsoft.Win32;
 using HAW_Tool.HAW.REST;
-using System.Windows.Media.Animation;
 using System.Runtime.InteropServices;
 using System.Windows.Interop;
-using MyHelper = HAW_Tool.HAW.Helper;
 using HAW_Tool.Properties;
 
 // Version 0.0.1: {48119271-97D3-4E03-9D11-58A18F31D5D0}
@@ -39,13 +27,13 @@ namespace HAW_Tool
     /// <summary>
     /// Interaction logic for Window1.xaml
     /// </summary>
-    public partial class Window1 : Window
+    public partial class Window1
     {
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        private static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+        private static extern IntPtr SendMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
-        private const int WM_SYSCOMMAND = 0x112;
-        private HwndSource mHWnd;
+        private const int WmSyscommand = 0x112;
+        private HwndSource _mHWnd;
 
         private enum ResizeDirection
         {
@@ -59,17 +47,16 @@ namespace HAW_Tool
             BottomRight = 8,
         }
 
-        private void ResizeWindow(ResizeDirection Direction)
+        private void ResizeWindow(ResizeDirection direction)
         {
-            Console.WriteLine("Resizing: {0} => {1}", Direction, mHWnd.Handle);
-            SendMessage(mHWnd.Handle, WM_SYSCOMMAND, (IntPtr)(61440 + Direction), IntPtr.Zero);
+            SendMessage(_mHWnd.Handle, WmSyscommand, (IntPtr)(61440 + direction), IntPtr.Zero);
         }
 
         public Window1()
         {
             InitializeComponent();
 
-            this.SourceInitialized += SourceInitializedHandler;
+            SourceInitialized += SourceInitializedHandler;
 
             PlanFile.StatusMessageChanged += PlanFileStatusChanged;
             PlanFile.StatusProgressChanged += PlanFileProgressChanged;
@@ -80,7 +67,7 @@ namespace HAW_Tool
 
         private void SourceInitializedHandler(object sender, EventArgs e)
         {
-            mHWnd = PresentationSource.FromVisual((Visual)sender) as HwndSource;
+            _mHWnd = PresentationSource.FromVisual((Visual)sender) as HwndSource;
         }
 
         public static Window1 MainWindow
@@ -96,26 +83,25 @@ namespace HAW_Tool
         {
             get
             {
-                HAW_Tool.Properties.Settings tSet = new HAW_Tool.Properties.Settings();
+                var tSet = new Settings();
                 if (tSet.Username != String.Empty) return tSet.Username;
                 return Environment.UserName;
             }
             set
             {
-                HAW_Tool.Properties.Settings tSet = new HAW_Tool.Properties.Settings();
-                tSet.Username = value;
+                var tSet = new Settings { Username = value };
                 tSet.Save();
             }
         }
 
         private void PlanFileStatusChanged(object sender, ValueEventArgs<string> e)
         {
-            this.Status = e.Value;
+            Status = e.Value;
         }
 
         private void PlanFileProgressChanged(object sender, ValueEventArgs<int> e)
         {
-            this.ProgressValue = e.Value;
+            ProgressValue = e.Value;
         }
 
         private void StartUp(object sender, EventArgs e)
@@ -127,7 +113,7 @@ namespace HAW_Tool
 
         private void LoadSettings()
         {
-            BackgroundWorker tWrk = new BackgroundWorker();
+            var tWrk = new BackgroundWorker();
 
             tWrk.DoWork += (x, y) =>
             {
@@ -136,28 +122,26 @@ namespace HAW_Tool
                     string tVerStr = new HAWClient().Version();
                     if (tVerStr == null) return;
 
-                    Version tVer = new Version(tVerStr);
-                    Version tMe = Assembly.GetExecutingAssembly().GetName().Version;
+                    var tVer = new Version(tVerStr);
+                    var tMe = Assembly.GetExecutingAssembly().GetName().Version;
                     if (tMe.IsNewerThan(tVer))
                     {
-                        Dispatcher.Invoke(new Action(() =>
-                        {
-                            new NewVersionNotify().ShowDialog();
-                        }));
+                        Dispatcher.Invoke(new Action(() => new NewVersionNotify().ShowDialog()));
                     }
                 }
-                catch { }
+                catch (Exception)
+                { }
             };
 
             tWrk.RunWorkerAsync();
 
             version.Content = String.Format("Version {0}", Assembly.GetExecutingAssembly().GetName().Version);
 
-            Properties.Settings tSet = new HAW_Tool.Properties.Settings();
+            var tSet = new Settings();
             SetValue(IsGroupFilterActiveProperty, tSet.FilterByGroup);
         }
 
-        private void ClosingAppSaveSettings(object sender, EventArgs e)
+        void ClosingAppSaveSettings(object sender, EventArgs e)
         {
             if (PlanFile.Instance != null) PlanFile.Instance.SaveSettings();
         }
@@ -172,8 +156,7 @@ namespace HAW_Tool
         public static readonly DependencyProperty IsGroupFilterActiveProperty =
             DependencyProperty.Register("IsGroupFilterActive", typeof(bool), typeof(Window1), new UIPropertyMetadata(false, (d, o) =>
             {
-                Properties.Settings tSet = new HAW_Tool.Properties.Settings();
-                tSet.FilterByGroup = (bool)o.NewValue;
+                var tSet = new Settings { FilterByGroup = (bool)o.NewValue };
                 tSet.Save();
             }));
 
@@ -212,31 +195,26 @@ namespace HAW_Tool
             {
                 Dispatcher.Invoke(new Action(() =>
                     {
-                        if (value)
-                        {
-                            progressStatusBar.Visibility = Visibility.Visible;
-                        }
-                        else
-                        {
-                            progressStatusBar.Visibility = Visibility.Collapsed;
-                        }
+                        progressStatusBar.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
                     }));
             }
         }
 
 
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            LoadPlanFile();
-        }
+        /*
+                private void Button_Click(object sender, RoutedEventArgs e)
+                {
+                    LoadPlanFile();
+                }
+        */
 
         private void LoadPlanFile()
         {
-            BackgroundWorker tWrk = new BackgroundWorker();
+            var tWrk = new BackgroundWorker();
             tWrk.DoWork += (tWrkSender, tWrkE) =>
             {
-                this.Status = "Lade Stundenplan. Dauert 'nen Augenblick.";
-                this.Progress = true;
+                Status = "Lade Stundenplan. Dauert 'nen Augenblick.";
+                Progress = true;
                 PlanFile.Initialize();
 
                 string[] urls;
@@ -250,13 +228,13 @@ namespace HAW_Tool
                     urls = new Settings().ScheduleFiles.Split(' ');
                 }
 
-                foreach (string tURL in urls)
+                foreach (var tURL in urls)
                 {
                     try
                     {
                         if (tURL != String.Empty && Uri.IsWellFormedUriString(tURL, UriKind.Absolute))
                         {
-                            this.Status = "Lade URL: " + tURL;
+                            Status = "Lade URL: " + tURL;
                             PlanFile.LoadTXT(new Uri(tURL));
                         }
                         else
@@ -277,9 +255,9 @@ namespace HAW_Tool
             {
                 if (!tWrkE.Cancelled)
                 {
-                    this.Progress = false;
-                    this.Status = "Fertig!";
-                    this.DataContext = PlanFile.Instance;
+                    Progress = false;
+                    Status = "Fertig!";
+                    DataContext = PlanFile.Instance;
                 }
             };
 
@@ -289,8 +267,7 @@ namespace HAW_Tool
         private void PrintWeekButtonPressed(object sender, RoutedEventArgs e)
         {
 
-            PrintDialog tDlg = new PrintDialog();
-            tDlg.PrintQueue = LocalPrintServer.GetDefaultPrintQueue();
+            var tDlg = new PrintDialog { PrintQueue = LocalPrintServer.GetDefaultPrintQueue() };
             tDlg.PrintTicket = tDlg.PrintQueue.DefaultPrintTicket;
             tDlg.PrintTicket.PageOrientation = PageOrientation.Landscape;
             tDlg.PrintTicket.PageResolution = new PageResolution(2400, 2400);
@@ -300,38 +277,39 @@ namespace HAW_Tool
             if ((bool)tDlg.ShowDialog())
             {
 
-                DependencyObject tBut = sender as DependencyObject;
-                FrameworkElement tPrintVis = tBut.GetParent<Grid>().GetChildren<RasteredGroup>().First();
+                var tBut = sender as DependencyObject;
+                var tPrintVis = tBut.GetParent<Grid>().GetChildren<RasteredGroup>().First();
 
-                PrintCapabilities tCaps = tDlg.PrintQueue.GetPrintCapabilities(tDlg.PrintTicket);
-                double scale = Math.Min(tCaps.PageImageableArea.ExtentWidth / tPrintVis.ActualWidth,
+                var tCaps = tDlg.PrintQueue.GetPrintCapabilities(tDlg.PrintTicket);
+                Debug.Assert(tCaps.PageImageableArea != null, "tCaps.PageImageableArea != null");
+                var scale = Math.Min(tCaps.PageImageableArea.ExtentWidth / tPrintVis.ActualWidth,
                     tCaps.PageImageableArea.ExtentHeight / tPrintVis.ActualHeight);
 
-                VisualBrush tBrush = new VisualBrush(tPrintVis);
+                var tBrush = new VisualBrush(tPrintVis);
 
-                Border tGrid = new Border()
-                {
-                    Width = tPrintVis.ActualWidth,
-                    Height = tPrintVis.ActualHeight,
-                    HorizontalAlignment = HorizontalAlignment.Stretch,
-                    VerticalAlignment = VerticalAlignment.Stretch
-                };
+                var tGrid = new Border
+                                {
+                                    Width = tPrintVis.ActualWidth,
+                                    Height = tPrintVis.ActualHeight,
+                                    HorizontalAlignment = HorizontalAlignment.Stretch,
+                                    VerticalAlignment = VerticalAlignment.Stretch
+                                };
 
-                Rectangle tRect = new Rectangle()
-                {
-                    Margin = new Thickness(30.0D),
-                    //Width = tPrintVis.ActualWidth,
-                    //Height = tPrintVis.ActualHeight,
-                    HorizontalAlignment = HorizontalAlignment.Stretch,
-                    VerticalAlignment = VerticalAlignment.Stretch,
-                    Fill = tBrush
-                };
+                var tRect = new Rectangle
+                                {
+                                    Margin = new Thickness(30.0D),
+                                    //Width = tPrintVis.ActualWidth,
+                                    //Height = tPrintVis.ActualHeight,
+                                    HorizontalAlignment = HorizontalAlignment.Stretch,
+                                    VerticalAlignment = VerticalAlignment.Stretch,
+                                    Fill = tBrush
+                                };
 
                 tGrid.Child = tRect;
                 tGrid.LayoutTransform = new ScaleTransform(scale, scale);
 
 
-                Size sz = new Size(tCaps.PageImageableArea.ExtentWidth, tCaps.PageImageableArea.ExtentHeight);
+                var sz = new Size(tCaps.PageImageableArea.ExtentWidth, tCaps.PageImageableArea.ExtentHeight);
                 tGrid.Measure(sz);
                 tGrid.Arrange(new Rect(new Point(tCaps.PageImageableArea.OriginWidth, tCaps.PageImageableArea.OriginHeight), sz));
 
@@ -346,26 +324,26 @@ namespace HAW_Tool
             }
         }
 
-        private void RasteredItemsControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void RasteredItemsControlSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            Console.WriteLine("Selection changed: {0}", e.AddedItems.Count);
+            Console.WriteLine(@"Selection changed: {0}", e.AddedItems.Count);
             if (e.AddedItems.Count <= 0)
-                mSelectedEvent = default(Event);
+                _mSelectedEvent = default(Event);
             else
-                mSelectedEvent = (IEvent)e.AddedItems[0] ?? default(IEvent);
+                _mSelectedEvent = (IEvent)e.AddedItems[0];
         }
 
-        private void CBIsFiltered_Click(object sender, RoutedEventArgs e)
+        private void CbIsFilteredClick(object sender, RoutedEventArgs e)
         {
-            foreach (RasteredItemsControl tCtl in this.GetChildren<RasteredItemsControl>()) RefreshFiltering(tCtl);
+            foreach (var tCtl in this.GetChildren<RasteredItemsControl>()) RefreshFiltering(tCtl);
         }
 
-        private void RefreshFiltering(RasteredItemsControl Ctl)
+        private void RefreshFiltering(RasteredItemsControl ctl)
         {
-            Ctl.Items.Filter = (obj) =>
+            ctl.Items.Filter = obj =>
             {
-                IEvent tObj = obj as IEvent;
-                if (!this.IsGroupFilterActive) return true;
+                var tObj = obj as IEvent;
+                if (!IsGroupFilterActive) return true;
 
                 var tBaseEvents = from evt in PlanFile.Instance.KnownBaseEvents
                                   where evt.BasicCode == tObj.BasicCode && (evt.Groups.Count() <= 1 || evt.Group == GroupID.Empty || evt.Group == tObj.Group || (!tObj.Group.IsSingleGroup && tObj.Group.Value.Split('+').Contains(evt.Group.Value)))
@@ -375,9 +353,9 @@ namespace HAW_Tool
             };
         }
 
-        private void RasteredItemsControl_Loaded(object sender, RoutedEventArgs e)
+        private void RasteredItemsControlLoaded(object sender, RoutedEventArgs e)
         {
-            RasteredItemsControl tCtl = sender as RasteredItemsControl;
+            var tCtl = sender as RasteredItemsControl;
             if (tCtl == null) return;
 
             RefreshFiltering(tCtl);
@@ -385,8 +363,9 @@ namespace HAW_Tool
 
         private void ResetChangesClick(object sender, RoutedEventArgs e)
         {
-            Control tCtl = sender as Control;
-            string tHash = tCtl.Tag as String;
+            var tCtl = sender as Control;
+            Debug.Assert(tCtl != null, "tCtl != null");
+            var tHash = tCtl.Tag as String;
 
             PlanFile.Instance.ResetChanges(tHash);
         }
@@ -399,14 +378,13 @@ namespace HAW_Tool
                 return;
             }
 
-            SeminarGroup tGrp = SemGroups.SelectedItem as SeminarGroup;
+            var tGrp = SemGroups.SelectedItem as SeminarGroup;
             if (tGrp == null)
             {
                 if (MessageBox.Show("Eine Seminargruppe muss schon ausgewählt sein. Was soll sonst exportiert werden? Alle Semestergruppen? Das willst du nicht, glaub mir!\nOder doch?", "Alles exportieren?", MessageBoxButton.YesNo, MessageBoxImage.Exclamation) == MessageBoxResult.No) return;
             }
 
-            SaveFileDialog tDlg = new SaveFileDialog();
-            tDlg.Filter = "iCalendar Datei (*.ics)|*.ics";
+            var tDlg = new SaveFileDialog {Filter = "iCalendar Datei (*.ics)|*.ics"};
 
             if ((bool)tDlg.ShowDialog())
             {
@@ -414,10 +392,10 @@ namespace HAW_Tool
             }
         }
 
-        IEvent mSelectedEvent = default(IEvent);
-        private void selectedEventShowHide_Click(object sender, RoutedEventArgs e)
+        IEvent _mSelectedEvent = default(IEvent);
+        private void SelectedEventShowHideClick(object sender, RoutedEventArgs e)
         {
-            if (mSelectedEvent == default(Event))
+            if (_mSelectedEvent == default(Event))
             {
                 MessageBox.Show("Ein Event muss schon ausgewählt sein, damit alle anderen ein- bzw. ausgeblendet werden können.");
                 return;
@@ -425,7 +403,7 @@ namespace HAW_Tool
 
             string tTag = ((FrameworkElement)sender).Tag.ToString();
             var tEvents = from evt in PlanFile.Instance.AllEvents
-                          where evt.Code == mSelectedEvent.Code
+                          where evt.Code == _mSelectedEvent.Code
                           select evt;
             foreach (Event tEvt in tEvents)
             {
@@ -433,50 +411,56 @@ namespace HAW_Tool
             }
         }
 
+/*
         private void MouseDownDragStart(object sender, MouseButtonEventArgs e)
         {
         }
+*/
 
-        TimeSpan? tOldFrom = null, tOldTill = null;
+        TimeSpan? _tOldFrom, _tOldTill;
 
-        double mGrid = 5.0D;
+        private const double MGrid = 5.0D;
 
         private void EventDragging(object sender, ValueEventArgs<DraggingItem> e)
         {
-            if (!(tOldFrom.HasValue | tOldTill.HasValue)) return;
+            if (!(_tOldFrom.HasValue | _tOldTill.HasValue)) return;
 
-            int minute = (int)(Math.Round(e.Value.Distance / mGrid) * mGrid);
+            var minute = (int)(Math.Round(e.Value.Distance / MGrid) * MGrid);
 
-            IEvent tEvt = e.Value.Item.Content as IEvent;
+            var tEvt = e.Value.Item.Content as IEvent;
             if (tEvt is RESTEvent) return;
 
-            TimeSpan tDist = new TimeSpan(0, minute, 0);
-            tEvt.From = tOldFrom.Value.Add(tDist);
-            tEvt.Till = tOldTill.Value.Add(tDist);
+            var tDist = new TimeSpan(0, minute, 0);
+            Debug.Assert(tEvt != null, "tEvt != null");
+            Debug.Assert(_tOldFrom != null, "_tOldFrom != null");
+            tEvt.From = _tOldFrom.Value.Add(tDist);
+            Debug.Assert(_tOldTill != null, "_tOldTill != null");
+            tEvt.Till = _tOldTill.Value.Add(tDist);
         }
 
         private void EventDraggingStart(object sender, ValueEventArgs<ListBoxItem> e)
         {
-            IEvent tEvt = e.Value.Content as IEvent;
-            tOldFrom = tEvt.From;
-            tOldTill = tEvt.Till;
+            var tEvt = e.Value.Content as IEvent;
+            Debug.Assert(tEvt != null, "tEvt != null");
+            _tOldFrom = tEvt.From;
+            _tOldTill = tEvt.Till;
         }
 
         private void EventDraggingEnd(object sender, EventArgs e)
         {
-            tOldFrom = null; tOldTill = null;
+            _tOldFrom = null; _tOldTill = null;
         }
 
         private void CopyHashClick(object sender, RoutedEventArgs e)
         {
-            Clipboard.SetText(mSelectedEvent.Hash);
+            Clipboard.SetText(_mSelectedEvent.Hash);
         }
 
         #region Window Resize
 
-        private void Resize_Init(object sender, MouseButtonEventArgs e)
+        private void ResizeInit(object sender, MouseButtonEventArgs e)
         {
-            Rectangle rect = sender as Rectangle;
+            var rect = sender as Rectangle;
             if (rect == null) return;
 
             switch (rect.Tag.ToString())
@@ -489,7 +473,6 @@ namespace HAW_Tool
                 case "SW": ResizeWindow(ResizeDirection.BottomLeft); break;
                 case "W": ResizeWindow(ResizeDirection.Left); break;
                 case "NW": ResizeWindow(ResizeDirection.TopLeft); break;
-                default: break;
             }
         }
 
@@ -501,7 +484,7 @@ namespace HAW_Tool
 
             //if (tabControl.ActualHeight <= 0.0 || tabControl.ActualWidth <= 0.0) return;
 
-            
+
             //RenderTargetBitmap tBmp = new RenderTargetBitmap((int)tabControl.ActualWidth, (int)tabControl.ActualHeight, 96, 96, PixelFormats.Pbgra32);
             //tBmp.Render(tabControl);
             //tabFadeBorder.Background = new ImageBrush(tBmp);
@@ -512,22 +495,22 @@ namespace HAW_Tool
             //tBoard.Begin();
         }
 
-        private void FramelessTitleBar_DoubleClick(object sender, RoutedEventArgs e)
+        private void FramelessTitleBarDoubleClick(object sender, RoutedEventArgs e)
         {
-            switch (this.WindowState)
+            switch (WindowState)
             {
-                case WindowState.Normal: this.WindowState = WindowState.Maximized; break;
-                case WindowState.Maximized: this.WindowState = WindowState.Normal; break;
+                case WindowState.Normal: WindowState = WindowState.Maximized; break;
+                case WindowState.Maximized: WindowState = WindowState.Normal; break;
             }
         }
 
-        private void DonateButton_Click(object sender, System.Windows.RoutedEventArgs e)
+        private void DonateButtonClick(object sender, RoutedEventArgs e)
         {
             string url = "";
-            string business = "7.e.q@syncro-community.de";
-            string description = "HAW%20Stundenplantool%20Spende";
-            string country = "DE";
-            string currency = "EUR";
+            const string business = "7.e.q@syncro-community.de";
+            const string description = "HAW%20Stundenplantool%20Spende";
+            const string country = "DE";
+            const string currency = "EUR";
 
             url += "https://www.paypal.com/cgi-bin/webscr" +
                 "?cmd=" + "_donations" +
@@ -537,7 +520,7 @@ namespace HAW_Tool
                 "&currency_code=" + currency +
                 "&bn=" + "PP%2dDonationsBF";
 
-            System.Diagnostics.Process.Start(url);
+            Process.Start(url);
         }
 
         private void MailMe(object sender, RoutedEventArgs e)
@@ -549,7 +532,7 @@ namespace HAW_Tool
         {
         }
 
-        private void tabFadeCompleted(object sender, EventArgs e)
+        private void TabFadeCompleted(object sender, EventArgs e)
         {
             tabFadeBorder.Visibility = Visibility.Collapsed;
         }

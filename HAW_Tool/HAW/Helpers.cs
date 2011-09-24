@@ -1,15 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.ComponentModel;
 using System.Windows;
-using System.Windows.Media;
 using LHelper = LittleHelpers.Helper;
 using System.Globalization;
 using DDayEvent = DDay.iCal.Event;
 using HAW_Tool.HAW.REST;
-using System.Runtime.InteropServices;
+using System.Xml.Linq;
 
 namespace HAW_Tool.HAW
 {
@@ -23,8 +19,13 @@ namespace HAW_Tool.HAW
             {
                 if (LHelper.IsInDesignModeStatic) return 500.0D;
 
-                double rasterH = ((double)Application.Current.FindResource("RasterH") * 24.0D) - 1.0D;
-                return rasterH;
+                var findResource = Application.Current.FindResource("RasterH");
+                if (findResource != null)
+                {
+                    double rasterH = ((double)findResource * 24.0D) - 1.0D;
+                    return rasterH;
+                }
+                throw new Exception("No RasterH defined. Need!");
             }
         }
 
@@ -34,11 +35,18 @@ namespace HAW_Tool.HAW
 
         // Public Methods (15) 
 
+        public static bool CheckElements(XElement elm, params string[] elementNames)
+        {
+            return elementNames.Select(elementName => elm.Element(elementName)).All(subelement => subelement != null);
+        }
+
         public static DDay.iCal.Event AsDDayEvent(this IEvent Event)
         {
-            DDayEvent tEvt = new DDayEvent();
-            tEvt.DTStart = new DDay.iCal.iCalDateTime(Event.Date + Event.From);
-            tEvt.DTEnd = new DDay.iCal.iCalDateTime(Event.Date + Event.Till);
+            var tEvt = new DDayEvent
+                           {
+                               DTStart = new DDay.iCal.iCalDateTime(Event.Date + Event.From),
+                               DTEnd = new DDay.iCal.iCalDateTime(Event.Date + Event.Till)
+                           };
 
             if (Event is RESTEvent)
                 tEvt.Summary = String.Format("{0} {1}", ((RESTEvent)Event).TypeCode, Event.Code);
@@ -48,6 +56,7 @@ namespace HAW_Tool.HAW
                 tEvt.Summary = evtCode;
             }
 
+            tEvt.Location = String.Format("Raum {0}", Event.Room);
             tEvt.Priority = Event.Priority;
             tEvt.Description = String.Format("Raum {0} - Dozent: {1}", Event.Room, Event.Tutor);
             return tEvt;
@@ -55,6 +64,8 @@ namespace HAW_Tool.HAW
 
         public static DateTime ParseYearWeekDayCode(string YWD)
         {
+            if (YWD == null) throw new ArgumentNullException("YWD");
+
             string[] ywd = YWD.Split(':');
             int year = Convert.ToInt32(ywd[0]);
             int week = Convert.ToInt32(ywd[1]);

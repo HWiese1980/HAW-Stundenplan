@@ -1,54 +1,54 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Globalization;
-using System.Windows;
 using HAW_Tool.HAW.REST;
 
 namespace HAW_Tool.HAW
 {
     public class Day : XElementContainer
     {
-		#region Fields (7) 
+        #region Fields (7)
 
-        bool bInitlialized = false;
-        bool bRecalculatingOccupiedRanges = false;
-        DateTime m_Date;
-        DayOfWeek? m_DOW = null;
-        List<IEvent> m_Events;
-        HAWClient m_HAWClient = new HAWClient();
-        IEvent[] mOccupiedMinutes;
+        bool _bInitlialized;
+        bool _bRecalculatingOccupiedRanges;
+        readonly List<IEvent> _mEvents;
+/*
+        HAWClient _mHawClient = new HAWClient();
+*/
+        IEvent[] _mOccupiedMinutes;
 
-		#endregion Fields 
+        #endregion Fields
 
-		#region Constructors (1) 
+        #region Constructors (1)
 
-        private Day(int DayNo, IEnumerable<IEvent> Events, IWeek Week)
+        private Day(int dayNo, IEnumerable<IEvent> events, IWeek week)
+            : this(dayNo, week)
         {
-            int minutes = (int)(TimeSpan.Parse("21:00") - TimeSpan.Parse("07:00")).TotalMinutes;
-            this.Week = Week;
-            mOccupiedMinutes = new IEvent[minutes];
-
-            m_DOW = (DayOfWeek)DayNo + 1;
-            m_Events = new List<IEvent>(Events);
-            m_Date = Events.First().Date;
+            Debug.Assert(events != null, "events != null");
+            var ev = events.ToList();
+            _mEvents.AddRange(ev);
+            Date = ev.First().Date;
         }
 
-		#endregion Constructors 
-
-		#region Properties (8) 
-
-        public DateTime Date
+        private Day(int dayNo, IWeek week)
         {
-            get { return m_Date; }
-            set { m_Date = value; }
+            var minutes = (int)(TimeSpan.Parse("21:00") - TimeSpan.Parse("07:00")).TotalMinutes;
+            Week = week;
+            _mOccupiedMinutes = new IEvent[minutes];
+
+            DOW = (DayOfWeek)dayNo + 1;
+            _mEvents = new List<IEvent>();
+            Date = Helper.DayOfWeekToDateTime(week.Year, week.Week, dayNo);
         }
 
-        public DayOfWeek? DOW
-        {
-            get { return m_DOW; }
-        }
+        #endregion Constructors
+
+        #region Properties (8)
+
+        public DateTime Date { get; set; }
+
+        public DayOfWeek? DOW { get; set; }
 
         public IEnumerable<IEvent> Events
         {
@@ -57,22 +57,18 @@ namespace HAW_Tool.HAW
                 InitializeEvents();
                 RecalculateOccupiedRanges();
 
-                var todays = from p in StoredEvents
-                             where p.SeminarGroup == this.Week.SeminarGroup.FullName
-                             where p.OtherDates.Contains(this.Date.Date) | p.Date == this.Date & (p.Replaces ?? "") == ""
-                             select p;
-
-                var exams = from p in todays
-                            where p.Type == EntryType.Exam
-                            select p;
+                var todays = (from p in StoredEvents
+                             where p.SeminarGroup == Week.SeminarGroup.FullName
+                             where p.OtherDates.Contains(Date.Date) | p.Date == Date & (p.Replaces ?? "") == ""
+                             select p).ToList();
 
                 // int tExmCount = exams.Count();
 
-                var ret = (from p in m_Events
+                var ret = (from p in _mEvents
                            where !PlanFile.Instance.HasReplacements(p, this)
-                           select (IEvent)p);
+                           select p);
 
-                List<IEvent> replacements = (from p in m_Events
+                List<IEvent> replacements = (from p in _mEvents
                                              from q in StoredEvents
                                              where q.IsReplacementFor(p)
                                              select (IEvent)q).ToList();
@@ -83,6 +79,7 @@ namespace HAW_Tool.HAW
             }
         }
 
+/*
         public bool HasAdditions
         {
             get
@@ -94,18 +91,22 @@ namespace HAW_Tool.HAW
                 return (additionals.Count() > 0);
             }
         }
+*/
 
+/*
         public bool HasReplacements
         {
             get
             {
-                var replacements = from p in m_Events
+                var replacements = from p in _mEvents
                                    where PlanFile.Instance.HasReplacements(p, this)
                                    select p;
                 return (replacements.Count() > 0);
             }
         }
+*/
 
+/*
         public double MinWidth
         {
             get
@@ -127,11 +128,12 @@ namespace HAW_Tool.HAW
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("Error: {0}", e.Message);
+                    Console.WriteLine(@"Error: {0}", e.Message);
                     return 0;
                 }
             }
         }
+*/
 
         private IEnumerable<RESTEvent> StoredEvents
         {
@@ -143,93 +145,104 @@ namespace HAW_Tool.HAW
 
         public IWeek Week { get; set; }
 
-		#endregion Properties 
+        #endregion Properties
 
-		#region Methods (7) 
+        #region Methods (7)
 
-		// Public Methods (4) 
+        // Public Methods (4) 
 
-        public static Day CreateDay(IGrouping<int, IEvent> EventGroup, IWeek Week)
+        public static Day CreateDay(IGrouping<int, IEvent> eventGroup, IWeek week)
         {
-            Day tDay = new Day(EventGroup.Key, EventGroup, Week);
+            var tDay = new Day(eventGroup.Key, eventGroup, week);
+            return tDay;
+        }
+
+        public static Day CreateDay(int day, IWeek week)
+        {
+            var tDay = new Day(day, week);
             return tDay;
         }
 
         public bool IsInOccupiedRanges(IEvent tEvt)
         {
-            int minutes = (int)(tEvt.Till - tEvt.From).TotalMinutes; // Länge des Events in Minuten
-            int frommin = (int)(tEvt.From - TimeSpan.Parse("07:00")).TotalMinutes; // Start des Events ab 07:00 Uhr in Minuten
+            var minutes = (int)(tEvt.Till - tEvt.From).TotalMinutes; // Länge des Events in Minuten
+            var frommin = (int)(tEvt.From - TimeSpan.Parse("07:00")).TotalMinutes; // Start des Events ab 07:00 Uhr in Minuten
 
-            for (int min = frommin; min < frommin + minutes; min++)
+            for (var min = frommin; min < frommin + minutes; min++)
             {
-                if (mOccupiedMinutes[min] != null && mOccupiedMinutes[min] != tEvt) return true;
+                if (_mOccupiedMinutes[min] != null && _mOccupiedMinutes[min] != tEvt) return true;
             }
             return false;
         }
 
-        public IEvent MinuteOccupiedBy(uint Minute)
+        public IEvent MinuteOccupiedBy(uint minute)
         {
-            uint fromminute = Minute - (uint)TimeSpan.Parse("07:00").TotalMinutes;
-            return mOccupiedMinutes[fromminute];
+            uint fromminute = minute - (uint)TimeSpan.Parse("07:00").TotalMinutes;
+            return _mOccupiedMinutes[fromminute];
         }
 
         public override string ToString()
         {
-            return String.Format("{0}", WeekHelper.WD[(int)m_DOW.Value - 1]);
+            Debug.Assert(DOW != null, "DOW != null");
+            return String.Format("{0}", WeekHelper.WD[(int)DOW.Value - 1]);
         }
-		// Private Methods (3) 
 
+        // Private Methods (3) 
+
+/*
         private bool ContainsCode(string p)
         {
-            var evt = from q in m_Events where q.BasicCode == p select q;
+            var evt = from q in _mEvents where q.BasicCode == p select q;
             return evt.Count() > 0;
         }
+*/
 
         private void InitializeEvents()
         {
-            if (bInitlialized) return;
+            if (_bInitlialized) return;
 
-            bInitlialized = true;
+            _bInitlialized = true;
             foreach (IEvent evt in Events.Where(p => p.Day == null)) evt.Day = this;
         }
 
         private void RecalculateOccupiedRanges()
         {
-            if (bRecalculatingOccupiedRanges) return;
-            bRecalculatingOccupiedRanges = true;
+            if (_bRecalculatingOccupiedRanges) return;
+            _bRecalculatingOccupiedRanges = true;
 
-            mOccupiedMinutes = new IEvent[mOccupiedMinutes.Length];
+            _mOccupiedMinutes = new IEvent[_mOccupiedMinutes.Length];
 
             foreach (IEvent tEvt in Events.Where(p => p.RowIndex == 0))
             {
-                int minutes = (int)(tEvt.Till - tEvt.From).TotalMinutes; // Länge des Events in Minuten
-                int frommin = (int)(tEvt.From - TimeSpan.Parse("07:00")).TotalMinutes; // Start des Events ab 07:00 Uhr in Minuten
+                var minutes = (int)(tEvt.Till - tEvt.From).TotalMinutes; // Länge des Events in Minuten
+                var frommin = (int)(tEvt.From - TimeSpan.Parse("07:00")).TotalMinutes; // Start des Events ab 07:00 Uhr in Minuten
 
                 for (int min = frommin; min < frommin + minutes; min++)
                 {
-                    mOccupiedMinutes[min] = tEvt;
+                    _mOccupiedMinutes[min] = tEvt;
                 }
             }
-            bRecalculatingOccupiedRanges = false;
+            _bRecalculatingOccupiedRanges = false;
         }
 
-		#endregion Methods 
+        #endregion Methods
 
-		#region Nested Classes (1) 
+        #region Nested Classes (1)
 
 
+/*
         class Range
         {
-		#region Fields (2) 
+            #region Fields (2)
 
-            public DateTime Date;
-            public int RowIndex = 0;
+            private DateTime Date;
+            private int RowIndex = 0;
 
-		#endregion Fields 
+            #endregion Fields
 
-		#region Methods (1) 
+            #region Methods (1)
 
-		// Public Methods (1) 
+            // Public Methods (1) 
 
             public bool IsInRange(DateTime Value, int Index)
             {
@@ -238,13 +251,14 @@ namespace HAW_Tool.HAW
                 return Value.IsBetween(Date.Date + From, Date.Date + To);
             }
 
-		#endregion Methods 
+            #endregion Methods
 
 
 
 
             public TimeSpan From, To;
         }
-		#endregion Nested Classes 
+*/
+        #endregion Nested Classes
     }
 }

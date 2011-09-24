@@ -62,15 +62,13 @@
       <HintPath>C:\Users\Hendrik\Desktop\DDay.iCal\DDay.iCal.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Expression.Interactions, Version=3.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
-    <Reference Include="PostSharp.Core">
-      <HintPath>C:\Users\Hendrik\Desktop\PostSharp-1.5.7.1081-Release-Binary\PostSharp.Core.dll</HintPath>
+    <Reference Include="PostSharp, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b13fd38b8f9c99d7, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\PostSharp 2.0\Release\PostSharp.dll</HintPath>
     </Reference>
     <Reference Include="PostSharp.Laos, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b13fd38b8f9c99d7, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Users\Hendrik\Desktop\PostSharp-1.5.7.1081-Release-Binary\PostSharp.Laos.dll</HintPath>
-    </Reference>
-    <Reference Include="PostSharp.Public">
-      <HintPath>C:\Users\Hendrik\Desktop\PostSharp-1.5.7.1081-Release-Binary\PostSharp.Public.dll</HintPath>
+      <HintPath>C:\Program Files (x86)\PostSharp 2.0\Release\PostSharp.Laos.dll</HintPath>
     </Reference>
     <Reference Include="PresentationFramework.Aero" />
     <Reference Include="ReachFramework">
@@ -81,6 +79,7 @@
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Drawing" />
+    <Reference Include="System.IdentityModel" />
     <Reference Include="System.Printing">
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
     </Reference>
@@ -175,13 +174,22 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Aspects\INotificationEnabled.cs" />
+    <Compile Include="Aspects\INotifyValueChanged.cs" />
+    <Compile Include="Aspects\LogExitAttribute.cs" />
+    <Compile Include="Aspects\LoggingAttribute.cs" />
+    <Compile Include="Aspects\NotifyingAttribute.cs" />
+    <Compile Include="Aspects\WCFExceptionHandlingAttribute.cs" />
+    <Compile Include="HAW\ChangeInfo.cs" />
+    <Compile Include="HAW\ChangeState.cs" />
+    <Compile Include="HAW\LabeledItem.cs" />
     <Compile Include="Window1.xaml.cs">
       <DependentUpon>Window1.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Aspects\TracingAttribute.cs" />
+    <Compile Include="Aspects\NotifyingPropertyAttribute.cs" />
     <Compile Include="Bittorrent\RESTTorrent.cs" />
     <Compile Include="CompactView.cs" />
     <Compile Include="Comparers\KeyEqualityComparer.cs" />
@@ -243,6 +251,7 @@
     <Compile Include="UniqueList.cs" />
     <Compile Include="WindowSettings.cs" />
     <Compile Include="WPF\ConverterWrapper.cs" />
+    <Compile Include="WPF\DayTemplateSelector.cs" />
     <Compile Include="WPF\TranslatorConverter.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

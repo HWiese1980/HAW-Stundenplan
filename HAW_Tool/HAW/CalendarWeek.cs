@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Xml.Linq;
 
 namespace HAW_Tool.HAW
@@ -18,19 +17,24 @@ namespace HAW_Tool.HAW
         //             };
         //         }
 
-        public CalendarWeek(SeminarGroup Group, XElement Base)
+        public CalendarWeek(SeminarGroup @group, XElement Base)
         {
-            m_BaseElement = Base;
-            m_Number = Convert.ToInt32(Base.Attribute("number").Value);
-            m_Year = Convert.ToInt32(Base.Attribute("year").Value);
-            this.SeminarGroup = Group;
+            MBaseElement = Base;
+
+            var xAttribute = Base.Attribute("number");
+            if (xAttribute != null) _mNumber = Convert.ToInt32(xAttribute.Value);
+
+            var attribute = Base.Attribute("year");
+            if (attribute != null) _mYear = Convert.ToInt32(attribute.Value);
+
+            SeminarGroup = @group;
         }
 
-        public int Week { get { return m_Number; } }
-        public int Year { get { return m_Year; } }
+        public int Week { get { return _mNumber; } }
+        public int Year { get { return _mYear; } }
 
-        int m_Number = 0;
-        int m_Year = 0;
+        readonly int _mNumber;
+        readonly int _mYear;
 
         public SeminarGroup SeminarGroup { get; set; }
 
@@ -38,7 +42,7 @@ namespace HAW_Tool.HAW
         {
             get
             {
-                return (this.Week == Helper.WeekOfDate(DateTime.Now));
+                return (Week == Helper.WeekOfDate(DateTime.Now));
             }
         }
 
@@ -46,7 +50,7 @@ namespace HAW_Tool.HAW
         {
             get
             {
-                return Helper.IsWeekPast(this.Year, this.Week);
+                return Helper.IsWeekPast(Year, Week);
             }
         }
 
@@ -54,22 +58,17 @@ namespace HAW_Tool.HAW
         {
             get
             {
-                return String.Format("KW{0}:{1}", m_Number, m_Year);
+                return String.Format("KW{0}:{1}", _mNumber, _mYear);
             }
         }
 
-        List<Event> mEvents;
+        List<Event> _mEvents;
         private IEnumerable<Event> EventInternal
         {
             get
             {
-                if (mEvents == null)
-                {
-                    mEvents = new List<Event>(from p in m_BaseElement.Elements("event")
-                                              select new Event(this, p));
-
-                }
-                return mEvents;
+                return _mEvents ?? (_mEvents = new List<Event>(from p in MBaseElement.Elements("event")
+                                                               select new Event(this, p)));
             }
         }
 
@@ -77,7 +76,7 @@ namespace HAW_Tool.HAW
         {
             get
             {
-                return from IEvent p in this.EventInternal
+                return from IEvent p in EventInternal
                        orderby p.Till
                        orderby p.From
                        orderby p.DayOfWeek
@@ -90,20 +89,30 @@ namespace HAW_Tool.HAW
         {
             get
             {
-                foreach (IGrouping<int, IEvent> tEventGroup in this.GroupedEvents)
+                var i = 0;
+                for (; i < 6; i++)
                 {
-                    Day tDay = Day.CreateDay(tEventGroup, this);
-                    DateTime tDate = Helper.StartOfWeek(m_Number, m_Year).AddDays((int)tDay.DOW - 1);
-                    tDay.Date = tDate;
+                    var tEvtGroups = GroupedEvents.Where(p => p.Key == i).ToList();
+                    var count = tEvtGroups.Count();
+                    var tDay = count == 1 ? Day.CreateDay(tEvtGroups.Single(), this) : Day.CreateDay(i, this);
+
                     yield return tDay;
                 }
+                //foreach (IGrouping<int, IEvent> tEventGroup in this.GroupedEvents)
+                //{
+                //    Day tDay = Day.CreateDay(tEventGroup, this);
+                //    DateTime tDate = Helper.StartOfWeek(m_Number, m_Year).AddDays((int)tDay.DOW - 1);
+                //    tDay.Date = tDate;
+                //    yield return tDay;
+                //}
             }
         }
 
-        private Day GetDayFromToday(int DaysAdded)
+/*
+        private Day GetDayFromToday(int daysAdded)
         {
             DateTime tToday = DateTime.Now.Date;
-            DateTime tTomorrow = tToday.AddDays(DaysAdded);
+            DateTime tTomorrow = tToday.AddDays(daysAdded);
 
             var tQuery = from p in this.Days
                          where p.Date == tTomorrow.Date
@@ -114,7 +123,9 @@ namespace HAW_Tool.HAW
             Day tDay = tQuery.Single();
             return tDay;
         }
+*/
 
+/*
         public Day Today
         {
             get
@@ -122,7 +133,9 @@ namespace HAW_Tool.HAW
                 return GetDayFromToday(0);
             }
         }
+*/
 
+/*
         public Day Tomorrow
         {
             get
@@ -130,10 +143,11 @@ namespace HAW_Tool.HAW
                 return GetDayFromToday(1);
             }
         }
+*/
 
         public override string ToString()
         {
-            return String.Format("KW{0} ({1:D} - {2:D})", m_Number, Helper.StartOfWeek(m_Number, m_Year), Helper.EndOfWeek(m_Number, m_Year)/*.AddDays(-2)*/);
+            return String.Format("KW{0} ({1:D} - {2:D})", _mNumber, Helper.StartOfWeek(_mNumber, _mYear), Helper.EndOfWeek(_mNumber, _mYear)/*.AddDays(-2)*/);
         }
     }
 }

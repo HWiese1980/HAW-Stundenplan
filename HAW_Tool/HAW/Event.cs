@@ -1,18 +1,21 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Xml.Linq;
-using System.Windows;
 using System.Security.Cryptography;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using HAW_Tool.Aspects;
+using HAW_Tool.Bittorrent;
 using LittleHelpers;
 using DDayEvent = DDay.iCal.Event;
+
 // using DDayEvent = DDay.iCal.Event;
-using DDay.iCal;
-using System.Text.RegularExpressions;
-using HAW_Tool.Bittorrent;
-using HAW_Tool.HAW.REST;
+
+#endregion
 
 namespace HAW_Tool.HAW
 {
@@ -21,55 +24,45 @@ namespace HAW_Tool.HAW
     {
         #region Fields (10)
 
-        private bool bEnabled = true;
-        private bool bOff = true;
-        private EventCode m_Code;
-        private DateTime m_Date;
-        private int m_KW = 0;
-        private string m_Room;
-        private string m_Tag;
-        //[NotifyingProperty(true, "Till", "Info")]
-        //public TimeSpan TillTime
-        //{
-        //    get { return m_Till.TimeOfDay; }
-        //    set
-        //    {
-        //        DateTime tNewTill = new DateTime(Till.Year, Till.Month, Till.Day, value.Hours, value.Minutes, value.Seconds);
-        //        if (tNewTill < From) return;
-        //        Till = tNewTill;
-        //    }
-        //}
-        private string m_Tutor;
-        private Day mDay = null;
-        private string mHash = String.Empty;
+        private bool _bEnabled = true;
+        private bool _bOff = true;
+        private EventCode _mCode;
+        private DateTime _mDate;
+        private Day _mDay;
+        private string _mHash = String.Empty;
+        private int _mKw;
+        private string _mRoom;
+        private string _mTag;
+        private string _mTutor;
 
         #endregion Fields
 
         #region Constructors (1)
 
-        public Event(CalendarWeek KW, XElement BaseElement)
+        public Event(IWeek kw, XElement baseElement)
         {
-            MBaseElement = BaseElement;
+            MBaseElement = baseElement;
 
-            m_Code = ParseCode(BaseElement.Element("code").Value);
+            Debug.Assert(baseElement != null, "baseElement != null");
+            _mCode = ParseCode(baseElement.Element("code").Value);
 
-            m_Tutor = BaseElement.Element("dozent").Value;
-            m_Room = BaseElement.Element("raum").Value;
-            m_Tag = BaseElement.Element("tag").Value;
+            _mTutor = baseElement.Element("dozent").Value;
+            _mRoom = baseElement.Element("raum").Value;
+            _mTag = baseElement.Element("tag").Value;
 
-            TimeSpan tFrom = DateTime.Parse(BaseElement.Element("von").Value).TimeOfDay;
-            TimeSpan tTill = DateTime.Parse(BaseElement.Element("bis").Value).TimeOfDay;
+            var tFrom = DateTime.Parse(baseElement.Element("von").Value).TimeOfDay;
+            var tTill = DateTime.Parse(baseElement.Element("bis").Value).TimeOfDay;
 
 
-            m_KW = KW.Week;
+            _mKw = kw.Week;
 
-            int tDOW = WeekHelper.DOW[m_Tag.ToLower()];
+            var tDOW = WeekHelper.DOW[_mTag.ToLower()];
 
-            DateTime tDT = Helper.DayOfWeekToDateTime(KW.Year, KW.Week, tDOW);
-            m_Date = tDT;
+            var tDT = Helper.DayOfWeekToDateTime(kw.Year, kw.Week, tDOW);
+            _mDate = tDT;
 
-            m_From = tFrom;
-            m_Till = tTill;
+            _mFrom = tFrom;
+            _mTill = tTill;
 
             ReGenerateHash();
         }
@@ -78,27 +71,58 @@ namespace HAW_Tool.HAW
 
         #region Properties (22)
 
+        public bool HasChanges
+        {
+            get { return PlanFile.Instance.HasChangesByHash(Hash); }
+        }
+
+        private byte[] ID
+        {
+            get { return Encoding.ASCII.GetBytes(Info); }
+        }
+
+        public string Info
+        {
+            get { return String.Format("{0};{1};{2}", Code, _mKw, DayOfWeek); }
+        }
+
+        [NotifyingProperty]
+        public bool TakesPlace
+        {
+            get { return _bOff; }
+            set { _bOff = value; }
+        }
+
+        public new string ToolTip
+        {
+            get
+            {
+                return String.Format("{0} - Von {1:t} bis {2:t} im Raum {3} [{4}]", Code, From, Till,
+                                     Room, BasicCode);
+            }
+        }
+
         [NotifyingProperty("Code", "Info", "IsObligatory")]
         public string BasicCode
         {
-            get { return m_Code.Code; }
-            set { m_Code.Code = value; }
+            get { return _mCode.Code; }
+            set { _mCode.Code = value; }
         }
 
         public string Code
         {
             get
             {
-                if (m_Code.Group != GroupID.Empty) return String.Format("{0}/{1:00}", m_Code.Code, m_Code.Group);
-                return m_Code.Code;
+                if (_mCode.Group != GroupID.Empty) return String.Format("{0}/{1:00}", _mCode.Code, _mCode.Group);
+                return _mCode.Code;
             }
         }
 
         [NotifyingProperty]
         public DateTime Date
         {
-            get { return m_Date.Date; }
-            private set { m_Date = value; }
+            get { return _mDate.Date; }
+            private set { _mDate = value; }
         }
 
         public IEnumerable<DateTime> OtherDates
@@ -108,17 +132,17 @@ namespace HAW_Tool.HAW
 
         public Day Day
         {
-            get { return mDay; }
+            get { return _mDay; }
             set
             {
-                mDay = value;
+                _mDay = value;
                 CalculateRowIndex();
             }
         }
 
         public int DayOfWeek
         {
-            get { return WeekHelper.DOW[m_Tag.ToLower()]; }
+            get { return WeekHelper.DOW[_mTag.ToLower()]; }
         }
 
         public IEnumerable<RESTTorrent> Files { get; set; }
@@ -126,58 +150,43 @@ namespace HAW_Tool.HAW
         [NotifyingProperty]
         public TimeSpan From
         {
-            get { return m_From; }
+            get { return _mFrom; }
             set
             {
-                IEvent occupiedBy = Day.MinuteOccupiedBy((uint) value.TotalMinutes);
+                var occupiedBy = Day.MinuteOccupiedBy((uint) value.TotalMinutes);
                 if (occupiedBy == null || occupiedBy == this)
-                    m_From = value;
+                    _mFrom = value;
             }
         }
 
         [NotifyingProperty("Code", "Info", "IsObligatory")]
         public GroupID Group
         {
-            get { return m_Code.Group; }
+            get { return _mCode.Group; }
             set
             {
-                m_Code.Group = value;
+                _mCode.Group = value;
                 //OnPropertyChanged("Code");
             }
-        }
-
-        public bool HasChanges
-        {
-            get { return PlanFile.Instance.HasChangesByHash(this.Hash); }
         }
 
         public string Hash
         {
             get
             {
-                if (mHash == String.Empty)
+                if (_mHash == String.Empty)
                 {
                     ReGenerateHash();
                 }
-                return mHash;
+                return _mHash;
             }
-        }
-
-        private byte[] ID
-        {
-            get { return Encoding.ASCII.GetBytes(this.Info); }
-        }
-
-        public string Info
-        {
-            get { return String.Format("{0};{1};{2}", this.Code, this.m_KW, this.DayOfWeek); }
         }
 
         [NotifyingProperty]
         public bool IsEnabled
         {
-            get { return bEnabled; }
-            set { bEnabled = value; }
+            get { return _bEnabled; }
+            set { _bEnabled = value; }
         }
 
         public bool IsObligatory
@@ -186,7 +195,7 @@ namespace HAW_Tool.HAW
             {
                 if (PlanFile.Instance.ObligatoryRegexPatterns == null) return false;
 
-                int matchingCount = (from p in PlanFile.Instance.ObligatoryRegexPatterns
+                var matchingCount = (from p in PlanFile.Instance.ObligatoryRegexPatterns
                                      let q = new Regex(p)
                                      where q.IsMatch(Code)
                                      select p).Count();
@@ -200,7 +209,7 @@ namespace HAW_Tool.HAW
         {
             get
             {
-                if (this.IsObligatory) return 3;
+                if (IsObligatory) return 3;
                 return 0;
             }
         }
@@ -208,8 +217,8 @@ namespace HAW_Tool.HAW
         [NotifyingProperty("Info")]
         public string Room
         {
-            get { return m_Room; }
-            set { m_Room = value; }
+            get { return _mRoom; }
+            set { _mRoom = value; }
         }
 
         public int RowIndex { get; set; }
@@ -218,45 +227,29 @@ namespace HAW_Tool.HAW
         {
             get
             {
-                Regex tRgx = new Regex(@"(.*?)-.*");
+                var tRgx = new Regex(@"(.*?)-.*");
                 if (!tRgx.IsMatch(BasicCode)) return "n/a";
                 return tRgx.Match(BasicCode).Groups[1].Value;
             }
         }
 
         [NotifyingProperty]
-        public bool TakesPlace
-        {
-            get { return bOff; }
-            set { bOff = value; }
-        }
-
-        [NotifyingProperty]
         public TimeSpan Till
         {
-            get { return m_Till; }
+            get { return _mTill; }
             set
             {
-                IEvent occupiedBy = Day.MinuteOccupiedBy((uint) value.TotalMinutes);
+                var occupiedBy = Day.MinuteOccupiedBy((uint) value.TotalMinutes);
                 if (occupiedBy == null || occupiedBy == this)
-                    m_Till = value;
-            }
-        }
-
-        public new string ToolTip
-        {
-            get
-            {
-                return String.Format("{0} - Von {1:t} bis {2:t} im Raum {3} [{4}]", this.Code, this.From, this.Till,
-                                     this.Room, this.BasicCode);
+                    _mTill = value;
             }
         }
 
         [NotifyingProperty("Info")]
         public string Tutor
         {
-            get { return m_Tutor; }
-            set { m_Tutor = value; }
+            get { return _mTutor; }
+            set { _mTutor = value; }
         }
 
         #endregion Properties
@@ -267,7 +260,7 @@ namespace HAW_Tool.HAW
 
         public override string ToString()
         {
-            return this.Code;
+            return Code;
         }
 
         // Private Methods (3) 
@@ -276,34 +269,70 @@ namespace HAW_Tool.HAW
         {
             if (Day == null) return;
 
-            DateTime astart = this.Date + this.From, aend = this.Date + this.Till;
-            foreach (IEvent tEvt in this.Day.Events.Where(p => p.RowIndex == 0))
+            DateTime astart = Date + From, aend = Date + Till;
+            foreach (var tEvt in Day.Events.Where(p => p.RowIndex == 0))
             {
                 if (tEvt == this) continue;
 
                 DateTime bstart = tEvt.Date + tEvt.From, bend = tEvt.Date + tEvt.Till;
 
-                if (Helper.PeriodsOverlap(astart, aend, bstart, bend)) this.RowIndex++;
+                if (Helper.PeriodsOverlap(astart, aend, bstart, bend)) RowIndex++;
             }
         }
 
-        private EventCode ParseCode(string XMLCode)
+        private EventCode ParseCode(string xmlCode)
         {
-            string[] tParts = XMLCode.Split('/');
-            if (tParts != null && tParts.Count() > 1 && GroupID.IsValidGroup(tParts[1]))
+            var tParts = xmlCode.Split('/');
+            if (tParts.Count() > 1 && GroupID.IsValidGroup(tParts[1]))
             {
-                return new EventCode() {Code = tParts[0], Group = new GroupID(tParts[1])};
+                return new EventCode {Code = tParts[0], Group = new GroupID(tParts[1])};
             }
-            return new EventCode() {Code = XMLCode, Group = GroupID.Empty};
+            return new EventCode {Code = xmlCode, Group = GroupID.Empty};
         }
 
         private void ReGenerateHash()
         {
-            MD5 tMD5 = MD5.Create();
-            mHash = Convert.ToBase64String(tMD5.ComputeHash(this.ID), Base64FormattingOptions.InsertLineBreaks);
+            var tMD5 = MD5.Create();
+            _mHash = Convert.ToBase64String(tMD5.ComputeHash(ID), Base64FormattingOptions.InsertLineBreaks);
         }
 
         #endregion Methods
+
+        private TimeSpan _mFrom, _mTill;
+
+        #region IComparable<Event> Members
+
+        public int CompareTo(Event other)
+        {
+            return Hash.CompareTo(other.Hash);
+        }
+
+        #endregion
+
+        #region INotificationEnabled Members
+
+        public bool IsNotifyingChanges
+        {
+            get { return PlanFile.Instance.IsNotifyingChanges; }
+        }
+
+        #endregion
+
+        #region INotifyValueChanged Members
+
+        public void OnValueChanging(string property, object oldValue, object newValue)
+        {
+            if (!oldValue.Equals(newValue)) PlanFile.Instance.AddChange(this, property, oldValue, newValue);
+        }
+
+        public void OnValueChanged(string property)
+        {
+            OnPropertyChanged(property);
+        }
+
+        #endregion
+
+        #region Nested type: EventCode
 
         internal class EventCode
         {
@@ -316,38 +345,6 @@ namespace HAW_Tool.HAW
             }
 
             public GroupID Group { get; set; }
-        }
-
-        private TimeSpan m_From, m_Till;
-
-        #region INotifyValueChanged Members
-
-        public void OnValueChanging(string Property, object OldValue, object NewValue)
-        {
-            if (!OldValue.Equals(NewValue)) PlanFile.Instance.AddChange(this, Property, OldValue, NewValue);
-        }
-
-        public void OnValueChanged(string Property)
-        {
-            OnPropertyChanged(Property);
-        }
-
-        #endregion
-
-        #region IComparable<Event> Members
-
-        public int CompareTo(Event other)
-        {
-            return this.Hash.CompareTo(other.Hash);
-        }
-
-        #endregion
-
-        #region INotificationEnabled Members
-
-        public bool IsNotifyingChanges
-        {
-            get { return PlanFile.Instance.IsNotifyingChanges; }
         }
 
         #endregion

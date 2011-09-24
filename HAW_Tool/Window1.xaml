@@ -24,7 +24,7 @@
     ResizeMode="NoResize"
     k:WindowSettings.Save="True" MinWidth="800" MinHeight="400">
     <Window.Resources>
-        <Storyboard Completed="tabFadeCompleted" x:Name="tabFadeStoryboard" x:Key="tabFadeStoryboard" Duration="00:00:01">
+        <Storyboard Completed="TabFadeCompleted" x:Name="tabFadeStoryboard" x:Key="tabFadeStoryboard" Duration="00:00:01">
             <DoubleAnimationUsingKeyFrames BeginTime="00:00:00" Storyboard.TargetName="tabFadeBorder" Storyboard.TargetProperty="Opacity">
                 <SplineDoubleKeyFrame Value="1.0" KeyTime="00:00:00" KeySpline="1,0,0,1" />
                 <SplineDoubleKeyFrame Value="0.0" KeyTime="00:00:01" KeySpline="1,0,0,1" />
@@ -305,8 +305,8 @@
                         StartDragging="EventDraggingStart" 
                         EndDragging="EventDraggingEnd" 
                         Dragging="EventDragging" 
-                        Loaded="RasteredItemsControl_Loaded" 
-                        SelectionChanged="RasteredItemsControl_SelectionChanged" 
+                        Loaded="RasteredItemsControlLoaded" 
+                        SelectionChanged="RasteredItemsControlSelectionChanged" 
                         Raster="{StaticResource RasterH}" 
                         ItemsSource="{Binding Events}" 
                         ItemTemplateSelector="{StaticResource EventItemTemplateSelector}" 
@@ -335,6 +335,22 @@
             </DataTemplate.Triggers>
         </DataTemplate>
 
+        <DataTemplate x:Key="EmptyDayItemTemplate">
+            <AdornerDecorator>
+                <Grid x:Name="dayGrid" MinWidth="{Binding MinWidth}" MaxWidth="{x:Static haw:Helper.MaxDayWidth}" Height="{DynamicResource DayHeight}" Margin="1" Background="#0F092D4D">
+                    <SeveQsCustomControls:RasteredItemsControl 
+                        Header="{Binding Date, StringFormat='{}[{0:dd} - {0:ddd}] An diesem Tag sind keine Veranstaltungen eingetragen.'}" 
+                        FontSize="24" FontWeight="Bold"
+                        Raster="{StaticResource RasterH}" 
+                        Foreground="#FFCCCCCC" 
+                        Padding="0,5,0,10" 
+                        FullLineThickness="0" HalfLineThickness="0" QuarterLineThickness="0" />
+                </Grid>
+            </AdornerDecorator>
+        </DataTemplate>
+
+        <wpf:DayTemplateSelector x:Key="DayTemplateSelect" EmptyDayTemplate="{StaticResource EmptyDayItemTemplate}" NotEmptyDayTemplate="{StaticResource DayItemTemplate}" />
+
         <DataTemplate x:Key="SeminarGroupTemplate">
             <Grid DataContext="{Binding SelectedItem, ElementName=CalWeek}" d:DesignWidth="769.34" d:DesignHeight="333">
                 <Label FontSize="20" Foreground="White" Content="{Binding Label}" VerticalAlignment="Top" MinHeight="30" HorizontalAlignment="Left">
@@ -344,7 +360,7 @@
                 </Label>
                 <ScrollViewer Margin="0,41.96,0,0" VerticalAlignment="Stretch" Width="Auto" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
                     <SeveQsCustomControls:RasteredGroup x:Name="TheWeek" Width="Auto" Height="Auto" >
-                        <ItemsControl Height="Auto" ItemsSource="{Binding Days}" ItemTemplate="{StaticResource DayItemTemplate}" />
+                        <ItemsControl Height="Auto" ItemsSource="{Binding Days}" ItemTemplateSelector="{StaticResource DayTemplateSelect}" />
                     </SeveQsCustomControls:RasteredGroup>
                 </ScrollViewer>
                 <Button VerticalAlignment="Top" HorizontalAlignment="Right" Content="Woche drucken" Click="PrintWeekButtonPressed" Style="{DynamicResource FlatButton}" Margin="0,8,8,0" Foreground="White" >
@@ -441,22 +457,22 @@
             </Style>
         </Grid.Resources>
 
-        <Rectangle Style="{StaticResource ResizeRect}" MouseLeftButtonDown="Resize_Init" Cursor="SizeNWSE" Tag="NW" HorizontalAlignment="Left" VerticalAlignment="Top" Width="4" Height="4" Fill="Black" />
-        <Rectangle Style="{StaticResource ResizeRect}" MouseLeftButtonDown="Resize_Init" Cursor="SizeNS" Tag="N" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="4,0,4,0" Height="4" Fill="Black" />
-        <Rectangle Style="{StaticResource ResizeRect}" MouseLeftButtonDown="Resize_Init" Cursor="SizeNESW" Tag="NE" HorizontalAlignment="Right" VerticalAlignment="Top" Width="4" Height="4" Fill="Black" />
-        <Rectangle Style="{StaticResource ResizeRect}" MouseLeftButtonDown="Resize_Init" Cursor="SizeWE" Tag="W" HorizontalAlignment="Left" VerticalAlignment="Stretch" Width="4" Margin="0,4,0,4" Fill="Black" />
-        <Rectangle Style="{StaticResource ResizeRect}" MouseLeftButtonDown="Resize_Init" Cursor="SizeWE" Tag="E" HorizontalAlignment="Right" VerticalAlignment="Stretch" Width="4" Margin="0,4,0,4" Fill="Black" />
-        <Rectangle Style="{StaticResource ResizeRect}" MouseLeftButtonDown="Resize_Init" Cursor="SizeNESW" Tag="SW" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="4" Height="4" Fill="Black" />
-        <Rectangle Style="{StaticResource ResizeRect}" MouseLeftButtonDown="Resize_Init" Cursor="SizeNS" Tag="S" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Margin="4,0,4,0" Height="4" Fill="Black" />
-        <Rectangle Style="{StaticResource ResizeRect}" MouseLeftButtonDown="Resize_Init" Cursor="SizeNWSE" Tag="SE" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="4" Height="4" Fill="Black" />
+        <Rectangle Style="{StaticResource ResizeRect}" MouseLeftButtonDown="ResizeInit" Cursor="SizeNWSE" Tag="NW" HorizontalAlignment="Left" VerticalAlignment="Top" Width="4" Height="4" Fill="Black" />
+        <Rectangle Style="{StaticResource ResizeRect}" MouseLeftButtonDown="ResizeInit" Cursor="SizeNS" Tag="N" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="4,0,4,0" Height="4" Fill="Black" />
+        <Rectangle Style="{StaticResource ResizeRect}" MouseLeftButtonDown="ResizeInit" Cursor="SizeNESW" Tag="NE" HorizontalAlignment="Right" VerticalAlignment="Top" Width="4" Height="4" Fill="Black" />
+        <Rectangle Style="{StaticResource ResizeRect}" MouseLeftButtonDown="ResizeInit" Cursor="SizeWE" Tag="W" HorizontalAlignment="Left" VerticalAlignment="Stretch" Width="4" Margin="0,4,0,4" Fill="Black" />
+        <Rectangle Style="{StaticResource ResizeRect}" MouseLeftButtonDown="ResizeInit" Cursor="SizeWE" Tag="E" HorizontalAlignment="Right" VerticalAlignment="Stretch" Width="4" Margin="0,4,0,4" Fill="Black" />
+        <Rectangle Style="{StaticResource ResizeRect}" MouseLeftButtonDown="ResizeInit" Cursor="SizeNESW" Tag="SW" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="4" Height="4" Fill="Black" />
+        <Rectangle Style="{StaticResource ResizeRect}" MouseLeftButtonDown="ResizeInit" Cursor="SizeNS" Tag="S" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Margin="4,0,4,0" Height="4" Fill="Black" />
+        <Rectangle Style="{StaticResource ResizeRect}" MouseLeftButtonDown="ResizeInit" Cursor="SizeNWSE" Tag="SE" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="4" Height="4" Fill="Black" />
 
         <Border BorderBrush="Black" BorderThickness="4" Margin="4,4,4,4" Padding="0,0,0,8">
             <Border.Background>
                 <ImageBrush ImageSource="Icons/haw_tool_bg.jpg" Stretch="Fill"/>
             </Border.Background>
             <Grid>
-                <SeveQsCustomControls:FramelessTitleBar DoubleClick="FramelessTitleBar_DoubleClick" VerticalAlignment="Top" Foreground="White"/>
-                <CheckBox Click="CBIsFiltered_Click" IsChecked="{Binding IsGroupFilterActive, Mode=TwoWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:Window1}}}" Content="nach Gruppen filtern" x:Name="CBIsFiltered" Foreground="White" ScrollViewer.VerticalScrollBarVisibility="Disabled" HorizontalAlignment="Right" Margin="0,13,70,0" VerticalAlignment="Top" Padding="5,0,10,0" RenderTransformOrigin="1,1" d:LayoutOverrides="HorizontalAlignment" />
+                <SeveQsCustomControls:FramelessTitleBar DoubleClick="FramelessTitleBarDoubleClick" VerticalAlignment="Top" Foreground="White"/>
+                <CheckBox Click="CbIsFilteredClick" IsChecked="{Binding IsGroupFilterActive, Mode=TwoWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:Window1}}}" Content="nach Gruppen filtern" x:Name="CBIsFiltered" Foreground="White" ScrollViewer.VerticalScrollBarVisibility="Disabled" HorizontalAlignment="Right" Margin="0,13,70,0" VerticalAlignment="Top" Padding="5,0,10,0" RenderTransformOrigin="1,1" d:LayoutOverrides="HorizontalAlignment" />
                 <Grid Margin="8,37.96,8,0">
                     <DockPanel VerticalAlignment="Bottom" Height="60">
                         <ProgressBar x:Name="progressStatusBar" HorizontalAlignment="Center" VerticalAlignment="Center" Width="40" Height="15" Minimum="0" Maximum="100" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Visibility="Collapsed"/>
@@ -617,7 +633,7 @@
                                         <LineBreak /><LineBreak />
                                         <Run Text="Diese Software ist Freeware. Der Urheber behält sich das Recht vor, das gewählte Lizenzmodell jederzeit zu wechseln. Jede bis dahin veröffentlichte Version behält ihren Status; d.h. jede Lizenzänderung bezieht sich ausschließlich auf zukünftige Versionen." FontSize="10" FontFamily="Verdana" />
                                     </TextBlock>
-                                    <Button Content="Spenden (PayPal)" VerticalAlignment="Bottom" Height="30" FontWeight="Bold" FontFamily="Dotum" Click="DonateButton_Click" HorizontalAlignment="Center" Margin="0,0,0,60" Width="180" >
+                                    <Button Content="Spenden (PayPal)" VerticalAlignment="Bottom" Height="30" FontWeight="Bold" FontFamily="Dotum" Click="DonateButtonClick" HorizontalAlignment="Center" Margin="0,0,0,60" Width="180" >
                                         <Button.Background>
                                             <LinearGradientBrush EndPoint="0,1" StartPoint="0,0">
                                                 <GradientStop Color="#FFB6C3FF" Offset="0"/>
@@ -683,8 +699,8 @@
                         <Expander Header="akt. Vorlesung" Foreground="White">
                             <Grid>
                                 <StackPanel d:LayoutOverrides="Width">
-                                    <Button Click="selectedEventShowHide_Click" Tag="Show" x:Name="selectedEventShowAllButton" Style="{DynamicResource FlatButton}" ToolTip="Blendet alle Vorlesungen des gewälten Fachs ein" Content="Alle einblenden" d:LayoutOverrides="Height" Foreground="White"/>
-                                    <Button Click="selectedEventShowHide_Click" Tag="Hide" x:Name="selectedEventHideAllButton" Margin="0" Style="{DynamicResource FlatButton}" Content="Alle ausblenden" Foreground="White" d:LayoutOverrides="Height" ToolTip="Blendet alle Vorlesungen des gewälten Fachs aus"/>
+                                    <Button Click="SelectedEventShowHideClick" Tag="Show" x:Name="selectedEventShowAllButton" Style="{DynamicResource FlatButton}" ToolTip="Blendet alle Vorlesungen des gewälten Fachs ein" Content="Alle einblenden" d:LayoutOverrides="Height" Foreground="White"/>
+                                    <Button Click="SelectedEventShowHideClick" Tag="Hide" x:Name="selectedEventHideAllButton" Margin="0" Style="{DynamicResource FlatButton}" Content="Alle ausblenden" Foreground="White" d:LayoutOverrides="Height" ToolTip="Blendet alle Vorlesungen des gewälten Fachs aus"/>
                                 </StackPanel>
                             </Grid>
                         </Expander>

@@ -7,6 +7,6 @@
         <ScrollViewer Margin="8,100,8,45">
             <TextBox x:Name="ErrorMessageText" TextWrapping="Wrap" />
         </ScrollViewer>
-        <Button Content="OK" Click="Button_Click" VerticalAlignment="Bottom" IsDefault="True" Width="70" HorizontalAlignment="Right" Margin="8" />
+        <Button Content="OK" Click="ButtonClick" VerticalAlignment="Bottom" IsDefault="True" Width="70" HorizontalAlignment="Right" Margin="8" />
     </Grid>
 </Window>

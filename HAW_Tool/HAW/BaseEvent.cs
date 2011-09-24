@@ -1,32 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using LittleHelpers;
 
 namespace HAW_Tool.HAW
 {
     public class BaseEvent : XElementContainer
     {
-        string mCode = "";
-        GroupID mSelectedGroup = GroupID.Empty;
-        List<GroupID> mGroups = new List<GroupID>();
+        string _mCode = "";
+        GroupID _mSelectedGroup = GroupID.Empty;
+        readonly List<GroupID> _mGroups = new List<GroupID>();
 
         public string Semester
         {
             get
             {
-                int i;
-                for (i = 0; i < this.BasicCode.Length; i++)
+                int iCodeLength;
+                for (iCodeLength = 0; iCodeLength < BasicCode.Length; iCodeLength++)
                 {
+                    var length = iCodeLength;
                     var tEvts = from evt in PlanFile.Instance.KnownBaseEvents
-                                where evt.BasicCode.Substring(0, i) == this.BasicCode.Substring(0, i)
+                                where evt.BasicCode.Substring(0, length) == BasicCode.Substring(0, length)
                                 select evt;
 
                     if (tEvts.Count() <= 0) break;
                 }
 
-                return this.BasicCode.Substring(0, i);
+                return BasicCode.Substring(0, iCodeLength);
             }
         }
 
@@ -34,11 +32,11 @@ namespace HAW_Tool.HAW
         {
             get
             {
-                return mCode;
+                return _mCode;
             }
             set
             {
-                mCode = value;
+                _mCode = value;
             }
         }
 
@@ -46,7 +44,7 @@ namespace HAW_Tool.HAW
         {
             get
             {
-                return mGroups;
+                return _mGroups;
             }
         }
 
@@ -54,33 +52,33 @@ namespace HAW_Tool.HAW
         {
             get
             {
-                return mSelectedGroup;
+                return _mSelectedGroup;
             }
             set
             {
-                mSelectedGroup = value;
+                _mSelectedGroup = value;
             }
         }
 
-        public BaseEvent(IEvent Evt)
+        public BaseEvent(IEvent evt)
         {
-            mCode = Evt.BasicCode;
-            mGroups.Add(GroupID.Empty);
-            mGroups.AddRange(PlanFile.Instance.GetEventGroups(Evt));
-            mSelectedGroup = GroupID.Empty;
+            _mCode = evt.BasicCode;
+            _mGroups.Add(GroupID.Empty);
+            _mGroups.AddRange(PlanFile.Instance.GetEventGroups(evt));
+            _mSelectedGroup = GroupID.Empty;
         }
 
         public new string Label
         {
             get
             {
-                return mCode;
+                return _mCode;
             }
         }
 
         public override string ToString()
         {
-            return mCode;
+            return _mCode;
         }
     }
 }

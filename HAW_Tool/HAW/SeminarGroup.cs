@@ -84,7 +84,7 @@ namespace HAW_Tool.HAW
             {
                 if (mWeeks == null)
                 {
-                    mWeeks = new List<CalendarWeek>(from p in m_BaseElement.Elements("kw")
+                    mWeeks = new List<CalendarWeek>(from p in MBaseElement.Elements("kw")
                                                     select new CalendarWeek(this, p));
                 }
                 return mWeeks;
@@ -167,14 +167,14 @@ namespace HAW_Tool.HAW
 
 		// Public Methods (1) 
 
-        public static implicit operator SeminarGroup(XElement Element)
+        public static implicit operator SeminarGroup(XElement element)
         {
             return new SeminarGroup()
             {
-                m_BaseElement = Element,
-                m_Name = Element.Attribute("name").Value,
-                m_Version = Element.Attribute("version").Value,
-                m_LastUpdated = DateTime.Parse(PlanFile.CleanDateString(Element.Attribute("lastupdate").Value))
+                MBaseElement = element,
+                m_Name = element.Attribute("name").Value,
+                m_Version = element.Attribute("version").Value,
+                m_LastUpdated = DateTime.Parse(PlanFile.CleanDateString(element.Attribute("lastupdate").Value))
             };
         }
 		// Private Methods (1) 

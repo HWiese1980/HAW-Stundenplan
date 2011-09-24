@@ -87,7 +87,7 @@ namespace HAW_Tool.HAW
                             mAllEvents.AddRange(qryX);
                         }
 
-                        Console.WriteLine("AllEvents initialization with {0} done", grp);
+                        //Console.WriteLine(@"AllEvents initialization with {0} done", grp);
                     });
 
                     tPar.WaitForAll();

@@ -113,7 +113,7 @@ namespace LittleHelpers
                 _synchronizer.StopSynchronizing();
             }
 
-            public static IList GetSelectedItemsCollection(Selector selector)
+            private static IList GetSelectedItemsCollection(Selector selector)
             {
                 if (selector is MultiSelector)
                 {

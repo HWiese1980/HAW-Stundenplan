@@ -62,116 +62,116 @@ namespace HAW_Tool.HAW
             return tEvt;
         }
 
-        public static DateTime ParseYearWeekDayCode(string YWD)
+        public static DateTime ParseYearWeekDayCode(string ywd)
         {
-            if (YWD == null) throw new ArgumentNullException("YWD");
+            if (ywd == null) throw new ArgumentNullException("ywd");
 
-            string[] ywd = YWD.Split(':');
-            int year = Convert.ToInt32(ywd[0]);
-            int week = Convert.ToInt32(ywd[1]);
-            string day = ywd[2];
+            var tYWD = ywd.Split(':');
+            var year = Convert.ToInt32(tYWD[0]);
+            var week = Convert.ToInt32(tYWD[1]);
+            var day = tYWD[2];
 
-            DateTime tDate = FirstDayOfFirstWeek(year).AddDays((week - 1) * 7).AddDays(WeekHelper.DOW[day]);
+            var tDate = FirstDayOfFirstWeek(year).AddDays((week - 1) * 7).AddDays(WeekHelper.DOW[day]);
 
             return tDate;
         }
 
-        public static bool IsWeekPast(int Year, int Week)
+        public static bool IsWeekPast(int year, int week)
         {
-            return (Helper.EndOfWeek(Week, Year) < DateTime.Now.AddDays(-28));
+            return (EndOfWeek(week, year) < DateTime.Now.AddDays(-28));
         }
 
-        public static DateTime DayOfWeekToDateTime(int Year, int Week, int Day)
+        public static DateTime DayOfWeekToDateTime(int year, int week, int day)
         {
-            DateTime tFirst = StartOfWeek(Week, Year);
-            tFirst = tFirst.AddDays(Day);
+            DateTime tFirst = StartOfWeek(week, year);
+            tFirst = tFirst.AddDays(day);
             return tFirst;
         }
 
-        public static DateTime DayOfYearToDateTime(this int DayOfYear)
+        public static DateTime DayOfYearToDateTime(this int dayOfYear)
         {
-            if (DayOfYear < 1 || DayOfYear > 365) throw new ArgumentOutOfRangeException("Value must be 1 to 365");
+            if (dayOfYear < 1 || dayOfYear > 365) throw new ArgumentOutOfRangeException("dayOfYear");
             DateTime start = new DateTime(DateTime.Now.Year, 1, 1).AddDays(-1);
-            DateTime end = start.AddDays(DayOfYear);
+            DateTime end = start.AddDays(dayOfYear);
             return end;
         }
 
-        public static DateTime Earliest(params DateTime[] Dates)
+        public static DateTime Earliest(params DateTime[] dates)
         {
-            var t = from p in Dates
+            var t = from p in dates
                     orderby p ascending
                     select p;
 
             return t.First();
         }
 
-        public static TimeSpan Earliest(params TimeSpan[] Times)
+        public static TimeSpan Earliest(params TimeSpan[] times)
         {
-            var t = from p in Times
+            var t = from p in times
                     orderby p ascending
                     select p;
 
             return t.First();
         }
 
-        public static DateTime EndOfWeek(int Week, int Year)
+        public static DateTime EndOfWeek(int week, int year)
         {
-            DateTime tStartOfWeek = StartOfWeek(Week, Year);
+            var tStartOfWeek = StartOfWeek(week, year);
             while (tStartOfWeek.DayOfWeek != DayOfWeek.Friday) tStartOfWeek = tStartOfWeek.AddDays(1);
             return tStartOfWeek;
         }
 
-        public static DateTime FirstDayOfFirstWeek(int Year)
+        private static DateTime FirstDayOfFirstWeek(int year)
         {
-            DateTime tStart = new DateTime(Year, 1, 4);
+            var tStart = new DateTime(year, 1, 4);
             while (tStart.DayOfWeek != DayOfWeek.Monday) tStart = tStart.AddDays(-1);
             return tStart;
         }
 
-        public static bool IsBetween(this DateTime me, DateTime First, DateTime Last)
+        public static bool IsBetween(this DateTime me, DateTime first, DateTime last)
         {
-            return (First <= me & me <= Last);
+            return (first <= me & me <= last);
         }
 
-        public static bool IsNumeric(this string What)
+        public static bool IsNumeric(this string what)
         {
-            int iTemp = 0;
-            return Int32.TryParse(What, out iTemp);
+            int iTemp;
+            return Int32.TryParse(what, out iTemp);
         }
 
-        public static DateTime Latest(params DateTime[] Dates)
+        public static DateTime Latest(params DateTime[] dates)
         {
-            var t = from p in Dates
+            var t = from p in dates
                     orderby p descending
                     select p;
 
             return t.First();
         }
 
-        public static TimeSpan Latest(params TimeSpan[] Times)
+        public static TimeSpan Latest(params TimeSpan[] times)
         {
-            var t = from p in Times
+            var t = from p in times
                     orderby p descending
                     select p;
 
             return t.First();
         }
 
-        public static bool PeriodsOverlap(DateTime AStart, DateTime AEnd, DateTime BStart, DateTime BEnd)
+        public static bool PeriodsOverlap(DateTime aStart, DateTime aEnd, DateTime bStart, DateTime bEnd)
         {
-            bool bOverlap = false;
-            bOverlap |= AStart.IsBetween(BStart, BEnd);
-            bOverlap |= AEnd.IsBetween(BStart, BEnd);
-            bOverlap |= BStart.IsBetween(AStart, AEnd);
-            bOverlap |= BEnd.IsBetween(AStart, AEnd);
+            var bOverlap = false;
+            bOverlap |= aStart.IsBetween(bStart, bEnd);
+            bOverlap |= aEnd.IsBetween(bStart, bEnd);
+            bOverlap |= bStart.IsBetween(aStart, aEnd);
+            bOverlap |= bEnd.IsBetween(aStart, aEnd);
 
             return bOverlap;
         }
 
-        public static DateTime StartOfWeek(int Week, int Year)
+        public static DateTime StartOfWeek(int week, int year)
         {
-            DateTime tFirstWeekStart = FirstDayOfFirstWeek(Year);
-            for (int i = 1; i < Week; i++)
+            DateTime tFirstWeekStart = FirstDayOfFirstWeek(year);
+            for (var i = 1; i < week; i++)
             {
                 tFirstWeekStart = tFirstWeekStart.AddDays(1);
                 while (tFirstWeekStart.DayOfWeek != DayOfWeek.Monday) tFirstWeekStart = tFirstWeekStart.AddDays(1);
@@ -179,16 +179,16 @@ namespace HAW_Tool.HAW
             return tFirstWeekStart;
         }
 
-        public static int WeekCount(int Year)
+        public static int WeekCount(int year)
         {
-            DateTime firstJan = new DateTime(Year, 1, 1);
-            DateTime lastDec = new DateTime(Year, 12, 31);
+            var firstJan = new DateTime(year, 1, 1);
+            var lastDec = new DateTime(year, 12, 31);
             return (firstJan.DayOfWeek == DayOfWeek.Thursday | lastDec.DayOfWeek == DayOfWeek.Thursday) ? 53 : 52;
         }
 
-        public static int WeekOfDate(DateTime Date)
+        public static int WeekOfDate(DateTime date)
         {
-            int tWeek = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(Date, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+            int tWeek = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(date, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
             return tWeek;
         }
 

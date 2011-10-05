@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.ComponentModel;
 using System.Threading;
-using System.Diagnostics;
-using System.Timers;
 
 namespace HAW_Tool
 {
@@ -17,41 +13,41 @@ namespace HAW_Tool
 
     internal class Parallel<T>
     {
-        volatile int runningTasks = 0;
+        volatile int _runningTasks;
 
-        WorkingData<T>[] inputDataArray;
-        ManualResetEvent[] resetEvents;
+        WorkingData<T>[] _inputDataArray;
+        ManualResetEvent[] _resetEvents;
 
 
-        private void parallelWork(object s)
+        private void ParallelWork(object s)
         {
-            int threadNumber = (int)s;
+            var threadNumber = (int)s;
 
-            WorkingData<T> tLocalWrkData = inputDataArray[threadNumber];
+            var tLocalWrkData = _inputDataArray[threadNumber];
 
-            T workObj = (T)tLocalWrkData.Data;
+            var workObj = tLocalWrkData.Data;
 
             tLocalWrkData.Action(workObj);
 
-            resetEvents[threadNumber].Set();
+            _resetEvents[threadNumber].Set();
         }
 
         public void ForEach(IEnumerable<T> data, Action<T> action)
         {
-            T[] array = data.ToArray<T>();
-            runningTasks = array.Length;
+            var array = data.ToArray();
+            _runningTasks = array.Length;
 
-            inputDataArray = new WorkingData<T>[runningTasks];
-            resetEvents = new ManualResetEvent[runningTasks];
+            _inputDataArray = new WorkingData<T>[_runningTasks];
+            _resetEvents = new ManualResetEvent[_runningTasks];
 
-            for (int i = 0; i < runningTasks; i++)
+            for (int i = 0; i < _runningTasks; i++)
             {
-                WorkingData<T> tWork = new WorkingData<T>() { Data = array[i], Action = action };
+                var tWork = new WorkingData<T> { Data = array[i], Action = action };
                 
-                inputDataArray[i] = tWork;
-                resetEvents[i] = new ManualResetEvent(false);
+                _inputDataArray[i] = tWork;
+                _resetEvents[i] = new ManualResetEvent(false);
 
-                ThreadPool.QueueUserWorkItem(new WaitCallback(parallelWork), i);
+                ThreadPool.QueueUserWorkItem(ParallelWork, i);
             }
         }
 
@@ -59,9 +55,9 @@ namespace HAW_Tool
         {
             try 
             {
-                for (int i = 0; i < resetEvents.Length; i++)
+                foreach (ManualResetEvent t in _resetEvents)
                 {
-                    resetEvents[i].WaitOne();
+                    t.WaitOne();
                 }
             }
             catch 

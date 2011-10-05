@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace HAW_Tool.HAW
 {
@@ -19,9 +17,9 @@ namespace HAW_Tool.HAW
 
         public readonly static GroupID Empty = new GroupID();
 
-        public GroupID(string Value)
+        public GroupID(string value)
         {
-            this.Value = Value;
+            Value = value;
         }
 
         public GroupID()
@@ -29,11 +27,11 @@ namespace HAW_Tool.HAW
         {
         }
 
-        public static bool IsValidGroup(string Value)
+        public static bool IsValidGroup(string value)
         {
-            bool isValid = (Value.IsNumeric() 
-                | (Value.Length == 1 && "ABCDEFGHIJKLMNOPQRSTUVWXYZ".Contains(Convert.ToChar(Value)))
-                | (Value.Contains('+') && Value.Split('+').Max(p => p.Length) == 1));
+            var isValid = (value.IsNumeric() 
+                | (value.Length == 1 && "ABCDEFGHIJKLMNOPQRSTUVWXYZ".Contains(Convert.ToChar(value)))
+                | (value.Contains('+') && value.Split('+').Max(p => p.Length) == 1));
             return isValid;
         }
 
@@ -41,7 +39,7 @@ namespace HAW_Tool.HAW
         {
             get
             {
-                return !(this.Value.Contains('+'));
+                return !(Value.Contains('+'));
             }
         }
 
@@ -53,9 +51,29 @@ namespace HAW_Tool.HAW
 
         public int CompareTo(object obj)
         {
-            return this.Value.CompareTo(((GroupID)obj).Value);
+            return Value.CompareTo(((GroupID)obj).Value);
         }
 
         #endregion
+
+        public bool Equals(GroupID other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(other.Value, Value);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != typeof (GroupID)) return false;
+            return Equals((GroupID) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return (Value != null ? Value.GetHashCode() : 0);
+        }
     }
 }

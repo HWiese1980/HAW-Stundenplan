@@ -11,17 +11,15 @@ namespace Kingsmill.Windows
     /// <summary>
     /// Persists a Window's Size, Location and WindowState to UserScopeSettings 
     /// </summary>
-    public class WindowSettings
+    public sealed class WindowSettings
     {
         #region WindowApplicationSettings Helper Class
+
         public class WindowApplicationSettings : ApplicationSettingsBase
         {
-            private WindowSettings windowSettings;
-
             public WindowApplicationSettings(WindowSettings windowSettings)
-                : base(windowSettings.window.PersistId.ToString()) 
+                : base(windowSettings._window.PersistId.ToString())
             {
-                this.windowSettings = windowSettings;
             }
 
             [UserScopedSetting]
@@ -35,10 +33,7 @@ namespace Kingsmill.Windows
                     }
                     return Rect.Empty;
                 }
-                set
-                {
-                    this["Location"] = value;
-                }
+                set { this["Location"] = value; }
             }
 
             [UserScopedSetting]
@@ -52,30 +47,31 @@ namespace Kingsmill.Windows
                     }
                     return WindowState.Normal;
                 }
-                set
-                {
-                    this["WindowState"] = value;
-                }
+                set { this["WindowState"] = value; }
             }
-
         }
+
         #endregion
+
         #region Constructor
-        private Window window = null;
+
+        private Window _window;
 
         public WindowSettings(Window window)
         {
-            this.window = window;
+            _window = window;
         }
 
         #endregion
-        #region Attached "Save" Property Implementation 
+
+        #region Attached "Save" Property Implementation
+
         /// <summary>
         /// Register the "Save" attached property and the "OnSaveInvalidated" callback 
         /// </summary>
         public static readonly DependencyProperty SaveProperty
-           = DependencyProperty.RegisterAttached("Save", typeof(bool), typeof(WindowSettings),
-                new FrameworkPropertyMetadata(new PropertyChangedCallback(OnSaveInvalidated)));
+            = DependencyProperty.RegisterAttached("Save", typeof(bool), typeof(WindowSettings),
+                                                  new FrameworkPropertyMetadata(OnSaveInvalidated));
 
         public static void SetSave(DependencyObject dependencyObject, bool enabled)
         {
@@ -87,54 +83,57 @@ namespace Kingsmill.Windows
         /// </summary>
         private static void OnSaveInvalidated(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
         {
-            Window window = dependencyObject as Window;
+            var window = dependencyObject as Window;
             if (window != null)
             {
                 if ((bool)e.NewValue)
                 {
-                    WindowSettings settings = new WindowSettings(window);
+                    var settings = new WindowSettings(window);
                     settings.Attach();
-
                 }
             }
         }
 
         #endregion
+
         #region Protected Methods
 
         /// <summary>
         /// Load the Window Size Location and State from the settings object
         /// </summary>
-        protected virtual void LoadWindowState()
+        private void LoadWindowState()
         {
-            this.Settings.Reload();
-            this.window.WindowState = this.Settings.WindowState;
-            if (this.Settings.Location != Rect.Empty)
+            Settings.Reload();
+            _window.WindowState = Settings.WindowState;
+            if (Settings.Location != Rect.Empty)
             {
-                this.window.Left = this.Settings.Location.Left;
-                this.window.Top = this.Settings.Location.Top;
-                this.window.Width = this.Settings.Location.Width;
-                this.window.Height = this.Settings.Location.Height;
+                _window.Left = Settings.Location.Left;
+                _window.Top = Settings.Location.Top;
+                _window.Width = Settings.Location.Width;
+                _window.Height = Settings.Location.Height;
             }
         }
 
         /// <summary>
         /// Save the Window Size, Location and State to the settings object
         /// </summary>
-        protected virtual void SaveWindowState()
+        private void SaveWindowState()
         {
-            this.Settings.WindowState = this.window.WindowState;
-            this.Settings.Location = this.window.RestoreBounds;
-            this.Settings.Save();
+            Settings.WindowState = _window.WindowState;
+            Settings.Location = _window.RestoreBounds;
+            Settings.Save();
         }
+
         #endregion
+
         #region Private Methods
+
         private void Attach()
         {
-            if (this.window != null)
+            if (_window != null)
             {
-                this.window.Closing += new CancelEventHandler(window_Closing);
-                this.window.Initialized += new EventHandler(window_Initialized);
+                _window.Closing += window_Closing;
+                _window.Initialized += window_Initialized;
             }
         }
 
@@ -147,27 +146,28 @@ namespace Kingsmill.Windows
         {
             SaveWindowState();
         }
-        #endregion
-        #region Settings Property Implementation
-        private WindowApplicationSettings windowApplicationSettings = null;
 
-        protected virtual WindowApplicationSettings CreateWindowApplicationSettingsInstance()
-        {
-            return new WindowApplicationSettings(this);
-        }
+        #endregion
+
+        #region Settings Property Implementation
+
+        private WindowApplicationSettings _windowApplicationSettings;
 
         [Browsable(false)]
         public WindowApplicationSettings Settings
         {
             get
             {
-                if (windowApplicationSettings == null)
-                {
-                    this.windowApplicationSettings = CreateWindowApplicationSettingsInstance();
-                }
-                return this.windowApplicationSettings;
+                return _windowApplicationSettings ??
+                       (_windowApplicationSettings = CreateWindowApplicationSettingsInstance());
             }
         }
+
+        private WindowApplicationSettings CreateWindowApplicationSettingsInstance()
+        {
+            return new WindowApplicationSettings(this);
+        }
+
         #endregion
     }
 }

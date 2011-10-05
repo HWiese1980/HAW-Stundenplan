@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Runtime.Serialization;
-using System.Text.RegularExpressions;
+using System.Text;
 using HAW_Tool.Bittorrent;
 
 namespace HAW_Tool.HAW.REST
@@ -16,6 +15,7 @@ namespace HAW_Tool.HAW.REST
         Probe,
         Other
     }
+
     public enum ReplacementType
     {
         None,
@@ -30,7 +30,7 @@ namespace HAW_Tool.HAW.REST
     {
         #region Fields (1)
 
-        static DateTime unixEpoch;
+        private static DateTime _unixEpoch;
 
         #endregion Fields
 
@@ -38,29 +38,14 @@ namespace HAW_Tool.HAW.REST
 
         static RESTEvent()
         {
-            unixEpoch = new DateTime(1970, 1, 1, 0, 0, 0);
+            _unixEpoch = new DateTime(1970, 1, 1, 0, 0, 0);
         }
 
         #endregion Constructors
 
         #region Properties (34)
 
-        [DataMember(Name = "basiccode")]
-        public string BasicCode { get; set; }
-
-        [IgnoreDataMember]
-        public string Code
-        {
-            get
-            {
-                StringBuilder tBld = new StringBuilder();
-
-                tBld.Append(BasicCode);
-
-                if (this.Group != GroupID.Empty) tBld.AppendFormat("/{0:00}", this.Group);
-                return tBld.ToString();
-            }
-        }
+        private string _mYWDCode = "";
 
         [DataMember(Name = "creator")]
         public string Creator { get; set; }
@@ -73,13 +58,181 @@ namespace HAW_Tool.HAW.REST
         {
             get
             {
-                DateTime tTime = unixEpoch.AddSeconds(Convert.ToInt32(UnixTimeStamp));
+                var tTime = _unixEpoch.AddSeconds(Convert.ToInt32(UnixTimeStamp));
                 return tTime;
             }
             set
             {
-                int tSeconds = (int)((TimeSpan)(value - unixEpoch)).TotalSeconds;
-                this.UnixTimeStamp = tSeconds.ToString();
+                var tSeconds = (int) (value - _unixEpoch).TotalSeconds;
+                UnixTimeStamp = tSeconds.ToString();
+            }
+        }
+
+
+        [DataMember(Name = "group")]
+        private string JsonGroup
+        {
+            get { return (Group != null) ? Group.Value : String.Empty; }
+            set { Group = new GroupID(value); }
+        }
+
+        [DataMember(Name = "id")]
+        public int ID { get; set; }
+
+        [DataMember(Name = "further_inf")]
+        public string Info { get; set; }
+
+        [DataMember(Name = "date")]
+        private string JsonDate
+        {
+            get { return Date.ToShortDateString(); }
+            set { Date = DateTime.Parse(value); }
+        }
+
+        [DataMember(Name = "year_week_day")]
+        private string JsonYearWeekDayCode
+        {
+            get { return _mYWDCode; }
+            set
+            {
+                _mYWDCode = value;
+                Date = Helper.ParseYearWeekDayCode(_mYWDCode);
+            }
+        }
+
+        [DataMember(Name = "from")]
+        private string JsonFrom
+        {
+            get { return From.ToString(); }
+            set { From = TimeSpan.Parse(value); }
+        }
+
+
+        [DataMember(Name = "isobligatory")]
+        private string JsonIsObligatory
+        {
+            get { return (IsObligatory) ? "1" : "0"; }
+            set { IsObligatory = (value == "1"); }
+        }
+
+        [DataMember(Name = "takesplace")]
+        private string JsonTakesPlace
+        {
+            get { return (TakesPlace) ? "1" : "0"; }
+            set { TakesPlace = (value == "1"); }
+        }
+
+        [DataMember(Name = "till")]
+        private string JsonTill
+        {
+            get { return Till.ToString(); }
+            set { Till = TimeSpan.Parse(value); }
+        }
+
+        [DataMember(Name = "type")]
+        private string JsonType { get; set; }
+
+        [IgnoreDataMember]
+        public ReplacementType ReplacementType
+        {
+            get
+            {
+                if (Replaces == null) return ReplacementType.None;
+
+                switch (Replaces.ToLower())
+                {
+                    case "single":
+                        return ReplacementType.Single;
+                    case "some":
+                        return ReplacementType.Some;
+                    case "all":
+                        return ReplacementType.All;
+                    case "time":
+                        return ReplacementType.Time;
+                    default:
+                        return ReplacementType.None;
+                }
+            }
+        }
+
+        [DataMember(Name = "repeats")]
+        public int RepeatsEveryXWeeks { get; set; }
+
+        [DataMember(Name = "replaces")]
+        public string Replaces { get; set; }
+
+        [DataMember(Name = "replaces_end_week")]
+        public int ReplacesEndWeek
+        {
+            get
+            {
+                int weekCount = Helper.WeekCount(WeekRefYear);
+                if (_mRplStartWeek <= weekCount) weekCount = 0;
+
+                return _mRplEndWeek - weekCount;
+            }
+            set { _mRplEndWeek = value; }
+        }
+
+        [DataMember(Name = "replaces_start_week")]
+        public int ReplacesStartWeek
+        {
+            get
+            {
+                int weekCount = Helper.WeekCount(WeekRefYear);
+                if (_mRplStartWeek <= weekCount) weekCount = 0;
+
+                return _mRplStartWeek - weekCount;
+            }
+            set { _mRplStartWeek = value; }
+        }
+
+        [IgnoreDataMember]
+        public bool TakesPlace { get; set; }
+
+        [IgnoreDataMember]
+        public EntryType Type
+        {
+            get { return (EntryType) Enum.Parse(typeof (EntryType), JsonType); }
+            set { JsonType = Enum.GetName(typeof (EntryType), value); }
+        }
+
+        [IgnoreDataMember]
+        public string TypeCode
+        {
+            get
+            {
+                switch (Type)
+                {
+                    case EntryType.Exam:
+                        return ("[Klausur]");
+                    case EntryType.Test:
+                        return ("[Test]");
+                    case EntryType.Probe:
+                        return ("[Probekl.]");
+                    default:
+                        return "";
+                }
+            }
+        }
+
+        [DataMember(Name = "week_reference_year")]
+        private int WeekRefYear { get; set; }
+
+        [DataMember(Name = "basiccode")]
+        public string BasicCode { get; set; }
+
+        [IgnoreDataMember]
+        public string Code
+        {
+            get
+            {
+                var tBld = new StringBuilder();
+
+                tBld.Append(BasicCode);
+
+                if (Group != GroupID.Empty) tBld.AppendFormat("/{0:00}", Group);
+                return tBld.ToString();
             }
         }
 
@@ -92,52 +245,19 @@ namespace HAW_Tool.HAW.REST
         [IgnoreDataMember]
         public int DayOfWeek
         {
-            get
-            {
-                return (int)Date.DayOfWeek;
-            }
+            get { return (int) Date.DayOfWeek; }
         }
 
         [IgnoreDataMember]
-        public IEnumerable<RESTTorrent> Files
-        {
-            get;
-            set;
-        }
+        public IEnumerable<RESTTorrent> Files { get; set; }
 
         [IgnoreDataMember]
         public TimeSpan From { get; set; }
 
-
-
-        [DataMember(Name = "group")]
-        private string JsonGroup
-        {
-            get
-            {
-                return (Group != null) ? Group.Value : String.Empty;
-            }
-            set
-            {
-                this.Group = new GroupID(value);
-            }
-        }
-
-        public GroupID Group
-        { get; set; }
+        public GroupID Group { get; set; }
 
         [IgnoreDataMember]
         public string Hash { get; set; }
-
-        [DataMember(Name = "id")]
-        public int ID
-        {
-            get;
-            set;
-        }
-
-        [DataMember(Name = "further_inf")]
-        public string Info { get; set; }
 
         [IgnoreDataMember]
         public bool IsEnabled
@@ -149,151 +269,42 @@ namespace HAW_Tool.HAW.REST
         [IgnoreDataMember]
         public bool IsObligatory { get; set; }
 
-        [DataMember(Name = "date")]
-        private string JsonDate
-        {
-            get { return this.Date.ToShortDateString(); }
-            set { this.Date = DateTime.Parse(value); }
-        }
-
-        string mYWDCode = "";
-        [DataMember(Name = "year_week_day")]
-        private string JsonYearWeekDayCode
-        {
-            get
-            {
-                return mYWDCode;
-            }
-            set
-            {
-                mYWDCode = value;
-                this.Date = Helper.ParseYearWeekDayCode(mYWDCode);
-            }
-        }
-
-        [DataMember(Name = "from")]
-        private string JsonFrom
-        {
-            get { return this.From.ToString(); }
-            set { this.From = TimeSpan.Parse(value); }
-        }
-
-
-
-        [DataMember(Name = "isobligatory")]
-        private string JsonIsObligatory
-        {
-            get { return (this.IsObligatory) ? "1" : "0"; }
-            set { this.IsObligatory = (value == "1"); }
-        }
-
-        [DataMember(Name = "takesplace")]
-        private string JsonTakesPlace
-        {
-            get { return (this.TakesPlace) ? "1" : "0"; }
-            set { this.TakesPlace = (value == "1"); }
-        }
-
-        [DataMember(Name = "till")]
-        private string JsonTill
-        {
-            get { return this.Till.ToString(); }
-            set { this.Till = TimeSpan.Parse(value); }
-        }
-
-        [DataMember(Name = "type")]
-        private string JsonType { get; set; }
-
         public int Priority
         {
             get
             {
-                switch (this.Type)
+                switch (Type)
                 {
-                    case EntryType.Test: return 2;
-                    case EntryType.Exam: return 1;
+                    case EntryType.Test:
+                        return 2;
+                    case EntryType.Exam:
+                        return 1;
                 }
 
-                if (this.IsObligatory) return 3;
+                if (IsObligatory) return 3;
 
                 return 0;
             }
         }
 
         [IgnoreDataMember]
-        public ReplacementType ReplacementType
-        {
-            get
-            {
-                if (this.Replaces == null) return ReplacementType.None;
-
-                switch (this.Replaces.ToLower())
-                {
-                    case "single": return ReplacementType.Single;
-                    case "some": return ReplacementType.Some;
-                    case "all": return ReplacementType.All;
-                    case "time": return ReplacementType.Time;
-                    default: return ReplacementType.None;
-                }
-            }
-        }
-
-        [DataMember(Name = "repeats")]
-        public int RepeatsEveryXWeeks { get; set; }
-
-        [IgnoreDataMember]
         public IEnumerable<DateTime> OtherDates
         {
             get
             {
-                if (RepeatsEveryXWeeks == 0) return new DateTime[] { };
+                if (RepeatsEveryXWeeks == 0) return new DateTime[] {};
 
-                List<DateTime> tDates = new List<DateTime>();
+                var tDates = new List<DateTime>();
 
-                int tThisWeek = Helper.WeekOfDate(this.Date);
+                int tThisWeek = Helper.WeekOfDate(Date);
                 int tWeekCount = PlanFile.Instance.CoveredWeeks.Last().Week - tThisWeek;
                 for (int i = 0; i < tWeekCount; i += RepeatsEveryXWeeks)
                 {
-                    DateTime tDate = this.Date.AddDays(i * 7);
+                    DateTime tDate = Date.AddDays(i*7);
                     tDates.Add(tDate);
                 }
 
                 return tDates;
-            }
-        }
-
-        [DataMember(Name = "replaces")]
-        public string Replaces { get; set; }
-
-        [DataMember(Name = "replaces_end_week")]
-        public int ReplacesEndWeek
-        {
-            get
-            {
-                int weekCount = Helper.WeekCount(this.WeekRefYear);
-                if (mRplStartWeek <= weekCount) weekCount = 0;
-
-                return mRplEndWeek - weekCount;
-            }
-            set
-            {
-                mRplEndWeek = value;
-            }
-        }
-
-        [DataMember(Name = "replaces_start_week")]
-        public int ReplacesStartWeek
-        {
-            get
-            {
-                int weekCount = Helper.WeekCount(this.WeekRefYear);
-                if (mRplStartWeek <= weekCount) weekCount = 0;
-
-                return mRplStartWeek - weekCount;
-            }
-            set
-            {
-                mRplStartWeek = value;
             }
         }
 
@@ -314,38 +325,10 @@ namespace HAW_Tool.HAW.REST
         public string SeminarGroup { get; set; }
 
         [IgnoreDataMember]
-        public bool TakesPlace { get; set; }
-
-        [IgnoreDataMember]
         public TimeSpan Till { get; set; }
 
         [DataMember(Name = "tutor")]
         public string Tutor { get; set; }
-
-        [IgnoreDataMember]
-        public EntryType Type
-        {
-            get { return (EntryType)Enum.Parse(typeof(EntryType), this.JsonType); }
-            set { JsonType = Enum.GetName(typeof(EntryType), value); }
-        }
-
-        [IgnoreDataMember]
-        public string TypeCode
-        {
-            get
-            {
-                switch (this.Type)
-                {
-                    case EntryType.Exam: return ("[Klausur]");
-                    case EntryType.Test: return ("[Test]");
-                    case EntryType.Probe: return ("[Probekl.]");
-                    default: return "";
-                }
-            }
-        }
-
-        [DataMember(Name = "week_reference_year")]
-        private int WeekRefYear { get; set; }
 
         #endregion Properties
 
@@ -355,33 +338,34 @@ namespace HAW_Tool.HAW.REST
 
         public bool IsReplacementFor(IEvent evt)
         {
-            switch (this.ReplacementType)
+            switch (ReplacementType)
             {
                 case ReplacementType.All:
-                    return (evt.BasicCode == this.BasicCode);
+                    return (evt.BasicCode == BasicCode);
 
                 case ReplacementType.Some:
                     {
-                        DateTime tStart = Helper.StartOfWeek(this.ReplacesStartWeek, this.Date.Year);
-                        DateTime tEnd = Helper.EndOfWeek(this.ReplacesEndWeek, this.Date.Year);
-                        bool bSameCode = (evt.BasicCode == this.BasicCode);
-                        bool bSameDOW = (evt.Date.DayOfWeek == this.Date.DayOfWeek);
+                        DateTime tStart = Helper.StartOfWeek(ReplacesStartWeek, Date.Year);
+                        DateTime tEnd = Helper.EndOfWeek(ReplacesEndWeek, Date.Year);
+                        bool bSameCode = (evt.BasicCode == BasicCode);
+                        bool bSameDOW = (evt.Date.DayOfWeek == Date.DayOfWeek);
                         bool bIsBetween = evt.Date.IsBetween(tStart, tEnd);
                         return (bSameCode & bSameDOW & bIsBetween);
                     }
 
                 case ReplacementType.Single:
-                    return (evt.BasicCode == this.BasicCode && evt.Date == this.Date);
+                    return (evt.BasicCode == BasicCode && evt.Date == Date);
                 case ReplacementType.Time:
                     {
-                        DateTime astart = (this.Date + this.From), aend = (this.Date + this.Till);
+                        DateTime astart = (Date + From), aend = (Date + Till);
                         DateTime bstart = (evt.Date + evt.From), bend = (evt.Date + evt.Till);
                         return Helper.PeriodsOverlap(astart, aend, bstart, bend);
                     }
-                case ReplacementType.None:
-                default: return false;
+                default:
+                    return false;
             }
         }
+
         // Private Methods (2) 
 
         private void FetchTorrents()
@@ -398,6 +382,7 @@ namespace HAW_Tool.HAW.REST
 
         #endregion Methods
 
-        int mRplStartWeek, mRplEndWeek;
+        private int _mRplEndWeek;
+        private int _mRplStartWeek;
     }
 }

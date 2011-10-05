@@ -235,7 +235,7 @@ namespace HAW_Tool
                         if (tURL != String.Empty && Uri.IsWellFormedUriString(tURL, UriKind.Absolute))
                         {
                             Status = "Lade URL: " + tURL;
-                            PlanFile.LoadTXT(new Uri(tURL));
+                            PlanFile.LoadTxt(new Uri(tURL));
                         }
                         else
                         {

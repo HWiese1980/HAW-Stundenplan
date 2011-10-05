@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Xml.Linq;
-using System.Windows;
-using System.Globalization;
 using HAW_Tool.HAW.REST;
 using LittleHelpers;
 
@@ -12,28 +9,31 @@ namespace HAW_Tool.HAW
 {
     public class SeminarGroup : XElementContainer, IIsCurrent
     {
-		#region Fields (4) 
+        #region Fields (4)
 
-        DateTime m_LastUpdated;
-        string m_Name;
-        string m_Version;
-        List<CalendarWeek> mWeeks;
+        private DateTime _mLastUpdated;
+        private string _mName;
+        private string _mVersion;
+        private List<CalendarWeek> _mWeeks;
 
-		#endregion Fields 
+        #endregion Fields
 
-		#region Properties (12) 
+        #region Properties (12)
 
         private IEnumerable<IWeek> AdditionalWeeks
         {
             get
             {
-                AnonymousComparer<RESTWeek> tCmp = new AnonymousComparer<RESTWeek>((x, y) => { return (x.Week == y.Week & x.Year == y.Year); }, (x) => { return String.Format("{0}:{1}", x.Week, x.Year).GetHashCode(); });
+                var tCmp = new AnonymousComparer<RESTWeek>((x, y) => (x.Week == y.Week & x.Year == y.Year),
+                                                           x => String.Format("{0}:{1}", x.Week, x.Year).
+                                                                    GetHashCode());
 
-                var weeks = (from p in PlanFile.Instance.StoredEvents
-                             where p.SeminarGroup == this.FullName
-                             let tWeek = Helper.WeekOfDate(p.Date)
-                             where !this.AlreadyHasHAWWeek(tWeek, p.Date.Year)
-                             select new RESTWeek() { SeminarGroup = this, Week = tWeek, Year = p.Date.Year }).Distinct(tCmp).Cast<IWeek>();
+                IEnumerable<IWeek> weeks = (from p in PlanFile.Instance.StoredEvents
+                                            where p.SeminarGroup == FullName
+                                            let tWeek = Helper.WeekOfDate(p.Date)
+                                            where !AlreadyHasHAWWeek(tWeek, p.Date.Year)
+                                            select new RESTWeek {SeminarGroup = this, Week = tWeek, Year = p.Date.Year})
+                    .Distinct(tCmp).Cast<IWeek>();
 
 
                 return weeks;
@@ -44,7 +44,7 @@ namespace HAW_Tool.HAW
         {
             get
             {
-                return from weeks in this.CalendarWeeks
+                return from weeks in CalendarWeeks
                        from days in weeks.Days
                        from IEvent evt in days.Events
                        select evt;
@@ -55,16 +55,15 @@ namespace HAW_Tool.HAW
         {
             get
             {
-                int currentWeek = Helper.WeekOfDate(DateTime.Now);
+                /*int currentWeek = Helper.WeekOfDate(DateTime.Now);*/
 
 
-
-                var tCalWeeks = from p in this.CalenderWeeksInternal.Cast<IWeek>().Concat(this.AdditionalWeeks)
-                                orderby p.Week
-                                orderby p.Year
-                                // where p.Year == DateTime.Now.Year
-                                where !p.IsPast
-                                select (IWeek)p;
+                IEnumerable<IWeek> tCalWeeks = from p in CalenderWeeksInternal.Cast<IWeek>().Concat(AdditionalWeeks)
+                                               orderby p.Week
+                                               orderby p.Year
+                                               // where p.Year == DateTime.Now.Year
+                                               where !p.IsPast
+                                               select p;
 
                 //int tRefYear = tCalWeeks.First().Year;
 
@@ -82,12 +81,8 @@ namespace HAW_Tool.HAW
         {
             get
             {
-                if (mWeeks == null)
-                {
-                    mWeeks = new List<CalendarWeek>(from p in MBaseElement.Elements("kw")
-                                                    select new CalendarWeek(this, p));
-                }
-                return mWeeks;
+                return _mWeeks ?? (_mWeeks = new List<CalendarWeek>(from p in MBaseElement.Elements("kw")
+                                                                    select new CalendarWeek(this, p)));
             }
         }
 
@@ -95,14 +90,13 @@ namespace HAW_Tool.HAW
         {
             get
             {
-                var tCurr = from p in this.CalendarWeeks
-                            where Helper.StartOfWeek(p.Week, p.Year) <= DateTime.Now
-                                & DateTime.Now <= Helper.EndOfWeek(p.Week, p.Year)
-                            select p;
+                List<IWeek> tCurr = (from p in CalendarWeeks
+                                     where Helper.StartOfWeek(p.Week, p.Year) <= DateTime.Now
+                                           & DateTime.Now <= Helper.EndOfWeek(p.Week, p.Year)
+                                     select p).ToList();
 
-                if (tCurr.Count() <= 0) return null;
-
-                return tCurr.Single();
+                int count = tCurr.Count;
+                return count <= 0 ? null : tCurr.Single();
             }
         }
 
@@ -128,69 +122,69 @@ namespace HAW_Tool.HAW
 
         public string FullName
         {
-            get
-            {
-                return String.Format("{0}", m_Name);
-            }
+            get { return String.Format("{0}", _mName); }
         }
 
         public IEnumerable<string> GroupedEvents
         {
             get
             {
-                var gEvts = from week in this.CalenderWeeksInternal
-                       from day in week.Days
-                       from Event evt in day.Events
-                       where evt is Event
-                            where evt.Group != GroupID.Empty
-                       group evt by evt.BasicCode into groupedEvt
-                       select groupedEvt.Key;
+                IEnumerable<string> gEvts = from week in CalenderWeeksInternal
+                                            from day in week.Days
+                                            from IEvent evt in day.Events
+                                            where evt is Event
+                                            where evt.Group != GroupID.Empty
+                                            group evt by evt.BasicCode
+                                            into groupedEvt
+                                            select groupedEvt.Key;
                 return gEvts.ToArray();
             }
         }
 
-        public DateTime LastUpdated { get { return m_LastUpdated; } }
+        public DateTime LastUpdated
+        {
+            get { return _mLastUpdated; }
+        }
 
         public new string ToolTip
         {
-            get
-            {
-                return String.Format("{0} Version: {1} vom {2:d}", m_Name, m_Version, m_LastUpdated);
-            }
+            get { return String.Format("{0} Version: {1} vom {2:d}", _mName, _mVersion, _mLastUpdated); }
         }
 
-        public string Version { get { return m_Version; } }
+        public string Version
+        {
+            get { return _mVersion; }
+        }
 
-		#endregion Properties 
+        #endregion Properties
 
-		#region Methods (2) 
+        #region Methods (2)
 
-		// Public Methods (1) 
+        // Public Methods (1) 
 
         public static implicit operator SeminarGroup(XElement element)
         {
-            return new SeminarGroup()
-            {
-                MBaseElement = element,
-                m_Name = element.Attribute("name").Value,
-                m_Version = element.Attribute("version").Value,
-                m_LastUpdated = DateTime.Parse(PlanFile.CleanDateString(element.Attribute("lastupdate").Value))
-            };
+            return new SeminarGroup
+                       {
+// ReSharper disable PossibleNullReferenceException
+                           MBaseElement = element,
+                           _mName = element.Attribute("name").Value,
+                           _mVersion = element.Attribute("version").Value,
+                           _mLastUpdated =
+                               DateTime.Parse(PlanFile.CleanDateString(element.Attribute("lastupdate").Value))
+// ReSharper restore PossibleNullReferenceException
+                       };
         }
-		// Private Methods (1) 
 
-        private bool AlreadyHasHAWWeek(int Week, int Year)
+        // Private Methods (1) 
+
+        private bool AlreadyHasHAWWeek(int week, int year)
         {
-            foreach (CalendarWeek tInternalWeek in this.CalenderWeeksInternal)
-            {
-                int tAdd = (Year > tInternalWeek.Year) ? Helper.WeekCount(tInternalWeek.Year) : 0;
-                if (tInternalWeek.Week == Week + tAdd & (tAdd > 0 || tInternalWeek.Year == Year)) return true;
-            }
-            return false;
+            return (from tInternalWeek in CalenderWeeksInternal let tAdd = (year > tInternalWeek.Year) ? Helper.WeekCount(tInternalWeek.Year) : 0 where tInternalWeek.Week == week + tAdd & (tAdd > 0 || tInternalWeek.Year == year) select tInternalWeek).Any();
         }
 
-		#endregion Methods 
-    
+        #endregion Methods
+
         #region IIsCurrent Members
 
         public bool IsCurrent

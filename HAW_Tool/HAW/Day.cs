@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
+using System.Windows;
 using HAW_Tool.HAW.REST;
 
 namespace HAW_Tool.HAW
@@ -79,21 +81,19 @@ namespace HAW_Tool.HAW
             }
         }
 
-/*
         public bool HasAdditions
         {
             get
             {
                 var additionals = from p in StoredEvents
-                                  where p.SeminarGroup == this.Week.SeminarGroup.FullName
-                                  where p.Date == this.Date
+                                  where p.SeminarGroup == Week.SeminarGroup.FullName
+                                  where p.Date == Date
                                   select p;
                 return (additionals.Count() > 0);
             }
         }
-*/
 
-/*
+
         public bool HasReplacements
         {
             get
@@ -104,36 +104,41 @@ namespace HAW_Tool.HAW
                 return (replacements.Count() > 0);
             }
         }
-*/
 
-/*
+
         public double MinWidth
         {
             get
             {
                 try
                 {
-                    double rasterW = (double)Application.Current.FindResource("RasterH");
-                    TimeToCoord tConv = new TimeToCoord() { AsWidth = false, Multiplier = rasterW };
-                    TimeToCoord tWConv = new TimeToCoord() { AsWidth = true, Multiplier = rasterW };
+                    object rasterH = Application.Current.FindResource("RasterH");
+                    if (rasterH != null)
+                    {
+                        var rasterW = (double)rasterH;
+                        var tConv = new TimeToCoord { AsWidth = false, Multiplier = rasterW };
+                        var tWConv = new TimeToCoord { AsWidth = true, Multiplier = rasterW };
 
-                    var tLatest = from p in this.Events
-                                  orderby p.From descending
-                                  select p;
+                        var tLatest = from p in Events
+                                      orderby p.From descending
+                                      select p;
 
-                    double tPos = (double)tConv.Convert(new object[] { tLatest.First().From, tLatest.First() }, null, null, CultureInfo.CurrentCulture);
-                    tPos += (double)tWConv.Convert(new object[] { tLatest.First().From, tLatest.First() }, null, null, CultureInfo.CurrentCulture);
+                        var tPos = (double)tConv.Convert(new object[] { tLatest.First().From, tLatest.First() }, null, null, CultureInfo.CurrentCulture);
+                        tPos += (double)tWConv.Convert(new object[] { tLatest.First().From, tLatest.First() }, null, null, CultureInfo.CurrentCulture);
 
-                    return tPos + rasterW;
+                        return tPos + rasterW;
+                    }
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine(@"Error: {0}", e.Message);
                     return 0;
                 }
+
+                return 0;
             }
         }
-*/
+
 
         private IEnumerable<RESTEvent> StoredEvents
         {

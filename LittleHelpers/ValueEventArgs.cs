@@ -7,8 +7,7 @@ namespace LittleHelpers
 {
     public class ValueEventArgs<T> : EventArgs
     {
-        T mValue = default(T);
-        public T Value { get { return mValue; } set { mValue = value; } }
+        public T Value { get; set; }
     }
 
 }

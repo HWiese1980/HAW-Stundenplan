@@ -1,31 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace LittleHelpers
 {
     public class AnonymousComparer<T> : IEqualityComparer<T>
     {
-        readonly Func<T, T, bool> equals;
-        readonly Func<T, int> getHash;
+        readonly Func<T, T, bool> _equals;
+        readonly Func<T, int> _getHash;
 
         public AnonymousComparer(Func<T, T, bool> equals, Func<T, int> getHash)
         {
-            this.equals = equals;
-            this.getHash = getHash;
+            _equals = equals;
+            _getHash = getHash;
         }
 
         #region IEqualityComparer<T> Members
 
         public bool Equals(T x, T y)
         {
-            return this.equals(x, y);
+            return _equals(x, y);
         }
 
         public int GetHashCode(T obj)
         {
-            return this.getHash(obj);
+            return _getHash(obj);
         }
 
         #endregion

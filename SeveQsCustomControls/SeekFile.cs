@@ -1,16 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Microsoft.Win32;
 using LittleHelpers;
 
@@ -47,13 +38,13 @@ namespace SeveQsCustomControls
     /// </summary>
     public class SeekFile : HeaderedContentControl
     {
-        private static RoutedCommand mBrowseButtonCommand;
+        private static RoutedCommand _mBrowseButtonCommand;
 
         public static RoutedCommand BrowseButtonCommand
         {
             get
             {
-                return mBrowseButtonCommand;
+                return _mBrowseButtonCommand;
             }
         }
 
@@ -61,12 +52,12 @@ namespace SeveQsCustomControls
         {
             DefaultStyleKeyProperty.OverrideMetadata(typeof(SeekFile), new FrameworkPropertyMetadata(typeof(SeekFile)));
 
-            Helper.InstallCommand(ref mBrowseButtonCommand, "BrowseButtonCommand", typeof(SeekFile), OnBrowseButtonCommand, OnBrowseButtonCanExecute);
+            Helper.InstallCommand(ref _mBrowseButtonCommand, "BrowseButtonCommand", typeof(SeekFile), OnBrowseButtonCommand, OnBrowseButtonCanExecute);
         }
 
         private static void OnBrowseButtonCommand(object sender, ExecutedRoutedEventArgs e)
         {
-            SeekFile tSF = sender as SeekFile;
+            var tSF = sender as SeekFile;
             if (tSF != null) tSF.OnBrowseButton();
         }
 
@@ -77,14 +68,13 @@ namespace SeveQsCustomControls
 
         private void OnBrowseButton()
         {
-            OpenFileDialog tDlg = new OpenFileDialog();
-            tDlg.Filter = this.Filter;
+            var tDlg = new OpenFileDialog {Filter = Filter};
             if(!(bool)tDlg.ShowDialog()) return;
 
-            this.Content = tDlg.FileName;
+            Content = tDlg.FileName;
         }
 
-        public static DependencyProperty FilterProperty = DependencyProperty.Register("Filter", typeof(string), typeof(SeekFile));
+        public static readonly DependencyProperty FilterProperty = DependencyProperty.Register("Filter", typeof(string), typeof(SeekFile));
 
         public string Filter
         {

@@ -1,16 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using LittleHelpers;
 
 namespace SeveQsCustomControls
@@ -47,30 +39,30 @@ namespace SeveQsCustomControls
     [TemplatePart(Name = "PART_Title", Type = typeof(Label))]
     public class FramelessTitleBar : Control
     {
-        static RoutedCommand mMinCmd, mMaxCmd, mCloseCmd;
+        static RoutedCommand _mMinCmd, _mMaxCmd, _mCloseCmd;
 
         public static RoutedCommand MinimizeCommand
         {
-            get { return mMinCmd; }
+            get { return _mMinCmd; }
         }
 
         public static RoutedCommand MaximizeCommand
         {
-            get { return mMaxCmd; }
+            get { return _mMaxCmd; }
         }
 
         public static RoutedCommand CloseCommand
         {
-            get { return mCloseCmd; }
+            get { return _mCloseCmd; }
         }
 
         static FramelessTitleBar()
         {
             DefaultStyleKeyProperty.OverrideMetadata(typeof(FramelessTitleBar), new FrameworkPropertyMetadata(typeof(FramelessTitleBar)));
 
-            Helper.InstallCommand(ref mMinCmd, "MinimizeCommand", typeof(Button), OnCommand, OnCanExecuteCommand);
-            Helper.InstallCommand(ref mMaxCmd, "MaximizeCommand", typeof(Button), OnCommand, OnCanExecuteCommand);
-            Helper.InstallCommand(ref mCloseCmd, "CloseCommand", typeof(Button), OnCommand, OnCanExecuteCommand);
+            Helper.InstallCommand(ref _mMinCmd, "MinimizeCommand", typeof(Button), OnCommand, OnCanExecuteCommand);
+            Helper.InstallCommand(ref _mMaxCmd, "MaximizeCommand", typeof(Button), OnCommand, OnCanExecuteCommand);
+            Helper.InstallCommand(ref _mCloseCmd, "CloseCommand", typeof(Button), OnCommand, OnCanExecuteCommand);
         }
 
         protected override void OnPreviewMouseDoubleClick(MouseButtonEventArgs e)
@@ -81,7 +73,7 @@ namespace SeveQsCustomControls
 
         private void RaiseDoubleClickEvent()
         {
-            RoutedEventArgs e = new RoutedEventArgs(FramelessTitleBar.DoubleClickEvent);
+            var e = new RoutedEventArgs(DoubleClickEvent);
             RaiseEvent(e);
         }
 
@@ -97,36 +89,36 @@ namespace SeveQsCustomControls
         {
             base.OnApplyTemplate();
 
-            Label tLab = base.GetTemplateChild("PART_Title") as Label;
+            var tLab = GetTemplateChild("PART_Title") as Label;
             if (Helper.IsInDesignModeStatic)
             {
+                Debug.Assert(tLab != null, "tLab != null");
                 tLab.Content = "Designmode - no Window Title available";
                 return;
             }
 
-            Binding tBind = new Binding();
-            tBind.Source = this.GetWindow();
-            tBind.Path = new PropertyPath("Title");
-            tBind.Mode = BindingMode.OneWay;
+            var tBind = new Binding
+                            {Source = this.GetWindow(), Path = new PropertyPath("Title"), Mode = BindingMode.OneWay};
 
+            Debug.Assert(tLab != null, "tLab != null");
             tLab.SetBinding(ContentControl.ContentProperty, tBind);
         }
 
         private static void OnCommand(object sender, ExecutedRoutedEventArgs e)
         {
-            RoutedCommand tCmd = e.Command as RoutedCommand;
-            FramelessTitleBar tBar = (sender as DependencyObject).GetParent<FramelessTitleBar>();
+            var tCmd = e.Command as RoutedCommand;
+            var tBar = (sender as DependencyObject).GetParent<FramelessTitleBar>();
 
+            Debug.Assert(tCmd != null, "tCmd != null");
             switch (tCmd.Name)
             {
                 case "CloseCommand": tBar.OnClose(); break;
                 case "MinimizeCommand": tBar.SetWindowState(WindowState.Minimized); break;
                 case "MaximizeCommand": tBar.SetWindowState(WindowState.Maximized); break;
-                default: break;
             }
         }
 
-        Point mOldWindowPosition = new Point();
+        Point _mOldWindowPosition;
 
         private void SetWindowState(WindowState windowState)
         {
@@ -135,22 +127,20 @@ namespace SeveQsCustomControls
             if (windowState == WindowState.Maximized & tWnd.WindowState == WindowState.Maximized)
             {
                 tWnd.WindowState = WindowState.Normal;
-                tWnd.Left = mOldWindowPosition.X;
-                tWnd.Top = mOldWindowPosition.Y;
+                tWnd.Left = _mOldWindowPosition.X;
+                tWnd.Top = _mOldWindowPosition.Y;
                 return;
             }
-            else
-            {
-                mOldWindowPosition.X = tWnd.Left;
-                mOldWindowPosition.Y = tWnd.Top;
-            }
+            
+            _mOldWindowPosition.X = tWnd.Left;
+            _mOldWindowPosition.Y = tWnd.Top;
 
             tWnd.WindowState = windowState;
         }
 
         private void OnClose()
         {
-            Window tWnd = this.GetWindow();
+            var tWnd = this.GetWindow();
             if (tWnd == Application.Current.MainWindow) Application.Current.Shutdown();
 
             tWnd.Close();
@@ -158,7 +148,8 @@ namespace SeveQsCustomControls
 
         private static void OnCanExecuteCommand(object sender, CanExecuteRoutedEventArgs e)
         {
-            RoutedCommand tCmd = e.Command as RoutedCommand;
+            var tCmd = e.Command as RoutedCommand;
+            Debug.Assert(tCmd != null, "tCmd != null");
             switch (tCmd.Name)
             {
                 default: e.CanExecute = true; break;
@@ -167,7 +158,7 @@ namespace SeveQsCustomControls
 
         protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
         {
-            Window tWindow = this.GetWindow();
+            var tWindow = this.GetWindow();
             tWindow.DragMove();
         }
     }

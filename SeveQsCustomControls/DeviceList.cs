@@ -1,18 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using LittleHelpers;
-using System.Windows.Controls.Primitives;
 
 namespace SeveQsCustomControls
 {
@@ -53,62 +43,58 @@ namespace SeveQsCustomControls
         {
             DefaultStyleKeyProperty.OverrideMetadata(typeof(DeviceList), new FrameworkPropertyMetadata(typeof(DeviceList)));
 
-            Helper.InstallCommand(ref mAddDeviceCommand, "AddDeviceCommand", typeof(UIElement), OnCommand, OnCanExecuteCommand);
-            Helper.InstallCommand(ref mRemoveDeviceCommand, "RemoveDeviceCommand", typeof(UIElement), OnCommand, OnCanExecuteCommand);
-            Helper.InstallCommand(ref mMountDeviceCommand, "MountDeviceCommand", typeof(UIElement), OnCommand, OnCanExecuteCommand);
-            Helper.InstallCommand(ref mUnmountDeviceCommand, "UnmountDeviceCommand", typeof(UIElement), OnCommand, OnCanExecuteCommand);
-            Helper.InstallCommand(ref mLoadTCFavsCommand, "LoadTCFavsCommand", typeof(UIElement), OnCommand, OnCanExecuteCommand);
+            Helper.InstallCommand(ref _mAddDeviceCommand, "AddDeviceCommand", typeof(UIElement), OnCommand, OnCanExecuteCommand);
+            Helper.InstallCommand(ref _mRemoveDeviceCommand, "RemoveDeviceCommand", typeof(UIElement), OnCommand, OnCanExecuteCommand);
+            Helper.InstallCommand(ref _mMountDeviceCommand, "MountDeviceCommand", typeof(UIElement), OnCommand, OnCanExecuteCommand);
+            Helper.InstallCommand(ref _mUnmountDeviceCommand, "UnmountDeviceCommand", typeof(UIElement), OnCommand, OnCanExecuteCommand);
+            Helper.InstallCommand(ref _mLoadTCFavsCommand, "LoadTCFavsCommand", typeof(UIElement), OnCommand, OnCanExecuteCommand);
         }
 
-        ItemsPresenter mPresenter;
-        public DeviceList()
-        {
-        }
+        ItemsPresenter _mPresenter;
 
-        private static RoutedCommand mAddDeviceCommand;
-        private static RoutedCommand mRemoveDeviceCommand;
-        private static RoutedCommand mMountDeviceCommand;
-        private static RoutedCommand mUnmountDeviceCommand;
-        private static RoutedCommand mLoadTCFavsCommand;
+        private static RoutedCommand _mAddDeviceCommand;
+        private static RoutedCommand _mRemoveDeviceCommand;
+        private static RoutedCommand _mMountDeviceCommand;
+        private static RoutedCommand _mUnmountDeviceCommand;
+        private static RoutedCommand _mLoadTCFavsCommand;
 
-        public static RoutedCommand AddDeviceCommand { get { return mAddDeviceCommand; } }
-        public static RoutedCommand RemoveDeviceCommand { get { return mRemoveDeviceCommand; } }
-        public static RoutedCommand MountDeviceCommand { get { return mMountDeviceCommand; } }
-        public static RoutedCommand UnmountDeviceCommand { get { return mUnmountDeviceCommand; } }
-        public static RoutedCommand LoadTCFavsCommand { get { return mLoadTCFavsCommand; } }
+        public static RoutedCommand AddDeviceCommand { get { return _mAddDeviceCommand; } }
+        public static RoutedCommand RemoveDeviceCommand { get { return _mRemoveDeviceCommand; } }
+        public static RoutedCommand MountDeviceCommand { get { return _mMountDeviceCommand; } }
+        public static RoutedCommand UnmountDeviceCommand { get { return _mUnmountDeviceCommand; } }
+        public static RoutedCommand LoadTCFavsCommand { get { return _mLoadTCFavsCommand; } }
 
 
         private static void OnCommand(object sender, ExecutedRoutedEventArgs e)
         {
-            RoutedCommand tCmd = e.Command as RoutedCommand;
-            DeviceList tDevList = (sender as Control).GetParent<DeviceList>();
+            var tCmd = e.Command as RoutedCommand;
+            var tDevList = (sender as Control).GetParent<DeviceList>();
 
+            Debug.Assert(tCmd != null, "tCmd != null");
             tDevList.OnFireEvent(tCmd.Name);
 
             e.Handled = true;
         }
 
-        private void OnFireEvent(string Command)
+        private void OnFireEvent(string command)
         {
-            switch (Command)
+            switch (command)
             {
                 case "AddDeviceCommand": if (AddDevice != null) AddDevice(this, new RoutedEventArgs()); break;
                 case "RemoveDeviceCommand": if (RemoveDevice != null) RemoveDevice(this, new RoutedEventArgs()); break;
                 case "MountDeviceCommand": if (MountDevice != null) MountDevice(this, new RoutedEventArgs()); break;
                 case "UnmountDeviceCommand": if (UnmountDevice != null) UnmountDevice(this, new RoutedEventArgs()); break;
                 case "LoadTCFavsCommand": if (LoadTCFavs != null) LoadTCFavs(this, new RoutedEventArgs()); break;
-                default: break;
             }
         }
 
         private static void OnCanExecuteCommand(object sender, CanExecuteRoutedEventArgs e)
         {
             e.CanExecute = true;
-            RoutedCommand tCmd = e.Command as RoutedCommand;
-            switch (tCmd.Name)
-            {
-                default: break;
-            }
+//            var tCmd = e.Command as RoutedCommand;
+//             switch (tCmd.Name)
+//             {
+//             }
         }
 
     }

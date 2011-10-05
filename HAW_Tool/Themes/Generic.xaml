@@ -4,8 +4,8 @@
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
     xmlns:local="clr-namespace:HAW_Tool" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" xmlns:HAW_Tool_HAW="clr-namespace:HAW_Tool.HAW" xmlns:Microsoft_Windows_Themes="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero">
 
-    <sys:Double x:Key="RasterH">100</sys:Double>
-    <sys:Double x:Key="RasterV">65</sys:Double>
+    <sys:Double x:Key="RasterH">90</sys:Double>
+    <sys:Double x:Key="RasterV">60</sys:Double>
     <SolidColorBrush x:Key="PR" Color="AliceBlue" />
 
     <Style x:Key="ScrollableItemsControl" TargetType="{x:Type ItemsControl}">

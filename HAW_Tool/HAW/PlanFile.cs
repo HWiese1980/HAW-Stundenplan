@@ -1,32 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
-using System.Windows;
-using System.Text.RegularExpressions;
-using System.Net;
-using System.Xml.Linq;
-using System.IO.IsolatedStorage;
-using System.Xml;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
-using HAW_Tool.Aspects;
-using System.Collections.Specialized;
-using System.ComponentModel;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Windows;
+using System.Xml.Linq;
+using DDay.iCal;
+using DDay.iCal.Serialization.iCalendar;
+using HAW_Tool.Comparers;
+using HAW_Tool.HAW.REST;
+using HAW_Tool.Properties;
 using LittleHelpers;
 using DDayEvent = DDay.iCal.Event;
 // using DDay.iCal.DataTypes;
-using DDay.iCal;
 // using System.Net.Mail;
-using System.Xml.Serialization;
-using HAW_Tool.HAW.REST;
-using System.Diagnostics;
-using HAW_Tool.Comparers;
-using System.Threading;
-using HAW_Tool.Properties;
-using System.Globalization;
 
 namespace HAW_Tool.HAW
 {
@@ -34,22 +29,23 @@ namespace HAW_Tool.HAW
     {
         #region Fields (16)
 
-        static WebClient m_Client = new WebClient();
-        IEnumerable<XElement> m_CurrentWeeks;
-        int m_CurrentYear = 0;
-        XDocument m_Doc = null;
-        string m_FullContent = "";
-        private iCalendar m_iCal;
-        XElement m_Semgroups = new XElement("semgrps"), m_CurrentSemGroup;
-        List<RESTEvent> m_StoredEvents;
-        List<IEvent> mAllEvents;
-        Dictionary<string, Dictionary<string, Change>> mChanges = new Dictionary<string, Dictionary<string, Change>>();
-        List<SeminarGroup> mGroups;
-        static PlanFile mInstance;
-        static List<BaseEvent> mKnownBaseEvents;
-        static List<IEvent> mKnownEvents;
-        ObservableCollection<ChangeInfo> mLocalChanges = new ObservableCollection<ChangeInfo>();
-        ObservableCollection<ChangeInfo> mPublishedChanges = new ObservableCollection<ChangeInfo>();
+        private static WebClient _mClient = new WebClient();
+        private static List<BaseEvent> _mKnownBaseEvents;
+        private static List<IEvent> _mKnownEvents;
+        private List<IEvent> _mAllEvents;
+
+        private Dictionary<string, Dictionary<string, Change>> _mChanges =
+            new Dictionary<string, Dictionary<string, Change>>();
+
+        private List<SeminarGroup> _mGroups;
+        private ObservableCollection<ChangeInfo> _mPublishedChanges = new ObservableCollection<ChangeInfo>();
+        private XElement _mCurrentSemGroup;
+        private IEnumerable<XElement> _mCurrentWeeks;
+        private int _mCurrentYear;
+        private XDocument _mDoc;
+        private string _mFullContent = "";
+        private XElement _mSemgroups = new XElement("semgrps");
+        private List<RESTEvent> _mStoredEvents;
 
         #endregion Fields
 
@@ -57,6 +53,8 @@ namespace HAW_Tool.HAW
 
         private PlanFile()
         {
+            LocalChanges = new ObservableCollection<ChangeInfo>();
+            IsNotifyingChanges = true;
             Init_ObligatoryRegexPatternXDoc();
             Init_EventXDoc();
         }
@@ -69,30 +67,30 @@ namespace HAW_Tool.HAW
         {
             get
             {
-                if (mAllEvents == null)
+                if (_mAllEvents == null)
                 {
-                    Parallel<SeminarGroup> tPar = new Parallel<SeminarGroup>();
+                    var tPar = new Parallel<SeminarGroup>();
 
-                    mAllEvents = new List<IEvent>();
-                    tPar.ForEach(SeminarGroups, (grp) =>
-                    {
-                        var qryX = from weeks in grp.CalendarWeeks
-                                   from days in weeks.Days
-                                   from IEvent evt in days.Events
-                                   orderby evt.Code ascending
-                                   select evt;
+                    _mAllEvents = new List<IEvent>();
+                    tPar.ForEach(SeminarGroups, grp =>
+                                                    {
+                                                        var qryX = from weeks in grp.CalendarWeeks
+                                                                   from days in weeks.Days
+                                                                   from IEvent evt in days.Events
+                                                                   orderby evt.Code ascending
+                                                                   select evt;
 
-                        lock (mAllEvents)
-                        {
-                            mAllEvents.AddRange(qryX);
-                        }
+                                                        lock (_mAllEvents)
+                                                        {
+                                                            _mAllEvents.AddRange(qryX);
+                                                        }
 
-                        //Console.WriteLine(@"AllEvents initialization with {0} done", grp);
-                    });
+                                                        //Console.WriteLine(@"AllEvents initialization with {0} done", grp);
+                                                    });
 
                     tPar.WaitForAll();
                 }
-                return mAllEvents.OrderBy(p => p.Code);
+                return _mAllEvents.OrderBy(p => p.Code);
             }
         }
 
@@ -100,8 +98,14 @@ namespace HAW_Tool.HAW
         {
             get
             {
-                return from evt in mChanges
-                       select new ChangeInfo() { EventHash = evt.Key, Event = GetEventByCode(evt.Key), EventChanges = new List<Change>(evt.Value.Values) };
+                return from evt in _mChanges
+                       select
+                           new ChangeInfo
+                               {
+                                   EventHash = evt.Key,
+                                   Event = GetEventByCode(evt.Key),
+                                   EventChanges = new List<Change>(evt.Value.Values)
+                               };
             }
         }
 
@@ -109,11 +113,11 @@ namespace HAW_Tool.HAW
         {
             get
             {
-                var tWeeks = from p in SeminarGroups
-                             from q in p.CalendarWeeks
-                             select q;
+                IEnumerable<IWeek> tWeeks = from p in SeminarGroups
+                                            from q in p.CalendarWeeks
+                                            select q;
 
-                var tWeeksDistinct = tWeeks.Distinct(new WeekEqualityComparer());
+                IEnumerable<IWeek> tWeeksDistinct = tWeeks.Distinct(new WeekEqualityComparer());
                 return tWeeksDistinct;
             }
         }
@@ -132,49 +136,45 @@ namespace HAW_Tool.HAW
         {
             get
             {
-                var ret = from evt in this.KnownBaseEvents
-                          where evt.Groups.Count() > 1
-                          select evt;
+                IEnumerable<BaseEvent> ret = from evt in KnownBaseEvents
+                                             where evt.Groups.Count() > 1
+                                             select evt;
                 return ret.ToArray();
             }
         }
 
-        internal iCalendar iCalendar { get { return m_iCal; } }
+        // ReSharper disable InconsistentNaming
+        private iCalendar iCalendar { get; set; }
+        // ReSharper restore InconsistentNaming
 
-        public static PlanFile Instance
-        {
-            get
-            {
-                return mInstance;
-            }
-        }
+        public static PlanFile Instance { get; private set; }
 
         public IEnumerable<BaseEvent> KnownBaseEvents
         {
             get
             {
-                if (mKnownBaseEvents == null)
+                if (_mKnownBaseEvents == null)
                 {
                     OnStatusMessageChanged("Initialisiere Liste bekannter Basis Events");
 
-                    UniqueList<BaseEvent> tEvts = new UniqueList<BaseEvent>();
-                    Parallel<IEvent> tPar = new Parallel<IEvent>();
+                    var tEvts = new UniqueList<BaseEvent>();
+                    var tPar = new Parallel<IEvent>();
 
-                    tPar.ForEach(this.KnownEvents, (evt) =>
-                        {
-                            lock (tEvts)
-                            {
-                                BaseEvent tBaseEvt = new BaseEvent(evt);
-                                tEvts.Add(tBaseEvt, new BaseEventComparer());
-                            }
-                        });
+                    tPar.ForEach(KnownEvents, evt =>
+                                                  {
+                                                      lock (tEvts)
+                                                      {
+                                                          var tBaseEvt = new BaseEvent(evt);
+                                                          tEvts.Add(tBaseEvt, new BaseEventComparer());
+                                                      }
+                                                  });
 
                     tPar.WaitForAll();
 
-                    mKnownBaseEvents = new List<BaseEvent>(tEvts);
-                    OnStatusMessageChanged("Bekannte Basis Events: {0}", mKnownBaseEvents.Count);
+                    _mKnownBaseEvents = new List<BaseEvent>(tEvts);
+                    OnStatusMessageChanged("Bekannte Basis Events: {0}", _mKnownBaseEvents.Count);
                 }
-                return mKnownBaseEvents;
+                return _mKnownBaseEvents;
             }
         }
 
@@ -182,112 +182,128 @@ namespace HAW_Tool.HAW
         {
             get
             {
-                if (mKnownEvents == null)
+                if (_mKnownEvents == null)
                 {
                     OnStatusMessageChanged("Initialisiere Liste bekannter Events");
 
-                    var tEvents = this.AllEvents;
-                    tEvents = tEvents.Distinct<IEvent>(new EventComparer());
-                    mKnownEvents = new List<IEvent>(tEvents);
+                    IEnumerable<IEvent> tEvents = AllEvents;
+                    tEvents = tEvents.Distinct(new EventComparer());
+                    _mKnownEvents = new List<IEvent>(tEvents);
                 }
-                return mKnownEvents;
+                return _mKnownEvents;
             }
         }
 
-        public ObservableCollection<ChangeInfo> LocalChanges
-        {
-            get { return mLocalChanges; }
-            set { mLocalChanges = value; }
-        }
+        public ObservableCollection<ChangeInfo> LocalChanges { get; set; }
 
         public IEnumerable<string> ObligatoryRegexPatterns { get; set; }
 
         public ObservableCollection<ChangeInfo> PublishedChanges
         {
-            get { return mPublishedChanges; }
+            get { return _mPublishedChanges; }
         }
 
         public IEnumerable<SeminarGroup> SeminarGroups
         {
             get
             {
-                if (mGroups == null)
-                {
-                    mGroups = new List<SeminarGroup>(from p in m_Doc.Element("semgrps").Elements("semgrp")
-                                                     select (SeminarGroup)p);
-                }
-                return mGroups;
+                var xSemGroupsElement = _mDoc.Element("semgrps");
+                if (xSemGroupsElement != null) return _mGroups ?? (_mGroups = new List<SeminarGroup>(from p in xSemGroupsElement.Elements("semgrp")
+                                                                                                     select (SeminarGroup)p));
+                throw new Exception("semgrps");
             }
         }
 
         public IEnumerable<RESTEvent> StoredEvents
         {
-            get { return m_StoredEvents; }
+            get { return _mStoredEvents; }
         }
 
         public RESTUserData Userdata { get; set; }
 
         #endregion Properties
 
-        #region Delegates and Events (2)
-
         // Events (2) 
+
+        public bool IsNotifyingChanges { get; set; }
+
+        #region IIsCurrent Members
+
+        public bool IsCurrent
+        {
+            get { return false; }
+        }
+
+        #endregion
+
+        #region INotifyPropertyChanged Members
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        #endregion
 
         public static event EventHandler<ValueEventArgs<string>> StatusMessageChanged;
         public static event EventHandler<ValueEventArgs<int>> StatusProgressChanged;
 
-        #endregion Delegates and Events
+        private void OnPropetyChanged(string prop)
+        {
+            if (PropertyChanged != null) PropertyChanged(this, new PropertyChangedEventArgs(prop));
+        }
 
         #region Methods (33)
 
         // Public Methods (10) 
 
-        public void ExportAs(SeminarGroup Group, ExportType XType, string Filename)
+        public void ExportAs(SeminarGroup @group, ExportType xType, string filename)
         {
-            switch (XType)
+            switch (xType)
             {
                 case ExportType.iCal:
                     {
-                        this.Export_iCal(Group, Filename);
+                        Export_iCal(@group, filename);
                         break;
                     }
             }
         }
 
-        public Event GetEventByCode(string Hash)
+        public Event GetEventByCode(string hash)
         {
-            var tOut = from p in AllEvents where p is Event && p.Hash == Hash select (Event)p;
-            if (tOut.Count() <= 0) return default(Event);
-            return tOut.First();
+            var tOut = (from p in AllEvents where p is Event && p.Hash == hash select (Event)p).ToList();
+            return tOut.Count <= 0 ? default(Event) : tOut.First();
         }
 
         public IEnumerable<GroupID> GetEventGroups(IEvent Event)
         {
-            var tGrp = (from events in PlanFile.Instance.KnownEvents
+            if (Event == null) throw new ArgumentNullException("Event");
+            var tGrp = (from events in Instance.KnownEvents
                         where events.BasicCode == Event.BasicCode && events.Group != GroupID.Empty
                         orderby events.Group ascending
                         select events.Group).ToList();
-            for (int i = 0; i < tGrp.Count; i++)
+
+            for (var i = 0; i < tGrp.Count; i++)
             {
                 if (tGrp[i].Value.Contains('+'))
                 {
-                    var new_grps = from p in tGrp[i].Value.Split('+') select new GroupID(p);
+                    var newGrps = from p in tGrp[i].Value.Split('+') select new GroupID(p);
                     tGrp.RemoveAt(i);
-                    tGrp.AddRange(new_grps);
+                    tGrp.AddRange(newGrps);
                 }
             }
+
             return tGrp.Distinct(new KeyEqualityComparer<GroupID>(p => p.Value));
         }
 
-        public bool HasChangesByHash(string Hash)
+        public bool HasChangesByHash(string hash)
         {
-            return mChanges.ContainsKey(Hash);
+            return _mChanges.ContainsKey(hash);
         }
 
-        public bool HasReplacements(IEvent evt, Day Day)
+        public bool HasReplacements(IEvent evt, Day day)
         {
             var bydayandcode = from p in StoredEvents
-                               where (Day.Week == null || p.SeminarGroup == Day.Week.SeminarGroup.FullName)
+                               where
+                                   (day.Week == null ||
+                                    p.SeminarGroup == day.Week.SeminarGroup.FullName)
                                where p.IsReplacementFor(evt)
                                select p;
             bool bret = (bydayandcode.Count() > 0);
@@ -298,27 +314,37 @@ namespace HAW_Tool.HAW
         {
             try
             {
-                Properties.Settings tSettings = new HAW_Tool.Properties.Settings();
+                var tSettings = new Settings();
                 if (tSettings.HAWSettingsXML == "") return;
 
-                XDocument tSettingsDoc = XDocument.Parse(tSettings.HAWSettingsXML);
+                var tSettingsDoc = XDocument.Parse(tSettings.HAWSettingsXML);
 
-                XElement tHawSettings = tSettingsDoc.Element("hawtoolsettings");
-                XElement tGrpSettings = tHawSettings.Element("groupsettings");
-                XElement tChgSettings = tHawSettings.Element("evtchanges");
+                var tHawSettings = tSettingsDoc.Element("hawtoolsettings");
 
-                foreach (XElement tElm in tGrpSettings.Elements("group"))
+                Debug.Assert(tHawSettings != null, "tHawSettings != null");
+                var tGrpSettings = tHawSettings.Element("groupsettings");
+                var tChgSettings = tHawSettings.Element("evtchanges");
+
+                Debug.Assert(tGrpSettings != null, "tGrpSettings != null");
+                foreach (var tElm in tGrpSettings.Elements("group"))
                 {
-                    string tBaseCode = tElm.Attribute("code").Value;
-                    BaseEvent tEvt = GetBaseEventByCode(tBaseCode);
-                    if (tEvt != null)
-                        tEvt.Group = new GroupID(tElm.Attribute("groupno").Value);
+                    Debug.Assert(tElm != null, "tElm != null");
+                    var xCodeAttribute = tElm.Attribute("code");
+                    if (xCodeAttribute == null) continue;
+
+                    var tBaseCode = xCodeAttribute.Value;
+                    var tEvt = GetBaseEventByCode(tBaseCode);
+                    if (tEvt == null) continue;
+
+                    var xGroupAttribute = tElm.Attribute("groupno");
+                    if (xGroupAttribute != null)
+                        tEvt.Group = new GroupID(xGroupAttribute.Value);
                 }
 
-                foreach (XElement tElm in tChgSettings.Elements("changeinfo"))
+                Debug.Assert(tChgSettings != null, "tChgSettings != null");
+                foreach (var tInf in tChgSettings.Elements("changeinfo").Select(ChangeInfo.FromXML))
                 {
-                    ChangeInfo tInf = ChangeInfo.FromXML(tElm);
-                    mLocalChanges.Add(tInf);
+                    LocalChanges.Add(tInf);
                 }
 
                 //foreach (ChangeInfo tInf in this.FetchChanges())
@@ -342,7 +368,7 @@ namespace HAW_Tool.HAW
 
         public static void Initialize()
         {
-            mInstance = new PlanFile();
+            Instance = new PlanFile();
         }
 
         public void LoadComplete()
@@ -350,75 +376,81 @@ namespace HAW_Tool.HAW
             ImportGroupSettings();
         }
 
-        public static void LoadTXT(Uri URL)
+        public static void LoadTxt(Uri url)
         {
             string tDestPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            string tFile = Path.Combine(tDestPath, URL.Segments.Last());
+            string tFile = Path.Combine(tDestPath, url.Segments.Last());
 
             if (LittleHelpers.Helper.HasInternetConnection)
             {
                 try
                 {
-                    WebClient tCnt = new WebClient();
-                    tCnt.DownloadFile(URL, tFile);
+                    var tCnt = new WebClient();
+                    tCnt.DownloadFile(url, tFile);
                 }
                 catch (Exception exp)
                 {
-                    MessageBox.Show(String.Format("Konnte Stundenplan {0} nicht herunterladen: {1}", URL.AbsoluteUri, exp.Message), "Fehler", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(
+                        String.Format("Konnte Stundenplan {0} nicht herunterladen: {1}", url.AbsoluteUri, exp.Message),
+                        "Fehler", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
 
             if (!File.Exists(tFile))
             {
-                MessageBox.Show(String.Format("Lokale Stundenplan-Datei {0} existiert nicht.", tFile), "Fehler", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(String.Format("Lokale Stundenplan-Datei {0} existiert nicht.", tFile), "Fehler",
+                                MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
-            mInstance.LoadFile(tFile);
+            Instance.LoadFile(tFile);
         }
 
-        public void Login(string Username, string Password)
+        public void Login(string username, string password)
         {
-            HAWClient tClnt = new HAWClient();
-            Userdata = tClnt.Login(new RESTUserData() { Username = Username, Password = Password });
+            var tClnt = new HAWClient();
+            Userdata = tClnt.Login(new RESTUserData { Username = username, Password = password });
         }
+
         // Private Methods (19) 
 
-        private static string ConfigFilePath(string CfgFile)
+        private static string ConfigFilePath(string cfgFile)
         {
             string cfgPath = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+            Debug.Assert(cfgPath != null, "cfgPath != null");
             cfgPath = Path.Combine(cfgPath, "ConfigFiles");
-            cfgPath = Path.Combine(cfgPath, CfgFile);
+            cfgPath = Path.Combine(cfgPath, cfgFile);
             return cfgPath;
         }
 
-        private DDay.iCal.Event ConvertToDDayEvt(IEvent tEvt)
+        private DDayEvent ConvertToDDayEvt(IEvent tEvt)
         {
             return (DDayEvent)tEvt;
         }
 
         private XElement CreateEventElement(Match match)
         {
-            XElement tCode = new XElement("code", match.Groups["Code"].Value.ConvertUmlauts(UmlautConvertDirection.ToCrossWordFormat));
-            XElement tTutor = new XElement("dozent", match.Groups["Tutor"].Value);
-            XElement tRoom = new XElement("raum", match.Groups["Room"].Value);
-            XElement tDay = new XElement("tag", match.Groups["DayOfWeek"].Value);
-            XElement tFrom = new XElement("von", match.Groups["Start"].Value);
-            XElement tTill = new XElement("bis", match.Groups["End"].Value);
+            var tCode = new XElement("code",
+                                     match.Groups["Code"].Value.ConvertUmlauts(UmlautConvertDirection.ToCrossWordFormat));
+            var tTutor = new XElement("dozent", match.Groups["Tutor"].Value);
+            var tRoom = new XElement("raum", match.Groups["Room"].Value);
+            var tDay = new XElement("tag", match.Groups["DayOfWeek"].Value);
+            var tFrom = new XElement("von", match.Groups["Start"].Value);
+            var tTill = new XElement("bis", match.Groups["End"].Value);
 
-            XElement tEvent = new XElement("event",
-                tCode, tTutor, tRoom, tDay, tFrom, tTill);
+            var tEvent = new XElement("event",
+                                      tCode, tTutor, tRoom, tDay, tFrom, tTill);
 
             return tEvent;
         }
 
-        private void Export_iCal(SeminarGroup Group, string Filename)
+        private void Export_iCal(SeminarGroup @group, string filename)
         {
-            m_iCal = new iCalendar();
+            iCalendar = new iCalendar();
 
-            if (Group != null)
+            if (@group != null)
             {
-                FetchDDayEventsFromSeminarGroup(Group);
+                FetchDDayEventsFromSeminarGroup(@group);
             }
             else
             {
@@ -429,69 +461,68 @@ namespace HAW_Tool.HAW
                 }
             }
 
-            OnStatusMessageChanged("Alle Events in iCal Events umgewandelt... Export nach {0} startet", Filename);
+            OnStatusMessageChanged("Alle Events in iCal Events umgewandelt... Export nach {0} startet", filename);
 
-            DDay.iCal.Serialization.iCalendar.iCalendarSerializer tSer = new DDay.iCal.Serialization.iCalendar.iCalendarSerializer(m_iCal);
-            tSer.Serialize(Filename);
+            var tSer = new iCalendarSerializer();
+            tSer.Serialize(iCalendar, filename);
 
-            OnStatusMessageChanged("Export nach {0} abgeschlossen.", Filename);
+            OnStatusMessageChanged("Export nach {0} abgeschlossen.", filename);
         }
 
-        private void FetchDDayEventsFromSeminarGroup(SeminarGroup Group)
+        private void FetchDDayEventsFromSeminarGroup(SeminarGroup @group)
         {
-            foreach (IEvent tEvt in Group.EnabledEvents)
+            foreach (IEvent tEvt in @group.EnabledEvents)
             {
-                var tBase = from evt in this.KnownBaseEvents
+                var tBase = from evt in KnownBaseEvents
                             where evt.BasicCode == tEvt.BasicCode
-                            && (tEvt.Group == GroupID.Empty || tEvt.Group == evt.Group)
+                                  && (tEvt.Group == GroupID.Empty || tEvt.Group == evt.Group)
                             select evt;
 
                 if (!Window1.MainWindow.IsGroupFilterActive || tBase.Count() > 0)
                 {
-                    m_iCal.Events.Add(tEvt.AsDDayEvent());
+                    iCalendar.Events.Add(tEvt.AsDDayEvent());
                 }
                 else
                     OnStatusMessageChanged("Event {0} beim Export aufgrund von Gruppenfiltern ignoriert", tEvt.Code);
             }
         }
 
-        private BaseEvent GetBaseEventByCode(string Code)
+        private BaseEvent GetBaseEventByCode(string code)
         {
-            var x = from p in KnownBaseEvents where p.BasicCode == Code select p;
-            if (x.Count() <= 0) return null;
-            return x.Single();
+            var x = (from p in KnownBaseEvents where p.BasicCode == code select p).ToList();
+            return x.Count != 1 ? null : x.Single();
         }
 
         private void Init_EventXDoc()
         {
-            m_Doc = new XDocument(new XDeclaration("1.0", Encoding.UTF8.WebName, "yes")); ;
-
-            m_Doc.Add(m_Semgroups);
+            _mDoc = new XDocument(new XDeclaration("1.0", Encoding.UTF8.WebName, "yes"));
+            _mDoc.Add(_mSemgroups);
         }
 
         private void Init_ObligatoryRegexPatternXDoc()
         {
-            Settings tSet = new Settings();
-            StringCollection tColl = tSet.ObligatoryRegexPatterns;
+            var tSet = new Settings();
+            var tColl = tSet.ObligatoryRegexPatterns;
             var tCollStrings = from String p in tColl select p;
 
-            this.ObligatoryRegexPatterns = tCollStrings.ToArray();
+            ObligatoryRegexPatterns = tCollStrings.ToArray();
         }
 
-        private void LoadFile(string Filename)
+        private void LoadFile(string filename)
         {
             LoadStoredEvents();
 
 
             try
             {
-                var buff = File.ReadAllBytes(Filename);
-                m_FullContent = Encoding.Default.GetString(buff);
-                this.ParseFileTXT();
+                byte[] buff = File.ReadAllBytes(filename);
+                _mFullContent = Encoding.Default.GetString(buff);
+                ParseFileTxt();
             }
             catch (Exception e)
             {
-                MessageBox.Show(String.Format("Ein Fehler ist bei der Verarbeitung der Datei {0} aufgetreten: {1}", Filename, e.Message));
+                MessageBox.Show(String.Format("Ein Fehler ist bei der Verarbeitung der Datei {0} aufgetreten: {1}",
+                                              filename, e.Message));
                 return;
             }
         }
@@ -500,9 +531,9 @@ namespace HAW_Tool.HAW
         {
             try
             {
-                HAWClient tCnt = new HAWClient();
+                var tCnt = new HAWClient();
                 // var hawevts = tCnt.HAWEvents();
-                var evts = tCnt.Events();
+                RESTEvent[] evts = tCnt.Events();
 
                 // List<RESTEvent> hawEvents = new List<RESTEvent>(hawevts);
 
@@ -511,70 +542,83 @@ namespace HAW_Tool.HAW
                 //    hawEvents.RemoveAll(p => p.Date == tEvt.Date && p.BasicCode == tEvt.BasicCode); 
                 //}
 
-                m_StoredEvents = new List<RESTEvent>(evts/*.Concat(hawEvents)*/);
+                _mStoredEvents = new List<RESTEvent>(evts /*.Concat(hawEvents)*/);
             }
             catch (Exception e)
             {
-                MessageBox.Show("Beim Laden zusätzlicher Daten vom Server des Entwicklers trat folgender Fehler auf:\n\n  {0}\n\nBitte teile dies dem Entwickler mit.\nKontakt-Infos gibt's auf der Homepage http://blog.seveq.de.\n\nDanke!", e.Message);
-                m_StoredEvents = new List<RESTEvent>();
+                MessageBox.Show(
+                    "Beim Laden zusätzlicher Daten vom Server des Entwicklers trat folgender Fehler auf:\n\n  {0}\n\nBitte teile dies dem Entwickler mit.\nKontakt-Infos gibt's auf der Homepage http://blog.seveq.de.\n\nDanke!",
+                    e.Message);
+                _mStoredEvents = new List<RESTEvent>();
             }
         }
 
-        private void OnStatusMessageChanged(string Format, params object[] Params)
+        private void OnStatusMessageChanged(string format, params object[] Params)
         {
-            String newStatus = String.Format(Format, Params);
+            String newStatus = String.Format(format, Params);
             // Console.WriteLine(newStatus);
 
-            if (StatusMessageChanged != null) StatusMessageChanged(this, new ValueEventArgs<string>() { Value = newStatus });
+            if (StatusMessageChanged != null)
+                StatusMessageChanged(this, new ValueEventArgs<string> { Value = newStatus });
         }
 
         private void OnStatusProgressChanged(int percent)
         {
-            if (StatusProgressChanged != null) StatusProgressChanged(this, new ValueEventArgs<int>() { Value = percent });
+            if (StatusProgressChanged != null) StatusProgressChanged(this, new ValueEventArgs<int> { Value = percent });
         }
 
-        private void ParseFileTXT()
+        private void ParseFileTxt()
         {
-            string t_Full_wo_returns = m_FullContent.Replace("\r", "");
-            string[] lines = t_Full_wo_returns.Split('\n');
+            string tFullWoReturns = _mFullContent.Replace("\r", "");
+            string[] lines = tFullWoReturns.Split('\n');
 
-            Dictionary<Regex, string> t_Regexes = new Dictionary<Regex, string>();
+            var tRegexes = new Dictionary<Regex, string>
+                               {
+                                   {
+                                       new Regex(
+                                       @"\w+?\s+(?<Semester>.*?)\s*Vers\.\s*(?<Version>\d+?\.\d+?)\s+?vom\s+?(?<Datum>.+)")
+                                       , "version"
+                                       },
+                                   {new Regex(@"Semestergruppe\s+(?<Gruppe>.*?)$"), "gruppe"},
+                                   {new Regex(@"^(?:\d+(?:-|,\s+|$))+$"), "kw"},
+                                   {
+                                       new Regex(
+                                       @"^(?<Code>.+?),(?<Tutor>.*?),(?<Room>.+?),(?<DayOfWeek>\w+?),(?<Start>\d{1,2}\:\d{1,2}),(?<End>\d{1,2}\:\d{1,2})$")
+                                       , "event"
+                                       }
+                               };
             // [a-zA-Z]*?\s+(?<Semester>.*?)\s*Vers\.\s*(?<Version>\d+?\.\d+?)\s+?vom\s+?(?<Datum>.+)
             // t_Regexes.Add(new Regex(@"Stundenplan\s+?(?<Semester>.*?)\(Vers\.\s*?(?<Version>\d+?\.\d+?)\s+?vom(?<Datum>\s+?.+?)\)"), "version");
-            t_Regexes.Add(new Regex(@"\w+?\s+(?<Semester>.*?)\s*Vers\.\s*(?<Version>\d+?\.\d+?)\s+?vom\s+?(?<Datum>.+)"), "version");
-            t_Regexes.Add(new Regex(@"Semestergruppe\s+(?<Gruppe>.*?)$"), "gruppe");
-            t_Regexes.Add(new Regex(@"^(?:\d+(?:-|,\s+|$))+$"), "kw");
-            t_Regexes.Add(new Regex(@"^(?<Code>.+?),(?<Tutor>.*?),(?<Room>.+?),(?<DayOfWeek>\w+?),(?<Start>\d{1,2}\:\d{1,2}),(?<End>\d{1,2}\:\d{1,2})$"), "event");
 
-            string[] tLines = (from p in lines where p != String.Empty select p).ToArray();
+            var tLines = (from p in lines where p != String.Empty select p).ToArray();
 
-            int tLineCount = tLines.Length;
+            var tLineCount = tLines.Length;
 
-            for (int i = 0; i < tLineCount; i++)
+            for (var i = 0; i < tLineCount; i++)
             {
                 string line = tLines[i];
 
-                var tMatches = from p in t_Regexes.Keys
+                var tMatches = from p in tRegexes.Keys
                                where p.IsMatch(line)
                                select p;
 
-                foreach (Regex tRgx in tMatches)
+                foreach (var tRgx in tMatches)
                 {
-                    Match tMatch = tRgx.Match(line);
-                    ParseLine(t_Regexes[tRgx], tMatch);
+                    var tMatch = tRgx.Match(line);
+                    ParseLine(tRegexes[tRgx], tMatch);
                 }
             }
         }
 
-        private IEnumerable<XElement> ParseKW(string KWLine)
+        private IEnumerable<XElement> ParseKW(string kwLine)
         {
-            List<XElement> tElm = new List<XElement>();
+            var tElm = new List<XElement>();
 
-            var t_wBlocks = from string p in KWLine.Split(',')
-                            select p.Trim();
+            IEnumerable<string> tWBlocks = from string p in kwLine.Split(',')
+                                           select p.Trim();
 
-            Regex tFromTo = new Regex(@"^(?<from>\d+)-(?<to>\d+)$");
-            foreach (string tBlock in t_wBlocks)
+            var tFromTo = new Regex(@"^(?<from>\d+)-(?<to>\d+)$");
+            foreach (string tBlock in tWBlocks)
             {
                 if (tFromTo.IsMatch(tBlock))
                 {
@@ -584,12 +628,12 @@ namespace HAW_Tool.HAW
 
                     for (int i = tStart; i <= tEnd; i++)
                     {
-                        tElm.Add(new XElement("kw", new XAttribute("year", m_CurrentYear), new XAttribute("number", i)));
+                        tElm.Add(new XElement("kw", new XAttribute("year", _mCurrentYear), new XAttribute("number", i)));
                     }
                 }
                 else
                 {
-                    tElm.Add(new XElement("kw", new XAttribute("year", m_CurrentYear), new XAttribute("number", tBlock)));
+                    tElm.Add(new XElement("kw", new XAttribute("year", _mCurrentYear), new XAttribute("number", tBlock)));
                 }
             }
             return tElm.AsEnumerable();
@@ -605,28 +649,28 @@ namespace HAW_Tool.HAW
 
                         DateTime date = ParseDate(dateString);
 
-                        m_CurrentYear = date.Year;
-                        m_CurrentSemGroup = new XElement("semgrp",
-                            new XAttribute("version", match.Groups["Version"].Value),
-                            new XAttribute("lastupdate", match.Groups["Datum"].Value));
+                        _mCurrentYear = date.Year;
+                        _mCurrentSemGroup = new XElement("semgrp",
+                                                         new XAttribute("version", match.Groups["Version"].Value),
+                                                         new XAttribute("lastupdate", match.Groups["Datum"].Value));
                         break;
                     }
                 case "gruppe":
                     {
                         Group grp = match.Groups["Gruppe"];
-                        m_CurrentSemGroup.Add(new XAttribute("name", grp.Value));
-                        m_Semgroups.Add(m_CurrentSemGroup);
+                        _mCurrentSemGroup.Add(new XAttribute("name", grp.Value));
+                        _mSemgroups.Add(_mCurrentSemGroup);
                         break;
                     }
                 case "kw":
                     {
-                        m_CurrentWeeks = ParseKW(match.Value);
-                        m_CurrentSemGroup.Add(m_CurrentWeeks);
+                        _mCurrentWeeks = ParseKW(match.Value);
+                        _mCurrentSemGroup.Add(_mCurrentWeeks);
                         break;
                     }
                 case "event":
                     {
-                        foreach (XElement tWeek in m_CurrentWeeks)
+                        foreach (XElement tWeek in _mCurrentWeeks)
                         {
                             tWeek.Add(CreateEventElement(match));
                         }
@@ -637,31 +681,33 @@ namespace HAW_Tool.HAW
 
         public static string CleanDateString(string dateString)
         {
-            Regex rgxClearDate = new Regex(@"\d{1,2}\.\d{1,2}\.\d{1,4}");
-            dateString = rgxClearDate.Match(dateString).Value; 
+            var rgxClearDate = new Regex(@"\d{1,2}\.\d{1,2}\.\d{1,4}");
+            dateString = rgxClearDate.Match(dateString).Value;
             return dateString;
         }
 
-        DateTime ParseDate(string dateString)
+        private static DateTime ParseDate(string dateString)
         {
-            string[] dateFormats = new string[] {
-                "dd.MM.yyyy",
-                "dd.MM.yy"
-            };
+            var dateFormats = new[]
+                                  {
+                                      "dd.MM.yyyy",
+                                      "dd.MM.yy"
+                                  };
 
             foreach (string dateFormat in dateFormats)
             {
                 DateTime temp;
-                DateTimeStyles style = DateTimeStyles.AllowWhiteSpaces;
-                if (DateTime.TryParseExact(dateString, dateFormat, CultureInfo.CurrentCulture, style, out temp)) return temp;
+                const DateTimeStyles style = DateTimeStyles.AllowWhiteSpaces;
+                if (DateTime.TryParseExact(dateString, dateFormat, CultureInfo.CurrentCulture, style, out temp))
+                    return temp;
             }
 
             return DateTime.MinValue;
         }
 
-        void RefreshChangesFrom(IEnumerable<ChangeInfo> Changes)
+        private void RefreshChangesFrom(IEnumerable<ChangeInfo> changes)
         {
-            foreach (ChangeInfo tInf in Changes)
+            foreach (ChangeInfo tInf in changes)
             {
                 Event tEvt = tInf.Event;
                 foreach (Change tChange in tInf.EventChanges)
@@ -674,75 +720,79 @@ namespace HAW_Tool.HAW
             }
         }
 
-        void RefreshChangesFromLocal()
+        private void RefreshChangesFromLocal()
         {
-            RefreshChangesFrom(mLocalChanges);
+            RefreshChangesFrom(LocalChanges);
         }
 
-        void RefreshChangesFromRemote()
+        private void RefreshChangesFromRemote()
         {
-            RefreshChangesFrom(mPublishedChanges);
+            RefreshChangesFrom(_mPublishedChanges);
         }
 
-        private static void SetPropertyBase64(object TheObject, string Property, string Base64String)
+        private static void SetPropertyBase64(object theObject, string property, string base64String)
         {
-            if (TheObject == null) return;
-            PropertyInfo tProp = TheObject.GetType().GetProperty(Property);
-            if (tProp == null) throw new ArgumentException(String.Format("Die Property {0} ist in dem Objekt des Typs {1} nicht enthalten", Property, TheObject.GetType()));
+            if (theObject == null) return;
+            var tProp = theObject.GetType().GetProperty(property);
+            if (tProp == null)
+                throw new ArgumentException(
+                    String.Format("Die Property {0} ist in dem Objekt des Typs {1} nicht enthalten", property,
+                                  theObject.GetType()));
 
-            MemoryStream tStrm = new MemoryStream(Convert.FromBase64String(Base64String));
-            BinaryFormatter tBin = new BinaryFormatter();
+            var tStrm = new MemoryStream(Convert.FromBase64String(base64String));
+            var tBin = new BinaryFormatter();
 
             tStrm.Seek(0, SeekOrigin.Begin);
 
-            object tVal = tBin.Deserialize(tStrm);
-            tProp.SetValue(TheObject, tVal, null);
+            var tVal = tBin.Deserialize(tStrm);
+            tProp.SetValue(theObject, tVal, null);
         }
+
         // Internal Methods (4) 
 
-        internal void AddChange(Event Evt, string Property, object OldValue, object NewValue)
+        internal void AddChange(Event evt, string property, object oldValue, object newValue)
         {
-            if (!mChanges.ContainsKey(Evt.Hash)) mChanges.Add(Evt.Hash, new Dictionary<string, Change>());
-            Dictionary<string, Change> tChange = mChanges[Evt.Hash];
+            if (!_mChanges.ContainsKey(evt.Hash)) _mChanges.Add(evt.Hash, new Dictionary<string, Change>());
+            var tChange = _mChanges[evt.Hash];
 
-            if (tChange.ContainsKey(Property))
+            if (tChange.ContainsKey(property))
             {
-                if (tChange[Property].OldValue.Equals(NewValue))
-                    tChange.Remove(Property);
+                if (tChange[property].OldValue.Equals(newValue))
+                    tChange.Remove(property);
                 else
-                    tChange[Property].NewValue = NewValue;
+                    tChange[property].NewValue = newValue;
 
                 if (tChange.Count == 0)
-                    mChanges.Remove(Evt.Hash);
+                    _mChanges.Remove(evt.Hash);
             }
             else
             {
-                Change tNew = new Change(Property, OldValue, NewValue);
-                tChange.Add(Property, tNew);
+                var tNew = new Change(property, oldValue, newValue);
+                tChange.Add(property, tNew);
             }
 
             OnPropetyChanged("Changes");
         }
 
-        internal Change GetChange(string EventHash, string tPropName)
+        internal Change GetChange(string eventHash, string tPropName)
         {
-            var tChanges = from inf in mPublishedChanges
-                           where inf.EventHash == EventHash
-                           from chg in inf.EventChanges
-                           where chg.Property == tPropName
-                           orderby chg.Timestamp ascending
-                           select chg;
+            var tChanges = (from inf in _mPublishedChanges
+                            where inf.EventHash == eventHash
+                            from chg in inf.EventChanges
+                            where chg.Property == tPropName
+                            orderby chg.Timestamp ascending
+                            select chg).ToList();
 
-            return (tChanges.Count() > 0) ? tChanges.Last() : null;
+            return (tChanges.Count > 0) ? tChanges.Last() : null;
         }
 
         internal void ResetChanges(string tHash)
         {
-            if (!mChanges.ContainsKey(tHash)) return;
+            if (!_mChanges.ContainsKey(tHash)) return;
 
-            PlanFile.Instance.IsNotifyingChanges = false;
+            Instance.IsNotifyingChanges = false;
 
-            Change[] tList = mChanges[tHash].Values.ToArray();
+            Change[] tList = _mChanges[tHash].Values.ToArray();
             Event tEvt = GetEventByCode(tHash);
             int tCount = tList.Count();
             for (int i = 0; i < tCount; i++)
@@ -753,24 +803,24 @@ namespace HAW_Tool.HAW
                 tEvt.OnValueChanged(tChange.Property);
             }
 
-            mChanges.Remove(tHash);
+            _mChanges.Remove(tHash);
 
             OnPropetyChanged("Changes");
 
             tEvt.OnValueChanged("HasChanges");
-            PlanFile.Instance.IsNotifyingChanges = true;
+            Instance.IsNotifyingChanges = true;
         }
 
         internal void SaveSettings()
         {
-            Properties.Settings tSettings = new HAW_Tool.Properties.Settings();
+            var tSettings = new Settings();
 
-            XDocument tDoc = new XDocument();
-            XElement tHAWSettingsElm = new XElement("hawtoolsettings");
-            tHAWSettingsElm.Add(new XElement("groupsettings", from elm in PlanFile.Instance.GroupedBaseEvents
+            var tDoc = new XDocument();
+            var tHAWSettingsElm = new XElement("hawtoolsettings");
+            tHAWSettingsElm.Add(new XElement("groupsettings", from elm in Instance.GroupedBaseEvents
                                                               select new XElement("group",
-                                                                  new XAttribute("code", elm.BasicCode),
-                                                                  new XAttribute("groupno", elm.Group))));
+                                                                                  new XAttribute("code", elm.BasicCode),
+                                                                                  new XAttribute("groupno", elm.Group))));
 
             //tHAWSettingsElm.Add(new XElement("evtchanges", from key in PlanFile.Instance.mChanges.Keys
             //                                               select new XElement("event", new XAttribute("hash", key),
@@ -788,44 +838,13 @@ namespace HAW_Tool.HAW
         }
 
         #endregion Methods
-
-
-
-        #region INotificationEnabled Members
-
-        bool bNotifyingChanges = true;
-        public bool IsNotifyingChanges
-        {
-            get { return bNotifyingChanges; }
-            set { bNotifyingChanges = value; }
-        }
-
-        #endregion
-
-        #region INotifyPropertyChanged Members
-
-        private void OnPropetyChanged(string Prop)
-        {
-            if (PropertyChanged != null) PropertyChanged(this, new PropertyChangedEventArgs(Prop));
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        #endregion
-
-        #region IIsCurrent Members
-
-        public bool IsCurrent
-        {
-            get { return false; }
-        }
-
-        #endregion
     }
 
     public enum ExportType
     {
+// ReSharper disable InconsistentNaming
         iCal,
+// ReSharper restore InconsistentNaming
         Plain
     }
 }

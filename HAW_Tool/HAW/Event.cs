@@ -44,6 +44,7 @@ namespace HAW_Tool.HAW
             MBaseElement = baseElement;
 
             Debug.Assert(baseElement != null, "baseElement != null");
+// ReSharper disable PossibleNullReferenceException
             _mCode = ParseCode(baseElement.Element("code").Value);
 
             _mTutor = baseElement.Element("dozent").Value;
@@ -52,6 +53,7 @@ namespace HAW_Tool.HAW
 
             var tFrom = DateTime.Parse(baseElement.Element("von").Value).TimeOfDay;
             var tTill = DateTime.Parse(baseElement.Element("bis").Value).TimeOfDay;
+            // ReSharper restore PossibleNullReferenceException
 
 
             _mKw = kw.Week;

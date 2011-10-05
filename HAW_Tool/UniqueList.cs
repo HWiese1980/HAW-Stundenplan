@@ -13,9 +13,9 @@ namespace HAW_Tool
             base.Add(obj);
         }
 
-        public void Add(T obj, IEqualityComparer<T> Comparer)
+        public void Add(T obj, IEqualityComparer<T> comparer)
         {
-            if (this.Contains(obj, Comparer)) return;
+            if (this.Contains(obj, comparer)) return;
             base.Add(obj);
         }
     }

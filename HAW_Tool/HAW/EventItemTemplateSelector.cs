@@ -12,12 +12,13 @@ namespace HAW_Tool.HAW
     {
         public override System.Windows.DataTemplate SelectTemplate(object item, System.Windows.DependencyObject container)
         {
-            DataTemplate tEventTmpl = (DataTemplate)Application.Current.MainWindow.FindResource("EventItemTemplate");
-            DataTemplate tRESTEventTmpl = (DataTemplate)Application.Current.MainWindow.FindResource("RESTEventItemTemplate");
+            var tMetroTemplate = (DataTemplate)Application.Current.MainWindow.FindResource("MetroEventTemplate");
+            var tEventTmpl = (DataTemplate) Application.Current.MainWindow.FindResource("EventItemTemplate");
+            var tRESTEventTmpl = (DataTemplate) Application.Current.MainWindow.FindResource("RESTEventItemTemplate");
 
-            if (item is Event) return tEventTmpl;
+            if (item is Event) return tMetroTemplate;
             if (item is RESTEvent) return tRESTEventTmpl;
-            
+
             return base.SelectTemplate(item, container);
         }
     }

@@ -56,26 +56,22 @@ namespace SeveQsCustomControls
 
         internal void OnSelectedItemChanged()
         {
-            this.OnPropertyChanged("SelectedItem");
+            OnPropertyChanged("SelectedItem");
         }
 
         public object SelectedItem
         {
             get
             {
-                foreach (RasteredItemsControl tRIC in this.GetChildren<RasteredItemsControl>())
-                {
-                    if (tRIC.SelectedItem != null) return tRIC.SelectedItem;
-                }
-                return null;
+                return (from tRIC in this.GetChildren<RasteredItemsControl>() where tRIC.SelectedItem != null select tRIC.SelectedItem).FirstOrDefault();
             }
         }
 
         #region INotifyPropertyChanged Members
 
-        private void OnPropertyChanged(string Property)
+        private void OnPropertyChanged(string property)
         {
-            if (PropertyChanged != null) PropertyChanged(this, new PropertyChangedEventArgs(Property));
+            if (PropertyChanged != null) PropertyChanged(this, new PropertyChangedEventArgs(property));
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

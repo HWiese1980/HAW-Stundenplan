@@ -9,9 +9,9 @@ namespace LittleHelpers
     public class HiPerf
     {
         [DllImport("Kernel32.dll")]
-        public static extern bool QueryPerformanceCounter(out long Value);
+        public static extern bool QueryPerformanceCounter(out long value);
 
         [DllImport("Kernel32.dll")]
-        public static extern bool QueryPerformanceFrequency(out long Value);
+        public static extern bool QueryPerformanceFrequency(out long value);
     }
 }

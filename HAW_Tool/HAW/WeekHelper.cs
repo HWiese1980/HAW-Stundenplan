@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace HAW_Tool.HAW
 {
     class WeekHelper
     {
-        public static Dictionary<string, int> DOW = new Dictionary<string, int>();
-        public static Dictionary<int, string> WD = new Dictionary<int, string>();
+        public static readonly Dictionary<string, int> DOW = new Dictionary<string, int>();
+        public static readonly Dictionary<int, string> WD = new Dictionary<int, string>();
         
         static WeekHelper()
         {

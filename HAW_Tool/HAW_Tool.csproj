@@ -278,6 +278,9 @@
     <Resource Include="Icons\world.png" />
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="Icons\background2.jpg" />
+    <Resource Include="Icons\sky1.jpg" />
+    <Resource Include="Icons\sky2.jpg" />
     <Content Include="Licenses\License.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

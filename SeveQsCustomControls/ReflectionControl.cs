@@ -1,16 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.ComponentModel;
 
 namespace SeveQsCustomControls
@@ -46,13 +36,13 @@ namespace SeveQsCustomControls
     /// </summary>
     public class ReflectionControl : Decorator
     {
-        VisualBrush mReflection;
-        LinearGradientBrush mOpacityMask;
+        VisualBrush _mReflection;
+        LinearGradientBrush _mOpacityMask;
 
 
         static void RedrawVisual(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            FrameworkElement tFW = d as FrameworkElement;
+            var tFW = d as FrameworkElement;
             if (tFW != null) tFW.InvalidateVisual();
         }
 
@@ -61,16 +51,12 @@ namespace SeveQsCustomControls
             VerticalAlignment = VerticalAlignment.Center;
             HorizontalAlignment = HorizontalAlignment.Center;
 
-            mOpacityMask = new LinearGradientBrush();
-            mOpacityMask.StartPoint = new Point(0, 0);
-            mOpacityMask.EndPoint = new Point(0, 1);
-            mOpacityMask.GradientStops.Add(new GradientStop(Colors.Black, 0));
-            mOpacityMask.GradientStops.Add(new GradientStop(Colors.Transparent, 0.6));
+            _mOpacityMask = new LinearGradientBrush {StartPoint = new Point(0, 0), EndPoint = new Point(0, 1)};
+            _mOpacityMask.GradientStops.Add(new GradientStop(Colors.Black, 0));
+            _mOpacityMask.GradientStops.Add(new GradientStop(Colors.Transparent, 0.6));
 
-            mReflection = new VisualBrush();
-            mReflection.Stretch = Stretch.None;
-            mReflection.TileMode = TileMode.None;
-            mReflection.Transform = new ScaleTransform(1, -1);
+            _mReflection = new VisualBrush
+                               {Stretch = Stretch.None, TileMode = TileMode.None, Transform = new ScaleTransform(1, -1)};
         }
 
 
@@ -121,12 +107,12 @@ namespace SeveQsCustomControls
             drawingContext.PushOpacityMask(ReflectionMask);
             drawingContext.PushOpacity(ReflectionOpacity);
 
-            mReflection.Visual = Child;
+            _mReflection.Visual = Child;
 
-            ((ScaleTransform)mReflection.Transform).CenterY = 3 * ActualHeight / 4;
-            ((ScaleTransform)mReflection.Transform).CenterX = ActualWidth / 2;
+            ((ScaleTransform)_mReflection.Transform).CenterY = 3 * ActualHeight / 4;
+            ((ScaleTransform)_mReflection.Transform).CenterX = ActualWidth / 2;
 
-            drawingContext.DrawRectangle(mReflection, null, new Rect(0, ActualHeight / 2, ActualWidth, ActualHeight / 2));
+            drawingContext.DrawRectangle(_mReflection, null, new Rect(0, ActualHeight / 2, ActualWidth, ActualHeight / 2));
 
             drawingContext.Pop();
             drawingContext.Pop();

@@ -1,16 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using LittleHelpers;
 
 namespace SeveQsCustomControls
@@ -50,29 +42,30 @@ namespace SeveQsCustomControls
         {
             DefaultStyleKeyProperty.OverrideMetadata(typeof(NumberBox), new FrameworkPropertyMetadata(typeof(NumberBox)));
 
-            Helper.InstallCommand(ref mChangeValueCommand, "IncreaseValueCommand", typeof(Button), CommandJunction, (s, e) => { e.CanExecute = true; });
+            Helper.InstallCommand(ref MChangeValueCommand, "IncreaseValueCommand", typeof(Button), CommandJunction, (s, e) => { e.CanExecute = true; });
         }
 
-        private static readonly RoutedCommand mChangeValueCommand;
+        private static readonly RoutedCommand MChangeValueCommand;
         public static RoutedCommand ChangeValueCommand
         {
-            get { return mChangeValueCommand; }
+            get { return MChangeValueCommand; }
         }
 
         private static void CommandJunction(object sender, ExecutedRoutedEventArgs e)
         {
             // RoutedCommand tCmd = e.Command as RoutedCommand;
-            Control tSource = e.Source as Control;
-            NumberBox tBox = tSource.GetParent<NumberBox>();
+            var tSource = e.Source as Control;
+            var tBox = tSource.GetParent<NumberBox>();
+
+            Debug.Assert(tSource != null, "tSource != null");
             switch (tSource.Tag as String)
             {
                 case "Increase": tBox.Value += tBox.SmallChange; break;
                 case "Decrease": tBox.Value -= tBox.SmallChange; break;
-                default: break;
             }
         }
 
-        public static readonly DependencyProperty ValueProperty = DependencyProperty.Register("Value", typeof(double), typeof(NumberBox), new FrameworkPropertyMetadata(new PropertyChangedCallback(CheckValue)));
+        public static readonly DependencyProperty ValueProperty = DependencyProperty.Register("Value", typeof(double), typeof(NumberBox), new FrameworkPropertyMetadata(CheckValue));
         public double Value
         {
             get { return (double)GetValue(ValueProperty); }
@@ -109,10 +102,11 @@ namespace SeveQsCustomControls
 
         private static void CheckValue(DependencyObject sender, DependencyPropertyChangedEventArgs e)
         {
-            NumberBox tBox = sender as NumberBox;
+            var tBox = sender as NumberBox;
 
-            Console.WriteLine("NumberBox - Value Changed: {0} -> {1}", e.OldValue, e.NewValue);
+            Console.WriteLine(@"NumberBox - Value Changed: {0} -> {1}", e.OldValue, e.NewValue);
 
+            Debug.Assert(tBox != null, "tBox != null");
             if ((double)e.NewValue > tBox.Maximum) tBox.Value = tBox.Maximum;
             if ((double)e.NewValue < tBox.Minimum) tBox.Value = tBox.Minimum;
         }

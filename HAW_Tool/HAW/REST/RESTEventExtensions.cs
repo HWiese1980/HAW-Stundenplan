@@ -12,10 +12,10 @@ namespace HAW_Tool.HAW.REST
 
 		// Public Methods (1) 
 
-        public static void AddFile(this IEvent me, RESTTorrent Torrent)
+        public static void AddFile(this IEvent me, RESTTorrent torrent)
         {
-            HAWClient tCnt = new HAWClient();
-            tCnt.AddFile(Torrent);
+            var tCnt = new HAWClient();
+            tCnt.AddFile(torrent);
         }
 
 		#endregion Methods 

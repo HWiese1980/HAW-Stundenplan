@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.ServiceModel;
 using System.ServiceModel.Web;
 using HAW_Tool.Bittorrent;
@@ -16,7 +13,7 @@ namespace HAW_Tool.HAW.REST
 
         [OperationContract]
         [WebInvoke(BodyStyle = WebMessageBodyStyle.Bare, RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json, UriTemplate = "addfile")]
-        string AddFile(RESTTorrent Torrent);
+        string AddFile(RESTTorrent torrent);
 
         [OperationContract]
         [WebGet(BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json, UriTemplate = "events")]
@@ -28,11 +25,11 @@ namespace HAW_Tool.HAW.REST
 
         [OperationContract]
         [WebInvoke(BodyStyle = WebMessageBodyStyle.Bare, RequestFormat = WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json, UriTemplate = "login")]
-        RESTUserData Login(RESTUserData Data);
+        RESTUserData Login(RESTUserData data);
 
         [OperationContract]
         [WebInvoke(BodyStyle = WebMessageBodyStyle.Bare, RequestFormat=WebMessageFormat.Json, ResponseFormat = WebMessageFormat.Json, UriTemplate = "torrents")]
-        RESTTorrent[] Torrents(string EventHash);
+        RESTTorrent[] Torrents(string eventHash);
 
         [OperationContract]
         [WebGet(BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json, UriTemplate = "schedules")]
@@ -51,23 +48,23 @@ namespace HAW_Tool.HAW.REST
 
 
     [WCFExceptionHandling]
-    public partial class HAWClient : ClientBase<IHAWRest>, IHAWRest
+    public class HAWClient : ClientBase<IHAWRest>, IHAWRest
     {
         #region IHAWRest Members
 
         public string Version()
         {
-            return base.Channel.Version();
+            return Channel.Version();
         }
 
         public string[] Schedules()
         {
-            return base.Channel.Schedules();
+            return Channel.Schedules();
         }
 
         public RESTEvent[] Events()
         {
-            return base.Channel.Events();
+            return Channel.Events();
         }
 
         public RESTEvent[] HAWEvents()
@@ -75,19 +72,19 @@ namespace HAW_Tool.HAW.REST
             return base.Channel.HAWEvents();
         }
 
-        public RESTTorrent[] Torrents(string EventHash)
+        public RESTTorrent[] Torrents(string eventHash)
         {
-            return base.Channel.Torrents(EventHash);
+            return base.Channel.Torrents(eventHash);
         }
 
-        public RESTUserData Login(RESTUserData Data)
+        public RESTUserData Login(RESTUserData data)
         {
-            return (base.Channel.Login(Data));
+            return (base.Channel.Login(data));
         }
 
-        public string AddFile(RESTTorrent Torrent)
+        public string AddFile(RESTTorrent torrent)
         {
-            return (base.Channel.AddFile(Torrent));
+            return (base.Channel.AddFile(torrent));
         }
 
         public void ReportException(Exception exp)

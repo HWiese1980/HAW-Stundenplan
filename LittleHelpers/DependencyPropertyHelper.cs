@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Diagnostics;
 using System.Windows;
 using System.Windows.Data;
 using System.Threading;
@@ -28,10 +25,7 @@ namespace LittleHelpers
             DependencyObject target, DependencyProperty property,
             IValueConverter converter)
         {
-            Binding binding = new Binding(path);
-            binding.Source = source;
-            binding.Mode = mode;
-            binding.Converter = converter;
+            var binding = new Binding(path) {Source = source, Mode = mode, Converter = converter};
             BindingOperations.SetBinding(target, property, binding);
         }
 
@@ -39,10 +33,11 @@ namespace LittleHelpers
 
         #region ValueChanged Event Handler
 
-        private static void valueChanged(DependencyObject d,
+        private static void OnValueChanged(DependencyObject d,
             DependencyPropertyChangedEventArgs e)
         {
-            DependencyPropertyHelper<T> helper = (d as DependencyPropertyHelper<T>);
+            var helper = (d as DependencyPropertyHelper<T>);
+            Debug.Assert(helper != null, "helper != null");
             if (helper.ValueChanged != null)
                 helper.ValueChanged(d, e);
         }
@@ -62,7 +57,7 @@ namespace LittleHelpers
 
         public readonly static DependencyProperty ValueProperty = DependencyProperty.Register(
             "Value", typeof(T), typeof(DependencyPropertyHelper<T>),
-            new PropertyMetadata(new PropertyChangedCallback(valueChanged)));
+            new PropertyMetadata(OnValueChanged));
 
         /// <summary>
         /// This is a DependencyProperty
@@ -73,16 +68,14 @@ namespace LittleHelpers
             {
                 try
                 {
-                    if (!this.Dispatcher.CheckAccess())
+                    if (!Dispatcher.CheckAccess())
                         return (T)Application.Current.Dispatcher.Invoke(
-                            System.Windows.Threading.DispatcherPriority.Background,
+                            DispatcherPriority.Background,
                             (DispatcherOperationCallback)delegate
                         {
                             return GetValue(ValueProperty);
                         }, ValueProperty);
-                    else
-                        return (T)GetValue(ValueProperty);
-
+                    return (T)GetValue(ValueProperty);
                 }
                 catch
                 {
@@ -91,7 +84,7 @@ namespace LittleHelpers
             }
             set
             {
-                if (!this.Dispatcher.CheckAccess())
+                if (!Dispatcher.CheckAccess())
                     Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background,
                         (SendOrPostCallback)delegate { SetValue(ValueProperty, value); },
                         value);

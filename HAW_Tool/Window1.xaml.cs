@@ -249,6 +249,10 @@ namespace HAW_Tool
                     }
                 }
 
+                // PlanFile.LoadGoogle();
+
+                PlanFile.Instance.LoadCouchDBChanges();
+
                 PlanFile.Instance.LoadComplete();
             };
             tWrk.RunWorkerCompleted += (tWrkSender, tWrkE) =>

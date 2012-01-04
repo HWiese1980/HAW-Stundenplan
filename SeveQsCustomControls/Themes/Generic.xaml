@@ -46,7 +46,7 @@
             </Setter.Value>
         </Setter>
     </Style>
-    
+
     <Style TargetType="{x:Type local:SeekFile}">
         <Setter Property="Template">
             <Setter.Value>
@@ -177,9 +177,9 @@
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}" VerticalAlignment="Stretch">
                         <DockPanel VerticalAlignment="Center">
-                    		<Label Content="{TemplateBinding Header}" Foreground="{TemplateBinding Foreground}" FontFamily="{TemplateBinding FontFamily}" FontSize="{TemplateBinding FontSize}" FontWeight="{TemplateBinding FontWeight}" FontStyle="{TemplateBinding FontStyle}" VerticalAlignment="Center" HorizontalAlignment="Left" />
-                    		<ContentPresenter Height="Auto" VerticalAlignment="Center"/>
-                    	</DockPanel>
+                            <Label Content="{TemplateBinding Header}" Foreground="{TemplateBinding Foreground}" FontFamily="{TemplateBinding FontFamily}" FontSize="{TemplateBinding FontSize}" FontWeight="{TemplateBinding FontWeight}" FontStyle="{TemplateBinding FontStyle}" VerticalAlignment="Center" HorizontalAlignment="Left" />
+                            <ContentPresenter Height="Auto" VerticalAlignment="Center"/>
+                        </DockPanel>
                     </Border>
                 </ControlTemplate>
             </Setter.Value>
@@ -226,9 +226,7 @@
                                FontSize="{TemplateBinding FontSize}" 
                                FontWeight="{TemplateBinding FontWeight}" Foreground="{TemplateBinding Foreground}" Content="{TemplateBinding Header}" />
                         <Canvas x:Name="PART_RasterCanvas" />
-                        <ScrollViewer VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Auto">
-                            <ItemsPresenter/>
-                        </ScrollViewer>
+                        <ItemsPresenter/>
                     </Grid>
                 </ControlTemplate>
             </Setter.Value>

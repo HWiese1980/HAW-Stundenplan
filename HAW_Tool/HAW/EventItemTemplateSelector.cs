@@ -16,7 +16,7 @@ namespace HAW_Tool.HAW
             var tEventTmpl = (DataTemplate) Application.Current.MainWindow.FindResource("EventItemTemplate");
             var tRESTEventTmpl = (DataTemplate) Application.Current.MainWindow.FindResource("RESTEventItemTemplate");
 
-            if (item is Event) return tMetroTemplate;
+            if (item is Event) return tEventTmpl;
             if (item is RESTEvent) return tRESTEventTmpl;
 
             return base.SelectTemplate(item, container);

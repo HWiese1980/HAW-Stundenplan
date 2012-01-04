@@ -15,11 +15,15 @@ using System.Windows;
 using System.Xml.Linq;
 using DDay.iCal;
 using DDay.iCal.Serialization.iCalendar;
+
 using HAW_Tool.Comparers;
 using HAW_Tool.HAW.REST;
-using HAW_Tool.Properties;
 using LittleHelpers;
+using RedBranch.Hammock;
 using DDayEvent = DDay.iCal.Event;
+using Settings = HAW_Tool.Properties.Settings;
+using HAW_Tool.HAW.CouchDB;
+
 // using DDay.iCal.DataTypes;
 // using System.Net.Mail;
 
@@ -375,6 +379,42 @@ namespace HAW_Tool.HAW
         {
             ImportGroupSettings();
         }
+
+        /* Google API ist noch sehr unkomfortabel
+        public static void LoadGoogle()
+        {
+            string googleAccountName = new Settings().GoogleUsername;
+            string googleAccountPass = new Settings().GooglePassword;
+
+            var provider = new NativeApplicationClient(GoogleAuthenticationServer.Description)
+                               {
+                                   ClientIdentifier = "346627111399.apps.googleusercontent.com",
+                                   ClientSecret = "BICWvhYP5IWTuRWKcnJpzqzo"
+                               };
+
+            Google.Apis.Authentication.IAuthenticator auth = new OAuth2Authenticator<NativeApplicationClient>(provider, GetAuthorization);
+            var service = new CalendarService(auth);
+
+            var events = service.Events.List("j61u4pk4c8frc6sfs9omo1hr0s@group.calendar.google.com").Fetch();
+
+
+
+        }
+
+        private static IAuthorizationState GetAuthorization(NativeApplicationClient arg)
+        {
+            IAuthorizationState state = new AuthorizationState(new[] { CalendarService.Scopes.Calendar.GetStringValue() });
+            state.Callback = new Uri(NativeApplicationClient.OutOfBandCallbackUrl);
+            Uri authUri = arg.RequestUserAuthorization(state);
+            Process.Start(authUri.ToString());
+            Console.Write(@"Authorization Code: ");
+            string authCode = "4/5PJ7ojy-oUImHIWA3F6VccFOUIiw";
+            Console.WriteLine();
+
+            return arg.ProcessUserAuthorization(authCode, state);
+        }
+         * 
+         */
 
         public static void LoadTxt(Uri url)
         {
@@ -774,6 +814,34 @@ namespace HAW_Tool.HAW
             OnPropetyChanged("Changes");
         }
 
+        internal void AddCouchDBChange(Event p, string property, object oldValue, object newValue)
+        {
+            var c = new Connection(new Uri("http://seveq.iriscouch.com"));
+            var s = c.CreateSession("changes");
+            var change = new CouchDocChange();
+            var ch = new Change(property, oldValue, newValue);
+            change.Change = ch;
+            change.EventHash = p.Hash;
+            s.Save(change);
+
+            AddChange(p, property, oldValue, newValue);
+        }
+
+        public void LoadCouchDBChanges()
+        {
+            var c = new Connection(new Uri("http://seveq.iriscouch.com"));
+            var s = c.CreateSession("changes");
+            foreach(var doc in s.ListDocuments())
+            {
+                if (doc.Id.StartsWith("_")) continue;
+                var cDoc = s.Load<CouchDocChange>(doc.Id);
+                var evt = AllEvents.Where(p => p.Hash == cDoc.EventHash).FirstOrDefault();
+                if (evt == null) continue;
+                AddChange((Event) evt, cDoc.Change.Property, cDoc.Change.OldValue, cDoc.Change.NewValue);
+            }
+
+        }
+
         internal Change GetChange(string eventHash, string tPropName)
         {
             var tChanges = (from inf in _mPublishedChanges
@@ -797,8 +865,8 @@ namespace HAW_Tool.HAW
             int tCount = tList.Count();
             for (int i = 0; i < tCount; i++)
             {
-                Change tChange = tList[i];
-                PropertyInfo tProp = typeof(Event).GetProperty(tChange.Property);
+                var tChange = tList[i];
+                var tProp = typeof(Event).GetProperty(tChange.Property);
                 tProp.SetValue(tEvt, tChange.OldValue, null);
                 tEvt.OnValueChanged(tChange.Property);
             }
@@ -838,6 +906,23 @@ namespace HAW_Tool.HAW
         }
 
         #endregion Methods
+
+        /*
+        internal void LoadChangesFromCouchDB()
+        {
+            var cClient = new CouchClient();
+            var cd_changes = cClient.GetChanges();
+            foreach(var cd_change in cd_changes)
+            {
+                var evtHash = cd_change.EventHash;
+                if(_mChanges.ContainsKey(evtHash))
+                {
+                    var changes = _mChanges[evtHash];
+                    AddChange();
+                }
+            }
+        }
+        */
     }
 
     public enum ExportType

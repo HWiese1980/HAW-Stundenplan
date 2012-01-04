@@ -44,7 +44,7 @@ namespace HAW_Tool.Aspects
                 var tOldValue = tGetter.Invoke(eventArgs.Instance, null);
                 var tNewValue = eventArgs.Arguments.ToArray().First();
 
-                if (!tAttrib.OnlyOthers && tOldValue != tNewValue) 
+                if (!tAttrib.OnlyOthers && tOldValue != tNewValue)
                     tNoti.OnValueChanging(tPropName, tOldValue, tNewValue);
             }
         }
@@ -57,18 +57,14 @@ namespace HAW_Tool.Aspects
                 if (tInstanceType.GetInterface("INotifyValueChanged") == null) throw new InvalidOperationException("Class needs to implement INotifyValueChanged Interface");
                 if (tInstanceType.GetInterface("INotificationEnabled") == null) throw new InvalidOperationException("Class needs to implement INotificationEnabled Interface");
                 if (!((INotificationEnabled)eventArgs.Instance).IsNotifyingChanges) return;
-
                 var tPropName = eventArgs.Method.Name.Substring(4);
                 var tProp = tInstanceType.GetProperty(tPropName);
-
                 var tAttribs = tProp.GetCustomAttributes(typeof(NotifyingPropertyAttribute), true);
                 if (tAttribs.Length <= 0) return;
 
-
                 var tNoti = (INotifyValueChanged)eventArgs.Instance;
-
-
                 var tAttrib = (NotifyingPropertyAttribute)tAttribs.Single();
+
                 if (!tAttrib.OnlyOthers)
                 {
                     Console.WriteLine(@"[Notify] Property changed: {0}", tPropName);

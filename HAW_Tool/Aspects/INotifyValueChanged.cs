@@ -8,6 +8,8 @@ namespace HAW_Tool.Aspects
 
         void OnValueChanging(string property, object oldValue, object newValue);
 
+        object GetNewValue(string property);
+
         #endregion Operations
     }
 }

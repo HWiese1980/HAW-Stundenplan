@@ -698,7 +698,7 @@
                                     </Button>
                                 </Grid>
                             </TabItem>
-                            <TabItem Header="Debugging" Visibility="Collapsed">
+                            <TabItem Header="Debugging" Visibility="Visible">
                                 <TabItem.Foreground>
                                     <SolidColorBrush Color="{DynamicResource WIPForeground}"/>
                                 </TabItem.Foreground>
@@ -723,7 +723,7 @@
                                             <ListBox.ItemTemplate>
                                                 <DataTemplate>
                                                     <DockPanel>
-                                                        <TextBlock Text="{Binding Code}" Width="200" DockPanel.Dock="Left" />
+                                                        <TextBlock Text="{Binding Info}" Width="200" DockPanel.Dock="Left" />
                                                         <TextBlock Text="{Binding IsEnabled}" />
                                                     </DockPanel>
                                                 </DataTemplate>

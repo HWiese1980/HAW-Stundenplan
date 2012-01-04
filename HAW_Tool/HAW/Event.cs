@@ -324,7 +324,8 @@ namespace HAW_Tool.HAW
 
         public void OnValueChanging(string property, object oldValue, object newValue)
         {
-            if (!oldValue.Equals(newValue)) PlanFile.Instance.AddChange(this, property, oldValue, newValue);
+            // if (!oldValue.Equals(newValue)) PlanFile.Instance.AddChange(this, property, oldValue, newValue);
+            if (!oldValue.Equals(newValue)) PlanFile.Instance.AddCouchDBChange(this, property, oldValue, newValue);
         }
 
         public void OnValueChanged(string property)
@@ -350,5 +351,11 @@ namespace HAW_Tool.HAW
         }
 
         #endregion
+
+
+        public object GetNewValue(string property)
+        {
+            return "Test";
+        }
     }
 }

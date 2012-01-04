@@ -195,26 +195,14 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Aspects\INotificationEnabled.cs" />
-    <Compile Include="Aspects\INotifyValueChanged.cs" />
-    <Compile Include="Aspects\LogExitAttribute.cs" />
-    <Compile Include="Aspects\LoggingAttribute.cs" />
-    <Compile Include="Aspects\NotifyingAttribute.cs" />
-    <Compile Include="Aspects\WCFExceptionHandlingAttribute.cs" />
-    <Compile Include="HAW\ChangeInfo.cs" />
-    <Compile Include="HAW\ChangeState.cs" />
-    <Compile Include="HAW\CouchDB\CouchDBResponse.cs" />
-    <Compile Include="HAW\CouchDB\CouchDocChange.cs" />
-    <Compile Include="HAW\GoogleAPI\GoogleEvent.cs" />
     <Compile Include="HAW\LabeledItem.cs" />
+    <Compile Include="HAW\REST\HAWClient.cs" />
     <Compile Include="Window1.xaml.cs">
       <DependentUpon>Window1.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Aspects\NotifyingPropertyAttribute.cs" />
-    <Compile Include="Bittorrent\RESTTorrent.cs" />
     <Compile Include="CompactView.cs" />
     <Compile Include="Comparers\KeyEqualityComparer.cs" />
     <Compile Include="Comparers\WeekEqualityComparer.cs" />
@@ -229,7 +217,6 @@
     <Compile Include="HAWToolException.cs" />
     <Compile Include="HAW\BaseEvent.cs" />
     <Compile Include="HAW\CalendarWeek.cs" />
-    <Compile Include="HAW\Change.cs" />
     <Compile Include="HAW\DateTimeToTimeSpan.cs" />
     <Compile Include="HAW\Day.cs" />
     <Compile Include="HAW\Event.cs" />
@@ -244,8 +231,6 @@
     <Compile Include="HAW\PlanFile.cs" />
     <Compile Include="HAW\REST\RESTEvent.cs" />
     <Compile Include="HAW\REST\HAWRest.cs" />
-    <Compile Include="HAW\REST\RESTEventExtensions.cs" />
-    <Compile Include="HAW\REST\RESTUserData.cs" />
     <Compile Include="HAW\REST\RESTWeek.cs" />
     <Compile Include="HAW\SeminarGroup.cs" />
     <Compile Include="HAW\TimeToCoord.cs" />

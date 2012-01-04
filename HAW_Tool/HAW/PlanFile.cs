@@ -22,14 +22,13 @@ using LittleHelpers;
 using RedBranch.Hammock;
 using DDayEvent = DDay.iCal.Event;
 using Settings = HAW_Tool.Properties.Settings;
-using HAW_Tool.HAW.CouchDB;
 
 // using DDay.iCal.DataTypes;
 // using System.Net.Mail;
 
 namespace HAW_Tool.HAW
 {
-    public class PlanFile : INotifyPropertyChanged, IIsCurrent
+    public partial class PlanFile : INotifyPropertyChanged, IIsCurrent
     {
         #region Fields (16)
 
@@ -38,11 +37,7 @@ namespace HAW_Tool.HAW
         private static List<IEvent> _mKnownEvents;
         private List<IEvent> _mAllEvents;
 
-        private Dictionary<string, Dictionary<string, Change>> _mChanges =
-            new Dictionary<string, Dictionary<string, Change>>();
-
         private List<SeminarGroup> _mGroups;
-        private ObservableCollection<ChangeInfo> _mPublishedChanges = new ObservableCollection<ChangeInfo>();
         private XElement _mCurrentSemGroup;
         private IEnumerable<XElement> _mCurrentWeeks;
         private int _mCurrentYear;
@@ -57,7 +52,6 @@ namespace HAW_Tool.HAW
 
         private PlanFile()
         {
-            LocalChanges = new ObservableCollection<ChangeInfo>();
             IsNotifyingChanges = true;
             Init_ObligatoryRegexPatternXDoc();
             Init_EventXDoc();
@@ -95,21 +89,6 @@ namespace HAW_Tool.HAW
                     tPar.WaitForAll();
                 }
                 return _mAllEvents.OrderBy(p => p.Code);
-            }
-        }
-
-        public IEnumerable<ChangeInfo> Changes
-        {
-            get
-            {
-                return from evt in _mChanges
-                       select
-                           new ChangeInfo
-                               {
-                                   EventHash = evt.Key,
-                                   Event = GetEventByCode(evt.Key),
-                                   EventChanges = new List<Change>(evt.Value.Values)
-                               };
             }
         }
 
@@ -198,14 +177,8 @@ namespace HAW_Tool.HAW
             }
         }
 
-        public ObservableCollection<ChangeInfo> LocalChanges { get; set; }
 
         public IEnumerable<string> ObligatoryRegexPatterns { get; set; }
-
-        public ObservableCollection<ChangeInfo> PublishedChanges
-        {
-            get { return _mPublishedChanges; }
-        }
 
         public IEnumerable<SeminarGroup> SeminarGroups
         {
@@ -222,8 +195,6 @@ namespace HAW_Tool.HAW
         {
             get { return _mStoredEvents; }
         }
-
-        public RESTUserData Userdata { get; set; }
 
         #endregion Properties
 
@@ -297,11 +268,6 @@ namespace HAW_Tool.HAW
             return tGrp.Distinct(new KeyEqualityComparer<GroupID>(p => p.Value));
         }
 
-        public bool HasChangesByHash(string hash)
-        {
-            return _mChanges.ContainsKey(hash);
-        }
-
         public bool HasReplacements(IEvent evt, Day day)
         {
             var bydayandcode = from p in StoredEvents
@@ -327,7 +293,6 @@ namespace HAW_Tool.HAW
 
                 Debug.Assert(tHawSettings != null, "tHawSettings != null");
                 var tGrpSettings = tHawSettings.Element("groupsettings");
-                var tChgSettings = tHawSettings.Element("evtchanges");
 
                 Debug.Assert(tGrpSettings != null, "tGrpSettings != null");
                 foreach (var tElm in tGrpSettings.Elements("group"))
@@ -344,23 +309,6 @@ namespace HAW_Tool.HAW
                     if (xGroupAttribute != null)
                         tEvt.Group = new GroupID(xGroupAttribute.Value);
                 }
-
-                Debug.Assert(tChgSettings != null, "tChgSettings != null");
-                foreach (var tInf in tChgSettings.Elements("changeinfo").Select(ChangeInfo.FromXML))
-                {
-                    LocalChanges.Add(tInf);
-                }
-
-                //foreach (ChangeInfo tInf in this.FetchChanges())
-                //{
-                //    mPublishedChanges.Add(tInf);
-                //}
-
-                OnStatusMessageChanged("Importiere lokal gespeicherte Änderungen...");
-                RefreshChangesFromLocal();
-
-                OnStatusMessageChanged("Importiere öffentlich gespeicherte Änderungen...");
-                RefreshChangesFromRemote();
 
                 OnStatusMessageChanged("Alle Einstellungen importiert.");
             }
@@ -444,12 +392,6 @@ namespace HAW_Tool.HAW
             }
 
             Instance.LoadFile(tFile);
-        }
-
-        public void Login(string username, string password)
-        {
-            var tClnt = new HAWClient();
-            Userdata = tClnt.Login(new RESTUserData { Username = username, Password = password });
         }
 
         // Private Methods (19) 
@@ -745,31 +687,6 @@ namespace HAW_Tool.HAW
             return DateTime.MinValue;
         }
 
-        private void RefreshChangesFrom(IEnumerable<ChangeInfo> changes)
-        {
-            foreach (ChangeInfo tInf in changes)
-            {
-                Event tEvt = tInf.Event;
-                foreach (Change tChange in tInf.EventChanges)
-                {
-                    PropertyInfo tProp = typeof(Event).GetProperty(tChange.Property);
-                    if (tProp == null) continue;
-
-                    tProp.SetValue(tEvt, tChange.NewValue, null);
-                }
-            }
-        }
-
-        private void RefreshChangesFromLocal()
-        {
-            RefreshChangesFrom(LocalChanges);
-        }
-
-        private void RefreshChangesFromRemote()
-        {
-            RefreshChangesFrom(_mPublishedChanges);
-        }
-
         private static void SetPropertyBase64(object theObject, string property, string base64String)
         {
             if (theObject == null) return;
@@ -790,95 +707,6 @@ namespace HAW_Tool.HAW
 
         // Internal Methods (4) 
 
-        internal void AddChange(Event evt, string property, object oldValue, object newValue)
-        {
-            if (!_mChanges.ContainsKey(evt.Hash)) _mChanges.Add(evt.Hash, new Dictionary<string, Change>());
-            var tChange = _mChanges[evt.Hash];
-
-            if (tChange.ContainsKey(property))
-            {
-                if (tChange[property].OldValue.Equals(newValue))
-                    tChange.Remove(property);
-                else
-                    tChange[property].NewValue = newValue;
-
-                if (tChange.Count == 0)
-                    _mChanges.Remove(evt.Hash);
-            }
-            else
-            {
-                var tNew = new Change(property, oldValue, newValue);
-                tChange.Add(property, tNew);
-            }
-
-            OnPropetyChanged("Changes");
-        }
-
-        internal void AddCouchDBChange(Event p, string property, object oldValue, object newValue)
-        {
-            var c = new Connection(new Uri("http://seveq.iriscouch.com"));
-            var s = c.CreateSession("changes");
-            var change = new CouchDocChange();
-            var ch = new Change(property, oldValue, newValue);
-            change.Change = ch;
-            change.EventHash = p.Hash;
-            s.Save(change);
-
-            AddChange(p, property, oldValue, newValue);
-        }
-
-        public void LoadCouchDBChanges()
-        {
-            var c = new Connection(new Uri("http://seveq.iriscouch.com"));
-            var s = c.CreateSession("changes");
-            foreach(var doc in s.ListDocuments())
-            {
-                if (doc.Id.StartsWith("_")) continue;
-                var cDoc = s.Load<CouchDocChange>(doc.Id);
-                var evt = AllEvents.Where(p => p.Hash == cDoc.EventHash).FirstOrDefault();
-                if (evt == null) continue;
-                AddChange((Event) evt, cDoc.Change.Property, cDoc.Change.OldValue, cDoc.Change.NewValue);
-            }
-
-        }
-
-        internal Change GetChange(string eventHash, string tPropName)
-        {
-            var tChanges = (from inf in _mPublishedChanges
-                            where inf.EventHash == eventHash
-                            from chg in inf.EventChanges
-                            where chg.Property == tPropName
-                            orderby chg.Timestamp ascending
-                            select chg).ToList();
-
-            return (tChanges.Count > 0) ? tChanges.Last() : null;
-        }
-
-        internal void ResetChanges(string tHash)
-        {
-            if (!_mChanges.ContainsKey(tHash)) return;
-
-            Instance.IsNotifyingChanges = false;
-
-            Change[] tList = _mChanges[tHash].Values.ToArray();
-            Event tEvt = GetEventByCode(tHash);
-            int tCount = tList.Count();
-            for (int i = 0; i < tCount; i++)
-            {
-                var tChange = tList[i];
-                var tProp = typeof(Event).GetProperty(tChange.Property);
-                tProp.SetValue(tEvt, tChange.OldValue, null);
-                tEvt.OnValueChanged(tChange.Property);
-            }
-
-            _mChanges.Remove(tHash);
-
-            OnPropetyChanged("Changes");
-
-            tEvt.OnValueChanged("HasChanges");
-            Instance.IsNotifyingChanges = true;
-        }
-
         internal void SaveSettings()
         {
             var tSettings = new Settings();
@@ -889,15 +717,6 @@ namespace HAW_Tool.HAW
                                                               select new XElement("group",
                                                                                   new XAttribute("code", elm.BasicCode),
                                                                                   new XAttribute("groupno", elm.Group))));
-
-            //tHAWSettingsElm.Add(new XElement("evtchanges", from key in PlanFile.Instance.mChanges.Keys
-            //                                               select new XElement("event", new XAttribute("hash", key),
-            //                                                   from change in PlanFile.Instance.mChanges[key].Values
-            //                                                   select change.ChangeXML)));
-
-            tHAWSettingsElm.Add(new XElement("evtchanges", from chgInf in Changes
-                                                           select ChangeInfo.AsXML(chgInf)));
-
 
             tDoc.Add(tHAWSettingsElm);
 
@@ -923,6 +742,11 @@ namespace HAW_Tool.HAW
             }
         }
         */
+
+        internal IEvent CreateModifiedEvent(Event p)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public enum ExportType

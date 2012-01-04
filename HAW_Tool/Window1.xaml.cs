@@ -251,8 +251,6 @@ namespace HAW_Tool
 
                 // PlanFile.LoadGoogle();
 
-                PlanFile.Instance.LoadCouchDBChanges();
-
                 PlanFile.Instance.LoadComplete();
             };
             tWrk.RunWorkerCompleted += (tWrkSender, tWrkE) =>
@@ -365,15 +363,6 @@ namespace HAW_Tool
             RefreshFiltering(tCtl);
         }
 
-        private void ResetChangesClick(object sender, RoutedEventArgs e)
-        {
-            var tCtl = sender as Control;
-            Debug.Assert(tCtl != null, "tCtl != null");
-            var tHash = tCtl.Tag as String;
-
-            PlanFile.Instance.ResetChanges(tHash);
-        }
-
         private void ExportEventsClick(object sender, RoutedEventArgs e)
         {
             if (PlanFile.Instance == null)
@@ -415,11 +404,7 @@ namespace HAW_Tool
             }
         }
 
-/*
-        private void MouseDownDragStart(object sender, MouseButtonEventArgs e)
-        {
-        }
-*/
+        /*
 
         TimeSpan? _tOldFrom, _tOldTill;
 
@@ -459,6 +444,7 @@ namespace HAW_Tool
         {
             Clipboard.SetText(_mSelectedEvent.Hash);
         }
+        */
 
         #region Window Resize
 

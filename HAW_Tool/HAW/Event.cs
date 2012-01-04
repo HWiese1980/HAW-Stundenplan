@@ -8,8 +8,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
-using HAW_Tool.Aspects;
-using HAW_Tool.Bittorrent;
 using LittleHelpers;
 using DDayEvent = DDay.iCal.Event;
 
@@ -19,8 +17,7 @@ using DDayEvent = DDay.iCal.Event;
 
 namespace HAW_Tool.HAW
 {
-    [Notifying("HasChanges")]
-    public class Event : XElementContainer, IComparable<Event>, INotifyValueChanged, INotificationEnabled, IEvent
+    public class Event : XElementContainer, IComparable<Event>, IEvent
     {
         #region Fields (10)
 
@@ -73,11 +70,6 @@ namespace HAW_Tool.HAW
 
         #region Properties (22)
 
-        public bool HasChanges
-        {
-            get { return PlanFile.Instance.HasChangesByHash(Hash); }
-        }
-
         private byte[] ID
         {
             get { return Encoding.ASCII.GetBytes(Info); }
@@ -88,7 +80,6 @@ namespace HAW_Tool.HAW
             get { return String.Format("{0};{1};{2}", Code, _mKw, DayOfWeek); }
         }
 
-        [NotifyingProperty]
         public bool TakesPlace
         {
             get { return _bOff; }
@@ -104,7 +95,6 @@ namespace HAW_Tool.HAW
             }
         }
 
-        [NotifyingProperty("Code", "Info", "IsObligatory")]
         public string BasicCode
         {
             get { return _mCode.Code; }
@@ -120,7 +110,6 @@ namespace HAW_Tool.HAW
             }
         }
 
-        [NotifyingProperty]
         public DateTime Date
         {
             get { return _mDate.Date; }
@@ -147,9 +136,6 @@ namespace HAW_Tool.HAW
             get { return WeekHelper.DOW[_mTag.ToLower()]; }
         }
 
-        public IEnumerable<RESTTorrent> Files { get; set; }
-
-        [NotifyingProperty]
         public TimeSpan From
         {
             get { return _mFrom; }
@@ -161,7 +147,6 @@ namespace HAW_Tool.HAW
             }
         }
 
-        [NotifyingProperty("Code", "Info", "IsObligatory")]
         public GroupID Group
         {
             get { return _mCode.Group; }
@@ -184,7 +169,6 @@ namespace HAW_Tool.HAW
             }
         }
 
-        [NotifyingProperty]
         public bool IsEnabled
         {
             get { return _bEnabled; }
@@ -203,7 +187,6 @@ namespace HAW_Tool.HAW
                                      select p).Count();
 
                 return (matchingCount > 0);
-                // return (Code.Contains("P") && Code.Contains("/"));
             }
         }
 
@@ -216,7 +199,6 @@ namespace HAW_Tool.HAW
             }
         }
 
-        [NotifyingProperty("Info")]
         public string Room
         {
             get { return _mRoom; }
@@ -235,7 +217,6 @@ namespace HAW_Tool.HAW
             }
         }
 
-        [NotifyingProperty]
         public TimeSpan Till
         {
             get { return _mTill; }
@@ -247,7 +228,6 @@ namespace HAW_Tool.HAW
             }
         }
 
-        [NotifyingProperty("Info")]
         public string Tutor
         {
             get { return _mTutor; }
@@ -324,8 +304,13 @@ namespace HAW_Tool.HAW
 
         public void OnValueChanging(string property, object oldValue, object newValue)
         {
-            // if (!oldValue.Equals(newValue)) PlanFile.Instance.AddChange(this, property, oldValue, newValue);
-            if (!oldValue.Equals(newValue)) PlanFile.Instance.AddCouchDBChange(this, property, oldValue, newValue);
+            if (!oldValue.Equals(newValue))
+            {
+                IEvent evt = PlanFile.Instance.CreateModifiedEvent(this);
+                
+                var prop = evt.GetType().GetProperty(property);
+                prop.SetValue(evt, newValue, null);
+            }
         }
 
         public void OnValueChanged(string property)

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
-using HAW_Tool.Bittorrent;
 
 namespace HAW_Tool.HAW.REST
 {
@@ -247,9 +246,6 @@ namespace HAW_Tool.HAW.REST
         {
             get { return (int) Date.DayOfWeek; }
         }
-
-        [IgnoreDataMember]
-        public IEnumerable<RESTTorrent> Files { get; set; }
 
         [IgnoreDataMember]
         public TimeSpan From { get; set; }

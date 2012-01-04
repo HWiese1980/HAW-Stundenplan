@@ -27,80 +27,7 @@
             </StackPanel>
         </ControlTemplate>
 
-        <HierarchicalDataTemplate DataType="{x:Type haw:ChangeInfo}" ItemsSource="{Binding EventChanges}">
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Foreground="White" Text="{Binding Event.Info}" />
-            </StackPanel>
-        </HierarchicalDataTemplate>
-
-        <HierarchicalDataTemplate DataType="{x:Type haw:Change}">
-            <StackPanel>
-                <HeaderedContentControl Template="{StaticResource HeaderedTextBlock}" Header="Eigenschaft: " Content="{Binding Property}" FontFamily="Courier New" />
-                <HeaderedContentControl Template="{StaticResource HeaderedTextBlock}" Header="alter Wert : " Content="{Binding OldValue}" FontFamily="Courier New" />
-                <HeaderedContentControl Template="{StaticResource HeaderedTextBlock}" Header="neuer Wert : " Content="{Binding NewValue}" FontFamily="Courier New" />
-            </StackPanel>
-        </HierarchicalDataTemplate>
-
-        <DataTemplate x:Key="MetroEventTemplate">
-            <Canvas Background="{x:Null}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                <Grid DataContext="{Binding}" Margin="0 15 0 0">
-                    <Canvas.Top>
-                        <MultiBinding Converter="{StaticResource TimeToTop}" ConverterParameter="RowIndex">
-                            <Binding Path="HasChanges" />
-                            <Binding />
-                        </MultiBinding>
-                    </Canvas.Top>
-                    <Canvas.Left>
-                        <MultiBinding Converter="{StaticResource TimeToLeft}">
-                            <Binding Path="HasChanges" />
-                            <Binding />
-                        </MultiBinding>
-                    </Canvas.Left>
-                    <Grid.Width>
-                        <MultiBinding Converter="{StaticResource TimeToWidth}">
-                            <Binding Path="HasChanges" />
-                            <Binding />
-                        </MultiBinding>
-                    </Grid.Width>
-                    <SeveQsCustomControls:StrikeOut Opacity="0.6" Panel.ZIndex="100" StrikeOutThickness="3.0" Visibility="Hidden" x:Name="strikeOut" />
-                    <Border x:Name="border" TextElement.FontSize="9" CornerRadius="0" BorderBrush="#76474747" BorderThickness="2,2,2,10" Background="#B2000000">
-                        <Grid MinHeight="{StaticResource EventMinHeight}">
-                            <Label x:Name="from" Content="{Binding From, Converter={StaticResource ShortTime}, Mode=Default}" Foreground="White" d:LayoutOverrides="Width, Height" VerticalAlignment="Center" HorizontalAlignment="Left" RenderTransformOrigin="0.5,0.5" Padding="0" Margin="0" >
-                                <Label.RenderTransform>
-                                    <TransformGroup>
-                                        <ScaleTransform/>
-                                        <SkewTransform/>
-                                        <RotateTransform Angle="-90"/>
-                                        <TranslateTransform/>
-                                    </TransformGroup>
-                                </Label.RenderTransform>
-                            </Label>
-                            <Label x:Name="till" Content="{Binding Till, Converter={StaticResource ShortTime}, Mode=Default}" Foreground="White" d:LayoutOverrides="Width, Height" VerticalAlignment="Center" HorizontalAlignment="Right" RenderTransformOrigin="0.5,0.5" Padding="0" Margin="0" >
-                                <Label.RenderTransform>
-                                    <TransformGroup>
-                                        <ScaleTransform/>
-                                        <SkewTransform/>
-                                        <RotateTransform Angle="-90"/>
-                                        <TranslateTransform/>
-                                    </TransformGroup>
-                                </Label.RenderTransform>
-                            </Label>
-                            <Label x:Name="codeGross" Content="{Binding Code}" FontWeight="Bold" Foreground="#05FFFFFF" FontStretch="Expanded" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontSize="20" />
-                            <Label x:Name="codeKlein" Content="{Binding Code}" FontWeight="Bold" Foreground="White" d:LayoutOverrides="Width, Height" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0" FontSize="10.667" />
-                            <Label Content="{Binding Tutor}" Foreground="White" d:LayoutOverrides="Width, Height" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0" FontSize="10.667" />
-                            <Label Content="{Binding Room}" Foreground="White" d:LayoutOverrides="Width, Height" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0" FontSize="10.667" />
-                            <StackPanel Margin="0,2,0,2" Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Top">
-                                <CheckBox ToolTip="Lokal ausblenden (findet satt, gehe aber nicht hin)"  Style="{StaticResource RedGreenBox}" IsChecked="{Binding IsEnabled}" />
-                                <CheckBox ToolTip="Veranstaltung findet gar nicht statt" Style="{StaticResource RedGreenBox}" IsChecked="{Binding TakesPlace}"/>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-
-                </Grid>
-            </Canvas>
-        </DataTemplate>
-
-        <DataTemplate x:Key="EventItemTemplate">
+      <DataTemplate x:Key="EventItemTemplate">
             <Canvas Background="{x:Null}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <Grid DataContext="{Binding}" Margin="0 15 0 0" >
                     <Canvas.Top>
@@ -154,69 +81,13 @@
                             <Label x:Name="codeKlein" Content="{Binding Code}" FontWeight="Bold" Foreground="White" d:LayoutOverrides="Width, Height" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0" FontSize="10.667" />
                             <Label Content="{Binding Tutor}" Foreground="White" d:LayoutOverrides="Width, Height" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0" FontSize="10.667" />
                             <Label Content="{Binding Room}" Foreground="White" d:LayoutOverrides="Width, Height" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0" FontSize="10.667" />
-                            <StackPanel Margin="0,2,0,2" Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Top">
-                                <CheckBox ToolTip="Lokal ausblenden (findet satt, gehe aber nicht hin)"  Style="{StaticResource RedGreenBox}" IsChecked="{Binding IsEnabled}" />
-                                <CheckBox ToolTip="Veranstaltung findet gar nicht statt" Style="{StaticResource RedGreenBox}" IsChecked="{Binding TakesPlace}"/>
-                            </StackPanel>
                         </Grid>
                     </Border>
-                    <Popup TextElement.FontSize="12" TextElement.FontWeight="Normal" Placement="Right" VerticalOffset="0" HorizontalOffset="5" x:Name="details" AllowsTransparency="True" PopupAnimation="Fade">
-                        <Border Margin="10" Background="#B2373737" BorderBrush="White" CornerRadius="5" Padding="5" BorderThickness="2" >
-                            <Border.Effect>
-                                <DropShadowEffect Opacity="0.5" RenderingBias="Quality" ShadowDepth="0" BlurRadius="10" />
-                            </Border.Effect>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="100"/>
-                                    <ColumnDefinition/>
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="25" />
-                                    <RowDefinition Height="25"/>
-                                    <RowDefinition Height="25"/>
-                                    <RowDefinition Height="25"/>
-                                    <RowDefinition Height="25"/>
-                                    <RowDefinition Height="25"/>
-                                    <RowDefinition Height="25"/>
-                                    <RowDefinition Height="25*"/>
-                                </Grid.RowDefinitions>
-                                <Label Grid.Row="0" Grid.Column="0" Foreground="White" Content="Bezeichnung"/>
-                                <Label Grid.Row="1" Grid.Column="0" Foreground="White" Content="Gruppe"/>
-                                <Label Grid.Row="2" Grid.Column="0" Foreground="White" Content="von/bis"/>
-                                <Label Grid.Row="3" Grid.Column="0" Foreground="White" Content="Dozent"/>
-                                <Label Grid.Row="4" Grid.Column="0" Foreground="White" Content="Raum"/>
-                                <Label Grid.Row="5" Grid.Column="0" Foreground="White" Content="Gültig"/>
-                                <Label Grid.Row="6" Grid.Column="0" Foreground="White" Content="Hash" />
-                                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding BasicCode}" />
-                                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Group, Mode=TwoWay}" />
-                                <!--<UniformGrid Rows="1" Grid.Row="2" Grid.Column="1">
-                                    <avalon:TimePicker SelectedTime="{Binding From, Mode=TwoWay}" Foreground="White" />
-                                    <avalon:TimePicker SelectedTime="{Binding Till, Mode=TwoWay}" Foreground="White" />
-                                </UniformGrid>-->
-                                <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding Tutor}" />
-                                <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding Room}" />
-                                <CheckBox Grid.Row="5" Grid.Column="1" IsChecked="{Binding IsEnabled, Mode=TwoWay}" VerticalAlignment="Center" HorizontalAlignment="Center" />
-
-                                <Label Foreground="White" Grid.Row="6" Grid.Column="1" Content="{Binding Hash}" />
-                                <ToolBar HorizontalAlignment="Stretch" Margin="0,0,0,12" d:LayoutOverrides="Height" Grid.Row="99" Grid.ColumnSpan="99" HorizontalContentAlignment="Right">
-                                    <Button HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Click="ResetChangesClick" Width="Auto" ToolTip="Änderungen zurücksetzen" Tag="{Binding Hash, Mode=Default}">
-                                        <Image Width="16" Height="16" Source="Icons/arrow_undo.png" Stretch="Fill"/>
-                                    </Button>
-                                    <Button Content="Hash kopieren" Click="CopyHashClick" />
-                                </ToolBar>
-                            </Grid>
-                        </Border>
-                    </Popup>
                 </Grid>
             </Canvas>
             <DataTemplate.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Opacity" TargetName="border" Value="1.0" />
-                    <Setter Property="Background" TargetName="backColorBorder" Value="#FFFFFFFF"/>
-                </Trigger>
                 <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType={x:Type ListBoxItem}, Mode=FindAncestor}}" Value="True">
                     <Setter Property="BorderBrush" TargetName="border" Value="White"/>
-                    <Setter Property="IsOpen" TargetName="details" Value="True" />
                     <Setter Property="Background" TargetName="border" Value="#44FFFFFF" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding IsObligatory}" Value="True">
@@ -233,123 +104,23 @@
                     <Setter Property="Visibility" TargetName="strikeOut" Value="Visible" />
                     <Setter Property="Opacity" Value="0.6" />
                 </DataTrigger>
-            </DataTemplate.Triggers>
-        </DataTemplate>
-
-        <DataTemplate x:Key="RESTEventItemTemplate">
-            <Canvas Background="{x:Null}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" d:DesignWidth="631">
-                <!-- Canvas.Top="{Binding Converter={StaticResource TimeToTop}, ConverterParameter=RowIndex}" Canvas.Left="{Binding Converter={StaticResource TimeToLeft}}" Width="{Binding Converter={StaticResource TimeToWidth}}" -->
-                <Grid DataContext="{Binding}" Margin="0,15,0,0" MinWidth="50" >
-                    <Canvas.Top>
-                        <MultiBinding Converter="{StaticResource TimeToTop}" ConverterParameter="RowIndex">
-                            <Binding />
-                        </MultiBinding>
-                    </Canvas.Top>
-                    <Canvas.Left>
-                        <MultiBinding Converter="{StaticResource TimeToLeft}">
-                            <Binding />
-                        </MultiBinding>
-                    </Canvas.Left>
-                    <Grid.Width>
-                        <MultiBinding Converter="{StaticResource TimeToWidth}">
-                            <Binding />
-                        </MultiBinding>
-                    </Grid.Width>
-                    <SeveQsCustomControls:StrikeOut Opacity="0.6" Panel.ZIndex="100" StrikeOutThickness="3.0" Visibility="Hidden" x:Name="strikeOut" />
-                    <Border x:Name="backColorBorder" Background="#44FFFF00" CornerRadius="0">
-                        <Border.OpacityMask>
-                            <VisualBrush Visual="{Binding ElementName=border}" />
-                        </Border.OpacityMask>
-                    </Border>
-                    <Border x:Name="border" CornerRadius="5" BorderBrush="#75474747" BorderThickness="2,2,2,10" Background="#B2000000" Margin="0" Padding="0" TextElement.FontSize="9">
-                        <Grid x:Name="grid" MinHeight="{StaticResource EventMinHeight}">
-                            <Label x:Name="from" Content="{Binding From, Converter={StaticResource ShortTime}, Mode=Default}" Foreground="White" d:LayoutOverrides="Width, Height" VerticalAlignment="Center" HorizontalAlignment="Left" RenderTransformOrigin="0.5,0.5" Padding="0" Margin="0" >
-                                <Label.RenderTransform>
-                                    <TransformGroup>
-                                        <ScaleTransform/>
-                                        <SkewTransform/>
-                                        <RotateTransform Angle="-90"/>
-                                        <TranslateTransform/>
-                                    </TransformGroup>
-                                </Label.RenderTransform>
-                            </Label>
-                            <Label x:Name="till" Content="{Binding Till, Converter={StaticResource ShortTime}, Mode=Default}" Foreground="White" d:LayoutOverrides="Width, Height" VerticalAlignment="Center" HorizontalAlignment="Right" RenderTransformOrigin="0.5,0.5" Padding="0" Margin="0" >
-                                <Label.RenderTransform>
-                                    <TransformGroup>
-                                        <ScaleTransform/>
-                                        <SkewTransform/>
-                                        <RotateTransform Angle="-90"/>
-                                        <TranslateTransform/>
-                                    </TransformGroup>
-                                </Label.RenderTransform>
-                            </Label>
-                            <Label x:Name="codeGross" Content="{Binding Code}" FontWeight="Bold" Foreground="#15FFFF00" FontStretch="Expanded" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontSize="20" />
-                            <Label x:Name="codeKlein" Content="{Binding Code}" FontWeight="Bold" Foreground="Yellow" d:LayoutOverrides="Width, Height" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0" />
-                            <StackPanel TextElement.FontSize="8" TextElement.FontWeight="Bold" Margin="0" Orientation="Horizontal" d:LayoutOverrides="Height" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <Label Foreground="White" Padding="1" x:Name="tutor" Content="{Binding Tutor}" Margin="1,0,1,0" />
-                                <Label Foreground="White" Padding="1" x:Name="creator" Content="{Binding Creator}" Margin="1,0,1,0" />
-                                <Label Foreground="White" Padding="1" x:Name="type" Content="{Binding TypeCode}" Margin="1,0,1,0" />
-                            </StackPanel>
-                            <Label x:Name="room" Content="{Binding Room}" Foreground="White" d:LayoutOverrides="Width, Height" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0" />
-                        </Grid>
-                    </Border>
-                    <Popup TextElement.FontSize="12" TextElement.FontWeight="Normal" Placement="Mouse" VerticalOffset="5" HorizontalOffset="5" x:Name="details" AllowsTransparency="True" PopupAnimation="Fade">
-                        <Border BorderBrush="Black" BorderThickness="1" Background="Yellow" MaxWidth="300">
-                            <TextBlock Foreground="Black" Text="{Binding Info}" TextWrapping="Wrap" />
-                        </Border>
-                    </Popup>
-                </Grid>
-            </Canvas>
-            <DataTemplate.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="IsOpen" TargetName="details" Value="True" />
                     <Setter Property="Opacity" TargetName="border" Value="1.0" />
                     <Setter Property="Background" TargetName="backColorBorder" Value="#FFFFFFFF"/>
                 </Trigger>
-                <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType={x:Type ListBoxItem}, Mode=FindAncestor}}" Value="True">
-                    <Setter Property="BorderBrush" TargetName="border" Value="White"/>
-                    <Setter Property="Background" TargetName="border" Value="#44FFFFFF" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding IsObligatory}" Value="True">
-                    <Setter Property="Background" TargetName="backColorBorder" Value="#44FF0000" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding TakesPlace}" Value="False">
-                    <Setter Property="Background" TargetName="backColorBorder" Value="#88FF0000" />
-                    <Setter Property="Visibility" TargetName="strikeOut" Value="Visible" />
-                    <Setter Property="Opacity" Value="0.6" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Type}" Value="Exam">
-                    <Setter Property="Opacity" Value="1.0" />
-                    <Setter Property="MinHeight" Value="{StaticResource ExamMinHeight}" TargetName="grid" />
-                    <Setter Property="Background" TargetName="backColorBorder" Value="Red" />
-                    <Setter Property="BitmapEffect" TargetName="backColorBorder">
-                        <Setter.Value>
-                            <OuterGlowBitmapEffect GlowColor="Red" GlowSize="10" />
-                        </Setter.Value>
-                    </Setter>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Type}" Value="Probe">
-                    <Setter Property="Opacity" Value="1.0" />
-                    <Setter Property="Background" TargetName="backColorBorder" Value="Green" />
-                    <Setter Property="BitmapEffect" TargetName="backColorBorder">
-                        <Setter.Value>
-                            <OuterGlowBitmapEffect GlowColor="Green" GlowSize="10" />
-                        </Setter.Value>
-                    </Setter>
-                </DataTrigger>
             </DataTemplate.Triggers>
         </DataTemplate>
 
-        <DataTemplate x:Key="DayItemTemplate">
+      <DataTemplate x:Key="DayItemTemplate">
             <AdornerDecorator>
                 <Grid x:Name="dayGrid" MinWidth="{Binding MinWidth}" MaxWidth="{x:Static haw:Helper.MaxDayWidth}" Height="{DynamicResource DayHeight}" Margin="1" Background="#0F092D4D">
                     <!-- #2F092D4D -->
+                    <!--StartDragging="EventDraggingStart" 
+                        EndDragging="EventDraggingEnd" 
+                        Dragging="EventDragging"-->
                     <SeveQsCustomControls:RasteredItemsControl 
                         Header="{Binding Date, StringFormat='{}[{0:dd} - {0:ddd}]'}" 
                         FontSize="24" FontWeight="Bold"
-                        StartDragging="EventDraggingStart" 
-                        EndDragging="EventDraggingEnd" 
-                        Dragging="EventDragging" 
                         Loaded="RasteredItemsControlLoaded" 
                         SelectionChanged="RasteredItemsControlSelectionChanged" 
                         Raster="{StaticResource RasterH}" 
@@ -390,7 +161,7 @@
                         Header="{Binding Date, StringFormat='{}[{0:dd} - {0:ddd}] An diesem Tag sind keine Veranstaltungen eingetragen.'}" 
                         FontSize="24" FontWeight="Bold"
                         Raster="{StaticResource RasterH}" 
-                        Foreground="#FFCCCCCC" 
+                        Foreground="#22FFFFFF" 
                         Padding="0,5,0,10" 
                         FullLineThickness="0" HalfLineThickness="0" QuarterLineThickness="0" />
                 </Grid>

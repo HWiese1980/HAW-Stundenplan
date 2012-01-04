@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using HAW_Tool.Bittorrent;
 
 namespace HAW_Tool.HAW
 {
@@ -25,6 +24,5 @@ namespace HAW_Tool.HAW
         GroupID Group { get; set; }
         bool IsEnabled { get; set; }
         bool IsObligatory { get; }
-        IEnumerable<RESTTorrent> Files { get; }
     }
 }

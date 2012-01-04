@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using LittleHelpers;
 
 namespace HAW_Tool.HAW.REST
 {
     public class RESTWeek : IWeek
     {
-
-
         #region IWeek Members
 
         public IEnumerable<Day> Days

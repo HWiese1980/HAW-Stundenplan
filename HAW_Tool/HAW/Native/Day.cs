@@ -5,8 +5,9 @@ using System.Globalization;
 using System.Linq;
 using System.Windows;
 using HAW_Tool.HAW.REST;
+using SeminarGroup = HAW_Tool.HAW.Native.SeminarGroup;
 
-namespace HAW_Tool.HAW
+namespace HAW_Tool.HAW.Native
 {
     public class Day : XElementContainer
     {

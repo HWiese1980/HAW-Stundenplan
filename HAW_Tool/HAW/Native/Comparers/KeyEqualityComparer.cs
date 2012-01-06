@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace HAW_Tool.Comparers
+namespace HAW_Tool.HAW.Native.Comparers
 {
     public class KeyEqualityComparer<T> : IEqualityComparer<T>
     {

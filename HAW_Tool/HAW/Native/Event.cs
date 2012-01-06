@@ -8,14 +8,13 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
-using LittleHelpers;
 using DDayEvent = DDay.iCal.Event;
 
 // using DDayEvent = DDay.iCal.Event;
 
 #endregion
 
-namespace HAW_Tool.HAW
+namespace HAW_Tool.HAW.Native
 {
     public class Event : XElementContainer, IComparable<Event>, IEvent
     {
@@ -126,7 +125,7 @@ namespace HAW_Tool.HAW
             get { return _mDay; }
             set
             {
-                _mDay = value;
+                _mDay = value as Day;
                 CalculateRowIndex();
             }
         }
@@ -290,57 +289,5 @@ namespace HAW_Tool.HAW
         }
 
         #endregion
-
-        #region INotificationEnabled Members
-
-        public bool IsNotifyingChanges
-        {
-            get { return PlanFile.Instance.IsNotifyingChanges; }
-        }
-
-        #endregion
-
-        #region INotifyValueChanged Members
-
-        public void OnValueChanging(string property, object oldValue, object newValue)
-        {
-            if (!oldValue.Equals(newValue))
-            {
-                IEvent evt = PlanFile.Instance.CreateModifiedEvent(this);
-                
-                var prop = evt.GetType().GetProperty(property);
-                prop.SetValue(evt, newValue, null);
-            }
-        }
-
-        public void OnValueChanged(string property)
-        {
-            OnPropertyChanged(property);
-        }
-
-        #endregion
-
-        #region Nested type: EventCode
-
-        internal class EventCode
-        {
-            private string _code;
-
-            public string Code
-            {
-                get { return _code.ConvertUmlauts(UmlautConvertDirection.FromCrossWordFormat); }
-                set { _code = value.ConvertUmlauts(UmlautConvertDirection.ToCrossWordFormat); }
-            }
-
-            public GroupID Group { get; set; }
-        }
-
-        #endregion
-
-
-        public object GetNewValue(string property)
-        {
-            return "Test";
-        }
     }
 }

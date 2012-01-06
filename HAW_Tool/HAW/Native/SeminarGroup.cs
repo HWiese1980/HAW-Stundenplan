@@ -5,7 +5,9 @@ using System.Xml.Linq;
 using HAW_Tool.HAW.REST;
 using LittleHelpers;
 
-namespace HAW_Tool.HAW
+using Event = HAW_Tool.HAW.Native.Event;
+
+namespace HAW_Tool.HAW.Native
 {
     public class SeminarGroup : XElementContainer, IIsCurrent
     {

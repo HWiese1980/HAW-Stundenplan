@@ -78,14 +78,6 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\..\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="PostSharp, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b13fd38b8f9c99d7, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files (x86)\PostSharp 2.0\Release\PostSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="PostSharp.Laos, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b13fd38b8f9c99d7, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files (x86)\PostSharp 2.0\Release\PostSharp.Laos.dll</HintPath>
-    </Reference>
     <Reference Include="PresentationFramework.Aero" />
     <Reference Include="ReachFramework">
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
@@ -185,6 +177,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="UserControls\EventControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Window1.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -195,8 +191,19 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="HAW\Depending\CalendarWeek.cs" />
+    <Compile Include="HAW\Depending\Event.cs" />
+    <Compile Include="HAW\Depending\IWeek.cs" />
+    <Compile Include="HAW\Depending\SeminarGroup.cs" />
     <Compile Include="HAW\LabeledItem.cs" />
+    <Compile Include="HAW\Native\Comparers\WeekEqualityComparer.cs" />
+    <Compile Include="HAW\Native\EventCode.cs" />
+    <Compile Include="HAW\Native\ExportType.cs" />
+    <Compile Include="HAW\Native\PlanFile.cs" />
     <Compile Include="HAW\REST\HAWClient.cs" />
+    <Compile Include="UserControls\EventControl.xaml.cs">
+      <DependentUpon>EventControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Window1.xaml.cs">
       <DependentUpon>Window1.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -204,8 +211,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CompactView.cs" />
-    <Compile Include="Comparers\KeyEqualityComparer.cs" />
-    <Compile Include="Comparers\WeekEqualityComparer.cs" />
+    <Compile Include="HAW\Native\Comparers\KeyEqualityComparer.cs" />
     <Compile Include="Converters\CodeToBrushConverter.cs" />
     <Compile Include="Converters\EncodingConverter.cs" />
     <Compile Include="ErrorMessage.xaml.cs">
@@ -215,25 +221,24 @@
       <DependentUpon>EventDetails.xaml</DependentUpon>
     </Compile>
     <Compile Include="HAWToolException.cs" />
-    <Compile Include="HAW\BaseEvent.cs" />
-    <Compile Include="HAW\CalendarWeek.cs" />
+    <Compile Include="HAW\Native\BaseEvent.cs" />
+    <Compile Include="HAW\Native\CalendarWeek.cs" />
     <Compile Include="HAW\DateTimeToTimeSpan.cs" />
-    <Compile Include="HAW\Day.cs" />
-    <Compile Include="HAW\Event.cs" />
-    <Compile Include="HAW\EventComparer.cs" />
+    <Compile Include="HAW\Native\Day.cs" />
+    <Compile Include="HAW\Native\Event.cs" />
+    <Compile Include="HAW\Native\EventComparer.cs" />
     <Compile Include="HAW\EventItemTemplateSelector.cs" />
     <Compile Include="HAW\FromTillCombiner.cs" />
-    <Compile Include="HAW\GroupID.cs" />
-    <Compile Include="HAW\Helpers.cs" />
-    <Compile Include="HAW\IEvent.cs" />
+    <Compile Include="HAW\Native\GroupID.cs" />
+    <Compile Include="HAW\Native\Helpers.cs" />
+    <Compile Include="HAW\Native\IEvent.cs" />
     <Compile Include="HAW\IIsCurrent.cs" />
-    <Compile Include="HAW\IWeek.cs" />
-    <Compile Include="HAW\PlanFile.cs" />
+    <Compile Include="HAW\Native\IWeek.cs" />
     <Compile Include="HAW\REST\RESTEvent.cs" />
     <Compile Include="HAW\REST\HAWRest.cs" />
     <Compile Include="HAW\REST\RESTWeek.cs" />
-    <Compile Include="HAW\SeminarGroup.cs" />
-    <Compile Include="HAW\TimeToCoord.cs" />
+    <Compile Include="HAW\Native\SeminarGroup.cs" />
+    <Compile Include="HAW\Native\TimeToCoord.cs" />
     <Compile Include="HAW\ToStringConverter.cs" />
     <Compile Include="HAW\WeekHelper.cs" />
     <Compile Include="HAW\XElementContainer.cs" />
@@ -259,9 +264,9 @@
     </Compile>
     <Compile Include="UniqueList.cs" />
     <Compile Include="WindowSettings.cs" />
-    <Compile Include="WPF\ConverterWrapper.cs" />
-    <Compile Include="WPF\DayTemplateSelector.cs" />
-    <Compile Include="WPF\TranslatorConverter.cs" />
+    <Compile Include="HAW\Native\WPF\ConverterWrapper.cs" />
+    <Compile Include="HAW\Native\WPF\DayTemplateSelector.cs" />
+    <Compile Include="HAW\Native\WPF\TranslatorConverter.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -342,6 +347,7 @@
       <Name>SeveQsCustomControls</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -4,6 +4,8 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 
+using HAW_Tool.HAW.Native;
+
 namespace HAW_Tool.HAW.REST
 {
     public enum EntryType

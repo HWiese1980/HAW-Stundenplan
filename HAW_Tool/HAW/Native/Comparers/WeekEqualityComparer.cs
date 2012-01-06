@@ -1,10 +1,6 @@
-﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using HAW_Tool.HAW;
 
-namespace HAW_Tool.Comparers
+namespace HAW_Tool.HAW.Native.Comparers
 {
     class WeekEqualityComparer : IEqualityComparer<IWeek>
     {

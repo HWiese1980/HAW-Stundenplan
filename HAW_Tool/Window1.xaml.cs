@@ -19,6 +19,9 @@ using System.Runtime.InteropServices;
 using System.Windows.Interop;
 using HAW_Tool.Properties;
 
+using HAW_Tool.HAW.Native;
+using PlanFile = HAW_Tool.HAW.Native.PlanFile;
+
 // Version 0.0.1: {48119271-97D3-4E03-9D11-58A18F31D5D0}
 // Version 0.9.1: {95BE38A7-8FAC-4226-839D-247E3463E474}
 

@@ -2,12 +2,12 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:haw="clr-namespace:HAW_Tool.HAW"
-    xmlns:local="clr-namespace:HAW_Tool" xmlns:wpf="clr-namespace:HAW_Tool.WPF"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:local="clr-namespace:HAW_Tool" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     mc:Ignorable="d" xmlns:SeveQsCustomControls="clr-namespace:SeveQsCustomControls;assembly=SeveQsCustomControls"
     xmlns:Cvt="clr-namespace:HAW_Tool.Converters"
-    xmlns:k="clr-namespace:Kingsmill.Windows"
+    xmlns:k="clr-namespace:Kingsmill.Windows" xmlns:uc="clr-namespace:HAW_Tool.UserControls"
+    xmlns:WPF="clr-namespace:HAW_Tool.HAW.Native.WPF" xmlns:Native="clr-namespace:HAW_Tool.HAW.Native"
     x:Class="HAW_Tool.Window1" 
     WindowStyle="None" 
     AllowsTransparency="True" 
@@ -28,92 +28,12 @@
         </ControlTemplate>
 
       <DataTemplate x:Key="EventItemTemplate">
-            <Canvas Background="{x:Null}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                <Grid DataContext="{Binding}" Margin="0 15 0 0" >
-                    <Canvas.Top>
-                        <MultiBinding Converter="{StaticResource TimeToTop}" ConverterParameter="RowIndex">
-                            <Binding Path="HasChanges" />
-                            <Binding />
-                        </MultiBinding>
-                    </Canvas.Top>
-                    <Canvas.Left>
-                        <MultiBinding Converter="{StaticResource TimeToLeft}">
-                            <Binding Path="HasChanges" />
-                            <Binding />
-                        </MultiBinding>
-                    </Canvas.Left>
-                    <Grid.Width>
-                        <MultiBinding Converter="{StaticResource TimeToWidth}">
-                            <Binding Path="HasChanges" />
-                            <Binding />
-                        </MultiBinding>
-                    </Grid.Width>
-                    <SeveQsCustomControls:StrikeOut Opacity="0.6" Panel.ZIndex="100" StrikeOutThickness="3.0" Visibility="Hidden" x:Name="strikeOut" />
-                    <Border x:Name="backColorBorder" Background="#FF536B8E" CornerRadius="0">
-                        <Border.OpacityMask>
-                            <VisualBrush Visual="{Binding ElementName=border}"/>
-                        </Border.OpacityMask>
-                    </Border>
-                    <!--<Border x:Name="border" TextElement.FontSize="9" CornerRadius="2" BorderBrush="#76474747" BorderThickness="2,2,2,10" Background="#B2000000">-->
-                    <Border x:Name="border" TextElement.FontSize="9" CornerRadius="0" BorderBrush="#76474747" BorderThickness="2,2,2,10" Background="#B2000000">
-                        <Grid MinHeight="{StaticResource EventMinHeight}">
-                            <Label x:Name="from" Content="{Binding From, Converter={StaticResource ShortTime}, Mode=Default}" Foreground="White" d:LayoutOverrides="Width, Height" VerticalAlignment="Center" HorizontalAlignment="Left" RenderTransformOrigin="0.5,0.5" Padding="0" Margin="0" >
-                                <Label.RenderTransform>
-                                    <TransformGroup>
-                                        <ScaleTransform/>
-                                        <SkewTransform/>
-                                        <RotateTransform Angle="-90"/>
-                                        <TranslateTransform/>
-                                    </TransformGroup>
-                                </Label.RenderTransform>
-                            </Label>
-                            <Label x:Name="till" Content="{Binding Till, Converter={StaticResource ShortTime}, Mode=Default}" Foreground="White" d:LayoutOverrides="Width, Height" VerticalAlignment="Center" HorizontalAlignment="Right" RenderTransformOrigin="0.5,0.5" Padding="0" Margin="0" >
-                                <Label.RenderTransform>
-                                    <TransformGroup>
-                                        <ScaleTransform/>
-                                        <SkewTransform/>
-                                        <RotateTransform Angle="-90"/>
-                                        <TranslateTransform/>
-                                    </TransformGroup>
-                                </Label.RenderTransform>
-                            </Label>
-                            <Label x:Name="codeGross" Content="{Binding Code}" FontWeight="Bold" Foreground="#05FFFFFF" FontStretch="Expanded" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontSize="20" />
-                            <Label x:Name="codeKlein" Content="{Binding Code}" FontWeight="Bold" Foreground="White" d:LayoutOverrides="Width, Height" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0" FontSize="10.667" />
-                            <Label Content="{Binding Tutor}" Foreground="White" d:LayoutOverrides="Width, Height" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0" FontSize="10.667" />
-                            <Label Content="{Binding Room}" Foreground="White" d:LayoutOverrides="Width, Height" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0" FontSize="10.667" />
-                        </Grid>
-                    </Border>
-                </Grid>
-            </Canvas>
-            <DataTemplate.Triggers>
-                <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType={x:Type ListBoxItem}, Mode=FindAncestor}}" Value="True">
-                    <Setter Property="BorderBrush" TargetName="border" Value="White"/>
-                    <Setter Property="Background" TargetName="border" Value="#44FFFFFF" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding IsObligatory}" Value="True">
-                    <Setter Property="Background" TargetName="backColorBorder" Value="#44FF0000" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding HasChanges}" Value="True">
-                    <Setter Property="Background" TargetName="backColorBorder" Value="#8800FFFF" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding IsEnabled}" Value="False">
-                    <Setter Property="Opacity" Value="0.3" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding TakesPlace}" Value="False">
-                    <Setter Property="Background" TargetName="backColorBorder" Value="#88FF0000" />
-                    <Setter Property="Visibility" TargetName="strikeOut" Value="Visible" />
-                    <Setter Property="Opacity" Value="0.6" />
-                </DataTrigger>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Opacity" TargetName="border" Value="1.0" />
-                    <Setter Property="Background" TargetName="backColorBorder" Value="#FFFFFFFF"/>
-                </Trigger>
-            </DataTemplate.Triggers>
+            <uc:EventControl DataContext="{Binding}" />
         </DataTemplate>
 
       <DataTemplate x:Key="DayItemTemplate">
             <AdornerDecorator>
-                <Grid x:Name="dayGrid" MinWidth="{Binding MinWidth}" MaxWidth="{x:Static haw:Helper.MaxDayWidth}" Height="{DynamicResource DayHeight}" Margin="1" Background="#0F092D4D">
+                <Grid x:Name="dayGrid" MinWidth="{Binding MinWidth}" MaxWidth="{x:Static Native:Helper.MaxDayWidth}" Height="{DynamicResource DayHeight}" Margin="1" Background="#0F092D4D">
                     <!-- #2F092D4D -->
                     <!--StartDragging="EventDraggingStart" 
                         EndDragging="EventDraggingEnd" 
@@ -156,7 +76,7 @@
 
         <DataTemplate x:Key="EmptyDayItemTemplate">
             <AdornerDecorator>
-                <Grid x:Name="dayGrid" MinWidth="{Binding MinWidth}" MaxWidth="{x:Static haw:Helper.MaxDayWidth}" Height="{DynamicResource DayHeight}" Margin="1" Background="#0F092D4D">
+                <Grid x:Name="dayGrid" MinWidth="{Binding MinWidth}" MaxWidth="{x:Static Native:Helper.MaxDayWidth}" Height="{DynamicResource DayHeight}" Margin="1" Background="#0F092D4D">
                     <SeveQsCustomControls:RasteredItemsControl 
                         Header="{Binding Date, StringFormat='{}[{0:dd} - {0:ddd}] An diesem Tag sind keine Veranstaltungen eingetragen.'}" 
                         FontSize="24" FontWeight="Bold"
@@ -168,7 +88,7 @@
             </AdornerDecorator>
         </DataTemplate>
 
-        <wpf:DayTemplateSelector x:Key="DayTemplateSelect" EmptyDayTemplate="{StaticResource EmptyDayItemTemplate}" NotEmptyDayTemplate="{StaticResource DayItemTemplate}" />
+        <WPF:DayTemplateSelector x:Key="DayTemplateSelect" EmptyDayTemplate="{StaticResource EmptyDayItemTemplate}" NotEmptyDayTemplate="{StaticResource DayItemTemplate}" />
 
         <DataTemplate x:Key="SeminarGroupTemplate">
             <Grid DataContext="{Binding SelectedItem, ElementName=CalWeek}" d:DesignWidth="769.34" d:DesignHeight="333">

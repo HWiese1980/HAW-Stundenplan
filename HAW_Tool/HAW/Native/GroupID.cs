@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace HAW_Tool.HAW
+namespace HAW_Tool.HAW.Native
 {
     public class GroupID: IComparable
     {

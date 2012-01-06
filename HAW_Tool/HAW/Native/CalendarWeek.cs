@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using System.Windows.Threading;
 
-namespace HAW_Tool.HAW
+namespace HAW_Tool.HAW.Native
 {
     public class CalendarWeek : XElementContainer, IWeek
     {
@@ -67,8 +68,19 @@ namespace HAW_Tool.HAW
         {
             get
             {
-                return _mEvents ?? (_mEvents = new List<Event>(from p in MBaseElement.Elements("event")
-                                                               select new Event(this, p)));
+                if (_mEvents == null)
+                {
+                    Dispatcher.CurrentDispatcher.Invoke(new Action(() =>
+                                                                       {
+                                                                           _mEvents =
+                                                                               new List<Event>(
+                                                                                   from p in
+                                                                                       MBaseElement.Elements("event")
+                                                                                   select new Event(this, p));
+                                                                       }));
+                }
+
+                return _mEvents;
             }
         }
 
@@ -108,42 +120,42 @@ namespace HAW_Tool.HAW
             }
         }
 
-/*
-        private Day GetDayFromToday(int daysAdded)
-        {
-            DateTime tToday = DateTime.Now.Date;
-            DateTime tTomorrow = tToday.AddDays(daysAdded);
+        /*
+                private Day GetDayFromToday(int daysAdded)
+                {
+                    DateTime tToday = DateTime.Now.Date;
+                    DateTime tTomorrow = tToday.AddDays(daysAdded);
 
-            var tQuery = from p in this.Days
-                         where p.Date == tTomorrow.Date
-                         select p;
+                    var tQuery = from p in this.Days
+                                 where p.Date == tTomorrow.Date
+                                 select p;
 
-            if (tQuery.Count() <= 0) return null;
+                    if (tQuery.Count() <= 0) return null;
 
-            Day tDay = tQuery.Single();
-            return tDay;
-        }
-*/
+                    Day tDay = tQuery.Single();
+                    return tDay;
+                }
+        */
 
-/*
-        public Day Today
-        {
-            get
-            {
-                return GetDayFromToday(0);
-            }
-        }
-*/
+        /*
+                public Day Today
+                {
+                    get
+                    {
+                        return GetDayFromToday(0);
+                    }
+                }
+        */
 
-/*
-        public Day Tomorrow
-        {
-            get
-            {
-                return GetDayFromToday(1);
-            }
-        }
-*/
+        /*
+                public Day Tomorrow
+                {
+                    get
+                    {
+                        return GetDayFromToday(1);
+                    }
+                }
+        */
 
         public override string ToString()
         {

@@ -4,10 +4,8 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Data;
-using LHelper = LittleHelpers.Helper;
 
-
-namespace HAW_Tool.HAW
+namespace HAW_Tool.HAW.Native
 {
     public class TimeToCoord : IMultiValueConverter
     {
@@ -31,7 +29,7 @@ namespace HAW_Tool.HAW
 
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {
-            if (LHelper.IsInDesignModeStatic) return null;
+            if (LittleHelpers.Helper.IsInDesignModeStatic) return null;
 
             IEnumerable<object> tEvents = from p in values
                                           where p is IEvent

@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -15,18 +13,15 @@ using System.Windows;
 using System.Xml.Linq;
 using DDay.iCal;
 using DDay.iCal.Serialization.iCalendar;
-
-using HAW_Tool.Comparers;
 using HAW_Tool.HAW.REST;
+using HAW_Tool.Properties;
 using LittleHelpers;
-using RedBranch.Hammock;
-using DDayEvent = DDay.iCal.Event;
-using Settings = HAW_Tool.Properties.Settings;
+using HAW_Tool.HAW.Native.Comparers;
 
 // using DDay.iCal.DataTypes;
 // using System.Net.Mail;
 
-namespace HAW_Tool.HAW
+namespace HAW_Tool.HAW.Native
 {
     public partial class PlanFile : INotifyPropertyChanged, IIsCurrent
     {
@@ -405,9 +400,9 @@ namespace HAW_Tool.HAW
             return cfgPath;
         }
 
-        private DDayEvent ConvertToDDayEvt(IEvent tEvt)
+        private DDay.iCal.Event ConvertToDDayEvt(IEvent tEvt)
         {
-            return (DDayEvent)tEvt;
+            return (DDay.iCal.Event)tEvt;
         }
 
         private XElement CreateEventElement(Match match)
@@ -747,13 +742,5 @@ namespace HAW_Tool.HAW
         {
             throw new NotImplementedException();
         }
-    }
-
-    public enum ExportType
-    {
-// ReSharper disable InconsistentNaming
-        iCal,
-// ReSharper restore InconsistentNaming
-        Plain
     }
 }

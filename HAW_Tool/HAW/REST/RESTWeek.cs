@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using LittleHelpers;
+using HAW_Tool.HAW.Native;
+using Helper = HAW_Tool.HAW.Native.Helper;
 
 namespace HAW_Tool.HAW.REST
 {

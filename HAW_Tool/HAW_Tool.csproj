@@ -14,13 +14,14 @@
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WarningLevel>4</WarningLevel>
-    <ExpressionBlendVersion>3.0.1927.0</ExpressionBlendVersion>
+    <ExpressionBlendVersion>4.0.20621.0</ExpressionBlendVersion>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <UpgradeBackupLocation>
     </UpgradeBackupLocation>
     <OldToolsVersion>3.5</OldToolsVersion>
+    <TargetFrameworkProfile />
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -35,46 +36,66 @@
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;HAW_NATIVE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;HAW_NATIVE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug %28Dep%29|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;HAW_DEPENDING</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisLogFile>bin\Debug\HAW_Tool.exe.CodeAnalysisLog.xml</CodeAnalysisLogFile>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
+    <CodeAnalysisIgnoreBuiltInRuleSets>false</CodeAnalysisIgnoreBuiltInRuleSets>
+    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
+    <CodeAnalysisIgnoreBuiltInRules>false</CodeAnalysisIgnoreBuiltInRules>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release %28Dep%29|AnyCPU'">
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE;HAW_DEPENDING</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisLogFile>bin\Release\HAW_Tool.exe.CodeAnalysisLog.xml</CodeAnalysisLogFile>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
+    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
+  </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AvalonControlsLibrary">
+      <HintPath>..\..\..\..\Downloads\Release V2\AvalonControlsLibrary\bin\Release\AvalonControlsLibrary.dll</HintPath>
+    </Reference>
     <Reference Include="DDay.iCal">
-      <HintPath>C:\Users\Hendrik\Desktop\DDay.iCal\DDay.iCal.dll</HintPath>
+      <HintPath>bin\Debug\DDay.iCal.dll</HintPath>
     </Reference>
-    <Reference Include="DotNetOpenAuth">
-      <HintPath>U:\Unshared\Firefox\DotNetOpenAuth-4.0.0.11165\DotNetOpenAuth-4.0.0.11165\Bin\DotNetOpenAuth.dll</HintPath>
-    </Reference>
-    <Reference Include="Google.Apis">
-      <HintPath>U:\Unshared\Firefox\google-api-dotnet-client-1.1.4344-beta.binary\Lib\Google.Apis.dll</HintPath>
-    </Reference>
-    <Reference Include="Google.Apis.Authentication.OAuth2">
-      <HintPath>U:\Unshared\Firefox\google-api-dotnet-client-1.1.4344-beta.binary\Lib\Google.Apis.Authentication.OAuth2.dll</HintPath>
-    </Reference>
-    <Reference Include="Google.Apis.Calendar.v3">
-      <HintPath>U:\Unshared\Firefox\Google.Apis.Calendar.v3.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Expression.Interactions, Version=3.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
+    <Reference Include="Microsoft.Expression.Interactions" />
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\..\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -104,7 +125,7 @@
     <Reference Include="System.ServiceModel.Web">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
-    <Reference Include="System.Windows.Interactivity, Version=3.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
+    <Reference Include="System.Windows.Interactivity" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -136,12 +157,6 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Page Include="ErrorMessage.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="EventDetails.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
       <Generator>MSBuild:Compile</Generator>
@@ -181,6 +196,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="UserControls\EventDetails.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Window1.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -191,10 +210,23 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Converters\BindingLogger.cs" />
+    <Compile Include="Converters\CheckBoxContentConverter.cs" />
+    <Compile Include="Converters\CompareConverter.cs" />
+    <Compile Include="Converters\ListBoxItemToContentConverter.cs" />
+    <Compile Include="Converters\TimeToValueConverter.cs" />
     <Compile Include="HAW\Depending\CalendarWeek.cs" />
+    <Compile Include="HAW\Depending\Day.cs" />
     <Compile Include="HAW\Depending\Event.cs" />
+    <Compile Include="HAW\Depending\FreezableUIElement.cs" />
+    <Compile Include="HAW\Depending\IEvent.cs" />
     <Compile Include="HAW\Depending\IWeek.cs" />
+    <Compile Include="HAW\Depending\PlanFile.cs" />
+    <Compile Include="HAW\Depending\RowIndex.cs" />
     <Compile Include="HAW\Depending\SeminarGroup.cs" />
+    <Compile Include="HAW\Depending\StringFilter.cs" />
+    <Compile Include="HAW\Depending\TimeToCoord.cs" />
+    <Compile Include="HAW\Depending\WPF\DayTemplateSelector.cs" />
     <Compile Include="HAW\LabeledItem.cs" />
     <Compile Include="HAW\Native\Comparers\WeekEqualityComparer.cs" />
     <Compile Include="HAW\Native\EventCode.cs" />
@@ -204,6 +236,10 @@
     <Compile Include="UserControls\EventControl.xaml.cs">
       <DependentUpon>EventControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\EventDetails.xaml.cs">
+      <DependentUpon>EventDetails.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\RangeSlider.cs" />
     <Compile Include="Window1.xaml.cs">
       <DependentUpon>Window1.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -216,9 +252,6 @@
     <Compile Include="Converters\EncodingConverter.cs" />
     <Compile Include="ErrorMessage.xaml.cs">
       <DependentUpon>ErrorMessage.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="EventDetails.xaml.cs">
-      <DependentUpon>EventDetails.xaml</DependentUpon>
     </Compile>
     <Compile Include="HAWToolException.cs" />
     <Compile Include="HAW\Native\BaseEvent.cs" />
@@ -356,5 +389,5 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <Import Project="$(MSBuildExtensionsPath)\Microsoft\Expression\Blend\3.0\WPF\Microsoft.Expression.Blend.WPF.targets" />
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\Expression\Blend\.NETFramework\v4.0\Microsoft.Expression.Blend.WPF.targets" />
 </Project>

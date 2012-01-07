@@ -3,7 +3,7 @@
                     xmlns:svq="clr-namespace:SeveQsCustomControls;assembly=SeveQsCustomControls"
                     xmlns:Microsoft_Windows_Themes="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero"
                     xmlns:System="clr-namespace:System;assembly=mscorlib" xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-                    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d">
+                    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:Custom="http://schemas.AvalonControls/AvalonControlsLibrary/Controls" mc:Ignorable="d">
     <!-- Resource dictionary entries should be defined here. -->
 
     <ImageBrush ImageSource="Icons/BlockBackground.png" x:Key="BlockBackgroundBrush" />
@@ -11,7 +11,7 @@
     <Style TargetType="{x:Type Button}" x:Key="SmallRoundButton">
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="Button">
+                <ControlTemplate TargetType="{x:Type Button}">
                     <Border x:Name="border" Width="10" Height="10" CornerRadius="6" Background="White"
                   BorderBrush="#44FFFFFF" BorderThickness="2" />
                     <ControlTemplate.Triggers>
@@ -290,13 +290,10 @@
                     </ControlTemplate.Resources>
                     <Grid SnapsToDevicePixels="true" Margin="2,1,2,1">
                         <Border TextElement.FontWeight="Bold" TextElement.Foreground="White" x:Name="Bd" BorderThickness="1,2"
-                    Padding="{TemplateBinding Padding}" CornerRadius="2" ScrollViewer.VerticalScrollBarVisibility="Disabled" Margin="3">
+                    Padding="{TemplateBinding Padding}" CornerRadius="2" ScrollViewer.VerticalScrollBarVisibility="Disabled" Margin="3" Background="#33FFFFFF">
                             <Border.BorderBrush>
                                 <SolidColorBrush Color="{DynamicResource DarkenDown20}" />
                             </Border.BorderBrush>
-                            <Border.Background>
-                                <SolidColorBrush Color="#33FFFFFF" />
-                            </Border.Background>
                             <ContentPresenter x:Name="Content"
                                 HorizontalAlignment="{Binding HorizontalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"
                                 VerticalAlignment="{Binding VerticalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"
@@ -370,7 +367,7 @@
                                 <BeginStoryboard Storyboard="{StaticResource TabMouseOver}" />
                             </Trigger.EnterActions>
                         </Trigger>
-                        <MultiDataTrigger>
+                        <!--<MultiDataTrigger>
                             <MultiDataTrigger.Conditions>
                                 <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True" />
                                 <Condition Binding="{Binding IsCurrent}" Value="True" />
@@ -389,7 +386,7 @@
                                 </Setter.Value>
                             </Setter>
                             <Setter Property="TextElement.FontWeight" Value="Bold" />
-                        </DataTrigger>
+                        </DataTrigger>-->
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
@@ -653,4 +650,21 @@
             </Trigger>
         </Style.Triggers>
     </Style>
+	<Style x:Key="RangeSliderStyle1" TargetType="{x:Type Custom:RangeSlider}">
+		<Setter Property="Template">
+			<Setter.Value>
+				<ControlTemplate TargetType="{x:Type Custom:RangeSlider}">
+					<Grid>
+						<StackPanel x:Name="PART_RangeSliderContainer" d:LayoutOverrides="Width, Height">
+							<RepeatButton x:Name="PART_LeftEdge" Content=""/>
+							<Thumb x:Name="PART_LeftThumb" Cursor="SizeWE" HorizontalAlignment="Stretch" Width="2"/>
+							<Thumb x:Name="PART_MiddleThumb" />
+							<Thumb x:Name="PART_RightThumb" Cursor="SizeWE" HorizontalAlignment="Stretch" Margin="0" Width="2"/>
+							<RepeatButton x:Name="PART_RightEdge" Content=""/>
+						</StackPanel>
+					</Grid>
+				</ControlTemplate>
+			</Setter.Value>
+		</Setter>
+	</Style>
 </ResourceDictionary>

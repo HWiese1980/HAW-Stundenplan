@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using LHelper = LittleHelpers.Helper;
@@ -11,6 +12,17 @@ namespace HAW_Tool.HAW.Native
 {
     public static class Helper
     {
+        public static readonly Dictionary<string,int> DaysOfWeek = new Dictionary<string, int>();
+        static Helper()
+        {
+            DaysOfWeek.Add("Mo", 1);
+            DaysOfWeek.Add("Di", 2);
+            DaysOfWeek.Add("Mi", 3);
+            DaysOfWeek.Add("Do", 4);
+            DaysOfWeek.Add("Fr", 5);
+            DaysOfWeek.Add("Sa", 6);
+            DaysOfWeek.Add("So", 0);
+        }
         #region Properties (1)
 
         public static double MaxDayWidth

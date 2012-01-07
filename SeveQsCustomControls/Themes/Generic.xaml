@@ -218,16 +218,25 @@
     </Style>
 
     <Style TargetType="{x:Type local:RasteredItemsControl}">
+        <Setter Property="ItemContainerStyle">
+            <Setter.Value>
+                <Style TargetType="{x:Type ListBoxItem}">
+                    <Setter Property="IsSelected" Value="{Binding Path='IsSelected', Mode=TwoWay}" />
+                </Style>
+            </Setter.Value>
+        </Setter>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type local:RasteredItemsControl}">
-                    <Grid>
-                        <Label HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="5,5,0,0" 
+                    <ScrollViewer>
+                        <Grid>
+                            <Label HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="5,5,0,0" 
                                FontSize="{TemplateBinding FontSize}" 
                                FontWeight="{TemplateBinding FontWeight}" Foreground="{TemplateBinding Foreground}" Content="{TemplateBinding Header}" />
-                        <Canvas x:Name="PART_RasterCanvas" />
-                        <ItemsPresenter/>
-                    </Grid>
+                            <Canvas x:Name="PART_RasterCanvas" />
+                            <ItemsPresenter/>
+                        </Grid>
+                    </ScrollViewer>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

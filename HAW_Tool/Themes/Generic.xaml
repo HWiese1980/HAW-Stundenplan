@@ -3,10 +3,11 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
     xmlns:local="clr-namespace:HAW_Tool" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" xmlns:HAW_Tool_HAW="clr-namespace:HAW_Tool.HAW" xmlns:Microsoft_Windows_Themes="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero"
-    xmlns:Native="clr-namespace:HAW_Tool.HAW.Native">
+    xmlns:Native="clr-namespace:HAW_Tool.HAW.Native" xmlns:Depending="clr-namespace:HAW_Tool.HAW.Depending"
+    xmlns:UserControls="clr-namespace:HAW_Tool.UserControls">
 
     <sys:Double x:Key="RasterH">90</sys:Double>
-    <sys:Double x:Key="RasterV">60</sys:Double>
+    <sys:Double x:Key="RasterV">50</sys:Double>
     <SolidColorBrush x:Key="PR" Color="AliceBlue" />
 
     <Style x:Key="ScrollableItemsControl" TargetType="{x:Type ItemsControl}">
@@ -21,10 +22,10 @@
         </Setter>
     </Style>
 
-    <Native:TimeToCoord x:Key="TimeToWidth" Multiplier="{StaticResource RasterH}" AsWidth="True" />
+    <Depending:TimeToCoord x:Key="TimeToWidth" Multiplier="{StaticResource RasterH}" AsWidth="True" />
     <HAW_Tool_HAW:ToStringConverter x:Key="ShortTime" Format="{}{0:t}" />
-    <Native:TimeToCoord x:Key="TimeToLeft" Multiplier="{StaticResource RasterH}" />
-    <Native:TimeToCoord x:Key="TimeToTop" Multiplier="{StaticResource RasterV}" />
+    <Depending:TimeToCoord x:Key="TimeToLeft" Multiplier="{StaticResource RasterH}" />
+    <Depending:TimeToCoord x:Key="TimeToTop" Multiplier="{StaticResource RasterV}" />
     <BorderGapMaskConverter x:Key="BorderGapMaskConverter"/>
     <Style x:Key="HAWGroupBoxStyle" TargetType="{x:Type GroupBox}">
         <Setter Property="BorderBrush" Value="#D5DFE5"/>
@@ -189,4 +190,17 @@
             </StackPanel>
         </Border>
     </DataTemplate>
+
+    <Style TargetType="{x:Type UserControls:RangeSlider}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type UserControls:RangeSlider}">
+                    <Canvas Background="{x:Null}">
+                		<Thumb Canvas.Left="{Binding LeftThumbPos, RelativeSource={RelativeSource TemplatedParent}}" x:Name="PART_LeftThumb" Width="10" Height="20" d:LayoutOverrides="Width" />
+                        <Thumb Canvas.Right="{Binding RightThumbPos, RelativeSource={RelativeSource TemplatedParent}}" x:Name="PART_RightThumb" Width="10" Height="20" d:LayoutOverrides="Width" />
+                	</Canvas>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 </ResourceDictionary>

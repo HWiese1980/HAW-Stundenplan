@@ -1,0 +1,84 @@
+﻿<UserControl
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:Converters="clr-namespace:HAW_Tool.Converters" x:Class="HAW_Tool.UserControls.EventDetails" 
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300">
+	<UserControl.Resources>
+		<Style TargetType="{x:Type Label}" x:Key="H1">
+			<Setter Property="Foreground" Value="White" />
+			<Setter Property="FontWeight" Value="Bold" />
+			<Setter Property="FontSize" Value="20" />
+		</Style>
+		<Style TargetType="{x:Type Label}" x:Key="H5" BasedOn="{StaticResource H1}">
+			<Setter Property="FontSize" Value="12" />
+		</Style>
+	</UserControl.Resources>
+    <Grid Margin="5">
+        <Grid.Resources>
+            <Style TargetType="{x:Type Label}" x:Key="H1">
+                <Setter Property="Foreground" Value="White" />
+                <Setter Property="FontWeight" Value="Bold" />
+                <Setter Property="FontSize" Value="20" />
+            </Style>
+            <Style TargetType="{x:Type Label}" x:Key="H2" BasedOn="{StaticResource H1}">
+                <Setter Property="FontSize" Value="18" />
+            </Style>
+            <Style TargetType="{x:Type Label}" x:Key="H3" BasedOn="{StaticResource H1}">
+                <Setter Property="FontSize" Value="16" />
+            </Style>
+            <Style TargetType="{x:Type Label}" x:Key="H4" BasedOn="{StaticResource H1}">
+                <Setter Property="FontSize" Value="14" />
+            </Style>
+            <Style TargetType="{x:Type Label}" x:Key="H5" BasedOn="{StaticResource H1}">
+                <Setter Property="FontSize" Value="12" />
+            </Style>
+            <Style TargetType="{x:Type Label}" x:Key="H6" BasedOn="{StaticResource H1}">
+                <Setter Property="FontSize" Value="10" />
+            </Style>
+        </Grid.Resources>
+    	<Grid.Background>
+    		<SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
+    	</Grid.Background>
+    	<DockPanel>
+    		<StackPanel d:LayoutOverrides="Height" DockPanel.Dock="Top">
+    			<Label Style="{StaticResource H1}" Content="Veranstaltungsdetails" Background="{x:Null}"/>
+    			<Label Style="{StaticResource H2}" Content="{Binding Code}" MinHeight="30" Background="{x:Null}"/>
+    		</StackPanel>
+    		<Grid>
+    			<Grid.RowDefinitions>
+    				<RowDefinition Height="27.925"/>
+    				<RowDefinition Height="27.925"/>
+    				<RowDefinition Height="27.925"/>
+    				<RowDefinition Height="27.925"/>
+    				<RowDefinition Height="27.925"/>
+    				<RowDefinition Height="27.925"/>
+    				<RowDefinition Height="27.925"/>
+    				<RowDefinition Height="27.925"/>
+    			</Grid.RowDefinitions>
+    			<Grid.ColumnDefinitions>
+    				<ColumnDefinition Width="102.08"/>
+    				<ColumnDefinition/>
+    			</Grid.ColumnDefinitions>
+    			<Label Content="Code" d:LayoutOverrides="Height" Style="{DynamicResource H5}"/>
+    			<Label Content="Prof." Style="{DynamicResource H5}" d:LayoutOverrides="Height" Grid.Row="1"/>
+    			<Label Content="Raum" Style="{DynamicResource H5}" d:LayoutOverrides="Height" Grid.Row="2"/>
+    			<Label Content="Datum" Style="{DynamicResource H5}" d:LayoutOverrides="Height" Grid.Row="3"/>
+    			<Label Content="Anfang" Style="{DynamicResource H5}" d:LayoutOverrides="Height" Grid.Row="4"/>
+    			<Label Content="Ende" Style="{DynamicResource H5}" d:LayoutOverrides="Height" Grid.Row="5"/>
+    			<Label Content="Findet statt" Style="{DynamicResource H5}" d:LayoutOverrides="Height" Grid.Row="6"/>
+    			<Label Content="Ist Pflicht" Style="{DynamicResource H5}" d:LayoutOverrides="Height" Grid.Row="7"/>
+    			<DatePicker SelectedDate="{Binding Date}"  d:LayoutOverrides="Height" Grid.Column="1" Grid.Row="3" VerticalAlignment="Center" FirstDayOfWeek="Monday" BorderBrush="{x:Null}" HorizontalAlignment="Left" Width="160"/>
+                <TextBox TextWrapping="Wrap" Text="{Binding Room}" Grid.Column="1" Grid.Row="2" VerticalAlignment="Center" Margin="2,0,0,0" HorizontalAlignment="Left" Width="130"/>
+                <TextBox TextWrapping="Wrap" Text="{Binding Code}" Grid.Column="1" Margin="2,0,0,0" d:LayoutOverrides="Height" HorizontalAlignment="Left" Width="130" VerticalAlignment="Center"/>
+                <TextBox TextWrapping="Wrap" Text="{Binding Tutor}" Grid.Column="1" Grid.Row="1" d:LayoutOverrides="Height" VerticalAlignment="Center" HorizontalAlignment="Left" Width="130" Margin="2,0,0,0"/>
+    			<Slider Value="{Binding From, Converter={Converters:TimeToValueConverter MinTime='7:00', MaxTime='22:00', SizeOfSlider=100}}" Minimum="0" Maximum="100" Grid.Column="1" Grid.Row="4" TickPlacement="TopLeft" HorizontalAlignment="Left" Width="130" Margin="2,0,0,0"/>
+                <Slider Value="{Binding Till, Converter={Converters:TimeToValueConverter MinTime='7:00', MaxTime='22:00', SizeOfSlider=100}}" Minimum="0" Maximum="100" Grid.Column="1" Grid.Row="5" TickPlacement="TopLeft" HorizontalAlignment="Left" Width="130" Margin="2,0,0,0"/>
+                <CheckBox Content="{Binding TakesPlace, Converter={Converters:CheckBoxContentConverter CheckedText='ja', UncheckedText='nein'}}" IsChecked="{Binding TakesPlace}" Grid.Column="1" Grid.Row="6" Width="130" HorizontalAlignment="Left" Margin="2,0,0,0" VerticalAlignment="Center"/>
+                <CheckBox Content="{Binding IsObligatory, Converter={Converters:CheckBoxContentConverter CheckedText='ja', UncheckedText='nein'}}" IsChecked="{Binding IsObligatory}" Grid.Column="1" Grid.Row="7" Width="130" HorizontalAlignment="Left" d:LayoutOverrides="Height" VerticalAlignment="Center" Margin="2,0,0,0"/>
+    		</Grid>
+    	</DockPanel>
+    </Grid>
+</UserControl>

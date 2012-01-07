@@ -7,14 +7,23 @@
     mc:Ignorable="d" xmlns:SeveQsCustomControls="clr-namespace:SeveQsCustomControls;assembly=SeveQsCustomControls"
     xmlns:Cvt="clr-namespace:HAW_Tool.Converters"
     xmlns:k="clr-namespace:Kingsmill.Windows" xmlns:uc="clr-namespace:HAW_Tool.UserControls"
-    xmlns:WPF="clr-namespace:HAW_Tool.HAW.Native.WPF" xmlns:Native="clr-namespace:HAW_Tool.HAW.Native"
-    x:Class="HAW_Tool.Window1" 
+    xmlns:WPF="clr-namespace:HAW_Tool.HAW.Depending.WPF" xmlns:Native="clr-namespace:HAW_Tool.HAW.Native"
+    xmlns:ComponentModel="clr-namespace:System.ComponentModel;assembly=WindowsBase"
+    xmlns:Depending="clr-namespace:HAW_Tool.HAW.Depending" x:Class="HAW_Tool.Window1" 
+    Name="TheMainWindow"
     WindowStyle="None" 
     AllowsTransparency="True" 
     Background="{x:Null}" 
     ResizeMode="NoResize"
     k:WindowSettings.Save="True" MinWidth="800" MinHeight="400">
+
     <Window.Resources>
+        <CollectionViewSource Source="{Binding SeminarGroups}" x:Key="seminarGroupsCollectionView">
+            <CollectionViewSource.SortDescriptions>
+                <ComponentModel:SortDescription Direction="Ascending" PropertyName="Name" />
+            </CollectionViewSource.SortDescriptions>
+        </CollectionViewSource>
+
         <haw:EventItemTemplateSelector x:Key="EventItemTemplateSelector" />
         <Cvt:EncodingConverter x:Key="EncodingCvt" />
 
@@ -27,11 +36,11 @@
             </StackPanel>
         </ControlTemplate>
 
-      <DataTemplate x:Key="EventItemTemplate">
-            <uc:EventControl DataContext="{Binding}" />
+        <DataTemplate x:Key="EventItemTemplate">
+                <uc:EventControl DataContext="{Binding}" RasterWidth="{Binding RasterWidth, RelativeSource={RelativeSource AncestorType=SeveQsCustomControls:RasteredItemsControl}}" />
         </DataTemplate>
 
-      <DataTemplate x:Key="DayItemTemplate">
+        <DataTemplate x:Key="DayItemTemplate">
             <AdornerDecorator>
                 <Grid x:Name="dayGrid" MinWidth="{Binding MinWidth}" MaxWidth="{x:Static Native:Helper.MaxDayWidth}" Height="{DynamicResource DayHeight}" Margin="1" Background="#0F092D4D">
                     <!-- #2F092D4D -->
@@ -39,10 +48,10 @@
                         EndDragging="EventDraggingEnd" 
                         Dragging="EventDragging"-->
                     <SeveQsCustomControls:RasteredItemsControl 
+                        x:Name="raster"
                         Header="{Binding Date, StringFormat='{}[{0:dd} - {0:ddd}]'}" 
                         FontSize="24" FontWeight="Bold"
                         Loaded="RasteredItemsControlLoaded" 
-                        SelectionChanged="RasteredItemsControlSelectionChanged" 
                         Raster="{StaticResource RasterH}" 
                         ItemsSource="{Binding Events}" 
                         ItemTemplateSelector="{StaticResource EventItemTemplateSelector}" 
@@ -65,6 +74,10 @@
                 </Grid>
             </AdornerDecorator>
             <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Events.Count, Converter={Cvt:CompareConverter Value=1, Operator='LessThan'}}" Value="True">
+                    <Setter TargetName="raster" Property="Header" Value="{Binding Date, StringFormat='{}[{0:dd} - {0:ddd}] keine Veranstaltung geplant'}" />
+                    <Setter TargetName="dayGrid" Property="Opacity" Value="0.2" />
+                </DataTrigger>
                 <DataTrigger Binding="{Binding HasAdditions}" Value="True">
                     <Setter TargetName="dayGrid" Property="Background" Value="#2F098D4D" />
                 </DataTrigger>
@@ -74,21 +87,7 @@
             </DataTemplate.Triggers>
         </DataTemplate>
 
-        <DataTemplate x:Key="EmptyDayItemTemplate">
-            <AdornerDecorator>
-                <Grid x:Name="dayGrid" MinWidth="{Binding MinWidth}" MaxWidth="{x:Static Native:Helper.MaxDayWidth}" Height="{DynamicResource DayHeight}" Margin="1" Background="#0F092D4D">
-                    <SeveQsCustomControls:RasteredItemsControl 
-                        Header="{Binding Date, StringFormat='{}[{0:dd} - {0:ddd}] An diesem Tag sind keine Veranstaltungen eingetragen.'}" 
-                        FontSize="24" FontWeight="Bold"
-                        Raster="{StaticResource RasterH}" 
-                        Foreground="#22FFFFFF" 
-                        Padding="0,5,0,10" 
-                        FullLineThickness="0" HalfLineThickness="0" QuarterLineThickness="0" />
-                </Grid>
-            </AdornerDecorator>
-        </DataTemplate>
-
-        <WPF:DayTemplateSelector x:Key="DayTemplateSelect" EmptyDayTemplate="{StaticResource EmptyDayItemTemplate}" NotEmptyDayTemplate="{StaticResource DayItemTemplate}" />
+        <WPF:DayTemplateSelector x:Key="DayTemplateSelect" EmptyDayTemplate="{StaticResource DayItemTemplate}" NotEmptyDayTemplate="{StaticResource DayItemTemplate}" />
 
         <DataTemplate x:Key="SeminarGroupTemplate">
             <Grid DataContext="{Binding SelectedItem, ElementName=CalWeek}" d:DesignWidth="769.34" d:DesignHeight="333">
@@ -98,9 +97,7 @@
                     </Label.BitmapEffect>
                 </Label>
                 <ScrollViewer Margin="0,41.96,0,0" VerticalAlignment="Stretch" Width="Auto" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-                    <SeveQsCustomControls:RasteredGroup x:Name="TheWeek" Width="Auto" Height="Auto" >
-                        <ItemsControl Height="Auto" ItemsSource="{Binding Days}" ItemTemplateSelector="{StaticResource DayTemplateSelect}" />
-                    </SeveQsCustomControls:RasteredGroup>
+                    <ItemsControl Height="Auto" ItemsSource="{Binding Days}" ItemTemplateSelector="{StaticResource DayTemplateSelect}" />
                 </ScrollViewer>
                 <Button VerticalAlignment="Top" HorizontalAlignment="Right" Content="Woche drucken" Click="PrintWeekButtonPressed" Style="{DynamicResource FlatButton}" Margin="0,8,8,0" Foreground="White" >
                     <Button.Background>
@@ -127,7 +124,15 @@
                         <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
                     </SeveQsCustomControls:ResettingTabControl.Background>
                     <TabItem Header="Wochenübersicht" Foreground="White">
-                        <SeveQsCustomControls:ResettingTabControl x:Name="CalWeek" SelectedItem="{Binding Current, Mode=OneTime}"  ItemsSource="{Binding CalendarWeeks}" ContentTemplate="{StaticResource SeminarGroupTemplate}" DataContext="{Binding SelectedItem, ElementName=SemGroups}" DisplayMemberPath="LabelShort" d:LayoutOverrides="Width" ItemContainerStyle="{DynamicResource MainTabItemStyle}" Foreground="White" Margin="0" Padding="0">
+                        <TabItem.Resources>
+                            <CollectionViewSource Source="{Binding CalendarWeeks}" x:Key="futureCalendarWeeksView" Filter="CollectionViewSource_Filter">
+                                <CollectionViewSource.SortDescriptions>
+                                    <ComponentModel:SortDescription Direction="Ascending" PropertyName="Week" />
+                                </CollectionViewSource.SortDescriptions>
+                            </CollectionViewSource>
+
+                        </TabItem.Resources>
+                        <SeveQsCustomControls:ResettingTabControl x:Name="CalWeek" SelectedItem="{Binding Current, Mode=OneTime}"  ItemsSource="{Binding Source={StaticResource futureCalendarWeeksView}}" ContentTemplate="{StaticResource SeminarGroupTemplate}" DataContext="{Binding SelectedItem, ElementName=SemGroups}" DisplayMemberPath="LabelShort" d:LayoutOverrides="Width" ItemContainerStyle="{DynamicResource MainTabItemStyle}" Foreground="White" Margin="0" Padding="0">
                             <SeveQsCustomControls:ResettingTabControl.Background>
                                 <!--<SolidColorBrush Color="{DynamicResource LightenUp20}"/>-->
                                 <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
@@ -218,156 +223,157 @@
                 <SeveQsCustomControls:FramelessTitleBar DoubleClick="FramelessTitleBarDoubleClick" VerticalAlignment="Top" Foreground="White"/>
                 <CheckBox Click="CbIsFilteredClick" IsChecked="{Binding IsGroupFilterActive, Mode=TwoWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:Window1}}}" Content="nach Gruppen filtern" x:Name="CBIsFiltered" Foreground="White" ScrollViewer.VerticalScrollBarVisibility="Disabled" HorizontalAlignment="Right" Margin="0,13,70,0" VerticalAlignment="Top" Padding="5,0,10,0" RenderTransformOrigin="1,1" d:LayoutOverrides="HorizontalAlignment" />
                 <Grid Margin="8,37.96,8,0">
-                    <DockPanel VerticalAlignment="Bottom" Height="60">
-                        <ProgressBar x:Name="progressStatusBar" HorizontalAlignment="Center" VerticalAlignment="Center" Width="40" Height="15" Minimum="0" Maximum="100" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Visibility="Collapsed"/>
-                        <StatusBarItem x:Name="MainStatus" Content="[...]" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <StatusBarItem.Background>
-                                <SolidColorBrush/>
-                            </StatusBarItem.Background>
-                        </StatusBarItem>
-                        <Grid Margin="0,6,5,6" Width="24" DockPanel.Dock="Right">
-                            <SeveQsCustomControls:ReflectionControl HorizontalAlignment="Right" VerticalAlignment="Center" ReflectionMask="{DynamicResource DefaultReflectionBrush}" Margin="0">
-                                <Button x:Name="aboutButton" Margin="0" Style="{DynamicResource FlatButton}" ToolTip="Über">
-                                    <Image Source="Icons/world.png" Stretch="None" StretchDirection="UpOnly"/>
-                                </Button>
+                    <DockPanel>
+                        <DockPanel DockPanel.Dock="Bottom"  VerticalAlignment="Bottom" Height="60">
+                            <ProgressBar x:Name="progressStatusBar" HorizontalAlignment="Center" VerticalAlignment="Center" Width="40" Height="15" Minimum="0" Maximum="100" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Visibility="Collapsed"/>
+                            <StatusBarItem x:Name="MainStatus" Content="[...]" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                <StatusBarItem.Background>
+                                    <SolidColorBrush/>
+                                </StatusBarItem.Background>
+                            </StatusBarItem>
+                            <StatusBarItem Content="{Binding SelectedItem.Code, ElementName='TheWeek'}" />
+                            <Grid Margin="0,6,5,6" Width="24" DockPanel.Dock="Right">
+                                <SeveQsCustomControls:ReflectionControl HorizontalAlignment="Right" VerticalAlignment="Center" ReflectionMask="{DynamicResource DefaultReflectionBrush}" Margin="0">
+                                    <Button x:Name="aboutButton" Margin="0" Style="{DynamicResource FlatButton}" ToolTip="Über">
+                                        <Image Source="Icons/world.png" Stretch="None" StretchDirection="UpOnly"/>
+                                    </Button>
+                                </SeveQsCustomControls:ReflectionControl>
+                                <Popup IsOpen="{Binding IsMouseOver, ElementName=aboutButton, Mode=OneWay}" x:Name="aboutPopup" HorizontalAlignment="Right" Margin="0" Placement="Top" HorizontalOffset="-300" PopupAnimation="Fade" AllowsTransparency="True" VerticalOffset="38">
+                                    <Grid>
+                                        <SeveQsCustomControls:ReflectionControl HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ReflectionMask="{DynamicResource DefaultReflectionBrush}" Opacity="0.5">
+                                            <Label x:Name="version" Content="Label" Foreground="White" Margin="0" FontStyle="Italic" FontWeight="Bold" HorizontalContentAlignment="Center" Padding="5,0" VerticalContentAlignment="Center" VerticalAlignment="Top" Height="13.5"/>
+                                        </SeveQsCustomControls:ReflectionControl>
+                                    </Grid>
+                                </Popup>
+                            </Grid>
+                            <SeveQsCustomControls:ReflectionControl ReflectionMask="{DynamicResource DefaultReflectionBrush}" HorizontalAlignment="Right" Margin="0,0,5,0" VerticalAlignment="Center" Opacity="0.5" Panel.ZIndex="10" DockPanel.Dock="Right" ReflectionOpacity="0.6" d:LayoutOverrides="Height">
+                                <Label x:Name="copyright" Content="© 2009 by Hendrik Wiese" FontFamily="Trajan Pro" FontSize="13.333" FontWeight="Bold" Foreground="White" Margin="0" VerticalAlignment="Top" Padding="0" Height="13.5"/>
                             </SeveQsCustomControls:ReflectionControl>
-                            <Popup IsOpen="{Binding IsMouseOver, ElementName=aboutButton, Mode=OneWay}" x:Name="aboutPopup" HorizontalAlignment="Right" Margin="0" Placement="Top" HorizontalOffset="-300" PopupAnimation="Fade" AllowsTransparency="True" VerticalOffset="38">
-                                <Grid>
-                                    <SeveQsCustomControls:ReflectionControl HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ReflectionMask="{DynamicResource DefaultReflectionBrush}" Opacity="0.5">
-                                        <Label x:Name="version" Content="Label" Foreground="White" Margin="0" FontStyle="Italic" FontWeight="Bold" HorizontalContentAlignment="Center" Padding="5,0" VerticalContentAlignment="Center" VerticalAlignment="Top" Height="13.5"/>
-                                    </SeveQsCustomControls:ReflectionControl>
-                                </Grid>
-                            </Popup>
-                        </Grid>
-                        <SeveQsCustomControls:ReflectionControl ReflectionMask="{DynamicResource DefaultReflectionBrush}" HorizontalAlignment="Right" Margin="0,0,5,0" VerticalAlignment="Center" Opacity="0.5" Panel.ZIndex="10" DockPanel.Dock="Right" ReflectionOpacity="0.6" d:LayoutOverrides="Height">
-                            <Label x:Name="copyright" Content="© 2009 by Hendrik Wiese" FontFamily="Trajan Pro" FontSize="13.333" FontWeight="Bold" Foreground="White" Margin="0" VerticalAlignment="Top" Padding="0" Height="13.5"/>
-                        </SeveQsCustomControls:ReflectionControl>
-                    </DockPanel>
-                    <Grid x:Name="stundenplanGrid" Margin="134,0,0,64">
-                        <Border x:Name="tabFadeBorder" HorizontalAlignment="Left" VerticalAlignment="Top" Width="{Binding ActualWidth, ElementName=tabControl, Mode=Default}" Height="{Binding ActualHeight, ElementName=tabControl, Mode=Default}" Panel.ZIndex="50" Visibility="Collapsed"/>
-                        <TabControl x:Name="tabControl" PreviewMouseDown="TabControlFadeSetBackground" SelectionChanged="TabControlFadeSelection" TabStripPlacement="Right" ItemContainerStyle="{DynamicResource MainTabItemStyle}" Foreground="White" Padding="0" BorderThickness="0" Panel.ZIndex="10" Margin="0">
-                            <TabControl.BorderBrush>
-                                <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
-                            </TabControl.BorderBrush>
-                            <TabControl.Background>
+                        </DockPanel>
+                        <SeveQsCustomControls:Accordion DockPanel.Dock="Left"  HorizontalAlignment="Left" Width="130" Margin="0,0,0,64" Visibility="Collapsed">
+                            <SeveQsCustomControls:Accordion.Background>
                                 <SolidColorBrush Color="{DynamicResource LightenUp20}"/>
-                            </TabControl.Background>
-                            <TabItem Header="Stundenplan" Style="{DynamicResource MainTabItemStyle}" Foreground="White">
-                                <SeveQsCustomControls:ResettingTabControl DisplayMemberPath="FullName" x:Name="SemGroups" ItemsSource="{Binding SeminarGroups}" ContentTemplate="{StaticResource TabContentTemplate}" TabStripPlacement="Left" ItemContainerStyle="{DynamicResource MainTabItemStyle}" BorderThickness="0" Foreground="White" Padding="2,0,0,0" Panel.ZIndex="10" Style="{DynamicResource ScrollableTabstrip}" >
-                                    <SeveQsCustomControls:ResettingTabControl.BorderBrush>
-                                        <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
-                                    </SeveQsCustomControls:ResettingTabControl.BorderBrush>
-                                    <SeveQsCustomControls:ResettingTabControl.Background>
-                                        <SolidColorBrush Color="{DynamicResource LightenUp20}"/>
-                                    </SeveQsCustomControls:ResettingTabControl.Background>
-                                </SeveQsCustomControls:ResettingTabControl>
-                            </TabItem>
-                            <TabItem Header="Kompakt" Foreground="White" ToolTip="Kompakte Ansicht">
+                            </SeveQsCustomControls:Accordion.Background>
+                            <Expander Header="Export" Foreground="White">
                                 <Grid>
-                                    <SeveQsCustomControls:ResettingTabControl SelectedIndex="{Binding SelectedIndex, ElementName='SemGroups', Mode=TwoWay}" DisplayMemberPath="FullName" x:Name="SemGroupsCompact" ItemsSource="{Binding SeminarGroups}" ContentTemplate="{StaticResource CompactSeminarGroupTemplate}" TabStripPlacement="Left" ItemContainerStyle="{DynamicResource MainTabItemStyle}" BorderThickness="0" Padding="2,0,0,0" Panel.ZIndex="10" Style="{DynamicResource ScrollableTabstrip}">
+                                    <Button Content="Als iCalendar (*.ics)" d:LayoutOverrides="Height" Style="{DynamicResource FlatButton}" Foreground="White" Click="ExportEventsClick"/>
+                                </Grid>
+                            </Expander>
+                            <Expander Header="akt. Vorlesung" Foreground="White">
+                                <Grid>
+                                    <StackPanel d:LayoutOverrides="Width">
+                                        <Button Click="SelectedEventShowHideClick" Tag="Show" x:Name="selectedEventShowAllButton" Style="{DynamicResource FlatButton}" ToolTip="Blendet alle Vorlesungen des gewälten Fachs ein" Content="Alle einblenden" d:LayoutOverrides="Height" Foreground="White"/>
+                                        <Button Click="SelectedEventShowHideClick" Tag="Hide" x:Name="selectedEventHideAllButton" Margin="0" Style="{DynamicResource FlatButton}" Content="Alle ausblenden" Foreground="White" d:LayoutOverrides="Height" ToolTip="Blendet alle Vorlesungen des gewälten Fachs aus"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Expander>
+                            <Expander Header="Anderer Kram" Foreground="White">
+                                <Grid>
+                                    <TextBlock HorizontalAlignment="Left" Text="Noch nix hier. Mal sehen, was mir noch einfällt..." TextWrapping="Wrap" d:LayoutOverrides="Height" Width="128"/>
+                                </Grid>
+                            </Expander>
+                        </SeveQsCustomControls:Accordion>
+                        <Grid x:Name="stundenplanGrid">
+                            <Border x:Name="tabFadeBorder" HorizontalAlignment="Left" VerticalAlignment="Top" Width="{Binding ActualWidth, ElementName=tabControl, Mode=Default}" Height="{Binding ActualHeight, ElementName=tabControl, Mode=Default}" Panel.ZIndex="50" Visibility="Collapsed"/>
+                            <TabControl x:Name="tabControl" PreviewMouseDown="TabControlFadeSetBackground" SelectionChanged="TabControlFadeSelection" TabStripPlacement="Right" ItemContainerStyle="{DynamicResource MainTabItemStyle}" Foreground="White" Padding="0" BorderThickness="0" Panel.ZIndex="10" Margin="0">
+                                <TabControl.BorderBrush>
+                                    <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
+                                </TabControl.BorderBrush>
+                                <TabControl.Background>
+                                    <SolidColorBrush Color="{DynamicResource LightenUp20}"/>
+                                </TabControl.Background>
+                                <TabItem Header="Stundenplan" Style="{DynamicResource MainTabItemStyle}" Foreground="White">
+                                    <SeveQsCustomControls:RasteredGroup x:Name="TheWeek" Width="Auto" Height="Auto" >
+                                        <!--<SeveQsCustomControls:ResettingTabControl DisplayMemberPath="FullName" x:Name="SemGroups" ItemsSource="{Binding SeminarGroups}" ContentTemplate="{StaticResource TabContentTemplate}" TabStripPlacement="Left" ItemContainerStyle="{DynamicResource MainTabItemStyle}" BorderThickness="0" Foreground="White" Padding="2,0,0,0" Panel.ZIndex="10" Style="{DynamicResource ScrollableTabstrip}" >-->
+                                        <SeveQsCustomControls:ResettingTabControl 
+                                            DisplayMemberPath="Name" 
+                                            x:Name="SemGroups" 
+                                            IsSynchronizedWithCurrentItem="true"  
+                                            ItemsSource="{Binding Source={StaticResource seminarGroupsCollectionView}}" 
+                                            ContentTemplate="{StaticResource TabContentTemplate}" 
+                                            TabStripPlacement="Left" 
+                                            ItemContainerStyle="{DynamicResource MainTabItemStyle}" 
+                                            BorderThickness="0" 
+                                            Foreground="White" 
+                                            Padding="2,0,0,0" 
+                                            Panel.ZIndex="10" 
+                                            Style="{DynamicResource ScrollableTabstrip}" 
+                                            SelectedItem="{Binding Source={x:Static Depending:PlanFile.Instance}, Path='SelectedSeminarGroup'}"
+                                            >
+                                            <SeveQsCustomControls:ResettingTabControl.BorderBrush>
+                                                <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
+                                            </SeveQsCustomControls:ResettingTabControl.BorderBrush>
+                                            <SeveQsCustomControls:ResettingTabControl.Background>
+                                                <SolidColorBrush Color="{DynamicResource LightenUp20}"/>
+                                            </SeveQsCustomControls:ResettingTabControl.Background>
+                                        </SeveQsCustomControls:ResettingTabControl>
+                                    </SeveQsCustomControls:RasteredGroup>
+                                </TabItem>
+                                <TabItem Header="Veranstaltung" ToolTip="Details zur gewählten Veranstaltung">
+                                    <uc:EventDetails DataContext="{Binding SelectedItem, ElementName='TheWeek'}"/>
+                                </TabItem>
+                                <TabItem Header="Kompakt" Foreground="White" ToolTip="Kompakte Ansicht" Visibility="Collapsed">
+                                    <Grid>
+                                        <SeveQsCustomControls:ResettingTabControl SelectedIndex="{Binding SelectedIndex, ElementName='SemGroups', Mode=TwoWay}" DisplayMemberPath="FullName" x:Name="SemGroupsCompact" ItemsSource="{Binding SeminarGroups}" ContentTemplate="{StaticResource CompactSeminarGroupTemplate}" TabStripPlacement="Left" ItemContainerStyle="{DynamicResource MainTabItemStyle}" BorderThickness="0" Padding="2,0,0,0" Panel.ZIndex="10" Style="{DynamicResource ScrollableTabstrip}">
 
-                                    </SeveQsCustomControls:ResettingTabControl>
-                                </Grid>
-                            </TabItem>
-                            <TabItem Header="Gruppen" Style="{DynamicResource MainTabItemStyle}" Foreground="White">
-                                <Grid>
-                                    <ListBox x:Name="KnownEventsList" ItemsSource="{Binding GroupedBaseEvents}" DisplayMemberPath="BasicCode" Margin="8,37.96,0,27.96" HorizontalAlignment="Left" Width="150" BorderBrush="{x:Null}" BorderThickness="0">
-                                        <ListBox.Foreground>
-                                            <SolidColorBrush Color="{DynamicResource LightenUp50}"/>
-                                        </ListBox.Foreground>
-                                        <ListBox.Background>
-                                            <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
-                                        </ListBox.Background>
-                                    </ListBox>
-                                    <SeveQsCustomControls:RadioBox SelectedItem="{Binding SelectedItem.Group, ElementName=KnownEventsList}" ItemsSource="{Binding SelectedItem.Groups, ElementName=KnownEventsList}" Margin="162,37.96,0,27.96" BorderThickness="0" HorizontalAlignment="Left" Width="150">
-                                        <SeveQsCustomControls:RadioBox.Foreground>
-                                            <SolidColorBrush Color="{DynamicResource LightenUp50}"/>
-                                        </SeveQsCustomControls:RadioBox.Foreground>
-                                        <SeveQsCustomControls:RadioBox.Background>
-                                            <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
-                                        </SeveQsCustomControls:RadioBox.Background>
-                                    </SeveQsCustomControls:RadioBox>
-                                    <Label HorizontalAlignment="Left" VerticalAlignment="Top" Content="Veranstaltung" Margin="8,8,0,0" Width="150" Foreground="White">
-                                        <Label.Background>
-                                            <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
-                                        </Label.Background>
-                                    </Label>
-                                    <Label VerticalAlignment="Top" Content="Gruppe" Margin="162,8,0,0" HorizontalAlignment="Left" Width="150" Foreground="White">
-                                        <Label.Background>
-                                            <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
-                                        </Label.Background>
-                                    </Label>
-                                </Grid>
-                            </TabItem>
-                            <!--<TabItem Header="Webservice" Foreground="Yellow" Visibility="Collapsed">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition />
-                                        <ColumnDefinition Width="50" />
-                                        <ColumnDefinition />
-                                    </Grid.ColumnDefinitions>
-                                    <Label Grid.Column="0" Foreground="White" VerticalAlignment="Top" Margin="8,8,8,0" Content="Lokale Änderungen">
-                                        <Label.Background>
-                                            <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
-                                        </Label.Background>
-                                    </Label>
-                                    <Label Grid.Column="2" Foreground="White" VerticalAlignment="Top" Margin="8,8,8,0" Content="Publizierte Änderungen">
-                                        <Label.Background>
-                                            <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
-                                        </Label.Background>
-                                    </Label>
-                                    <Border BorderBrush="White" BorderThickness="0" Margin="0,8" Grid.Column="1">
-                                        <Border.Background>
-                                            <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
-                                        </Border.Background>
-                                        <StackPanel Orientation="Vertical" d:LayoutOverrides="Height" VerticalAlignment="Center">
-                                            <Button Click="PublishSelectedChangesClick" VerticalAlignment="Center" HorizontalAlignment="Center" Style="{DynamicResource FlatButton}">
-                                                <Image Width="16" Height="16" Source="Icons/arrow_right.png" Stretch="Fill"/>
-                                            </Button>
-                                        </StackPanel>
-                                    </Border>
-                                    <ListBox x:Name="localChanges" SelectionMode="Extended" ItemsSource="{Binding Changes}" Margin="8,37.96,8,8" BorderBrush="{x:Null}">
-                                        <ListBox.ItemTemplate>
-                                            <DataTemplate DataType="ChangeInfo">
-                                                <Label Foreground="White" Content="{Binding Info}" />
-                                            </DataTemplate>
-                                        </ListBox.ItemTemplate>
-                                        <ListBox.Background>
-                                            <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
-                                        </ListBox.Background>
-                                    </ListBox>
-                                    <TreeView Margin="8,37.96,8,8" Grid.Column="2" BorderBrush="{x:Null}" ItemsSource="{Binding PublishedChanges}" Foreground="White">
-                                        <TreeView.Background>
-                                            <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
-                                        </TreeView.Background>
-                                    </TreeView>
-                                </Grid>
-                            </TabItem>-->
-                            <TabItem Header="Einstellungen" Foreground="White" ToolTip="Benutzerdaten und so..." Visibility="Collapsed">
-                                <Grid>
-                                    <GroupBox Margin="8,8,8,0" Header="Benutzerdaten" Foreground="White" VerticalAlignment="Top" Style="{DynamicResource HAWGroupBoxStyle}" BorderBrush="{x:Null}" HorizontalContentAlignment="Stretch" Padding="8,8,8,15">
-                                        <GroupBox.Background>
-                                            <SolidColorBrush Color="{DynamicResource DarkenDown40}"/>
-                                        </GroupBox.Background>
-                                        <SeveQsCustomControls:HeaderContentField Header="Name" Padding="0">
-                                            <TextBox Text="{Binding UserName, Mode=TwoWay, Source={x:Static local:Window1.MainWindow}, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap"/>
-                                        </SeveQsCustomControls:HeaderContentField>
-                                    </GroupBox>
-                                </Grid>
-                            </TabItem>
-                            <TabItem TextElement.Foreground="White" Header="Über" Visibility="Visible">
-                                <Grid>
-                                    <Rectangle Stroke="White" Margin="16.365,0,16.365,55" VerticalAlignment="Bottom" Height="40" HorizontalAlignment="Center" Width="480" RadiusX="5" RadiusY="5" StrokeThickness="2">
-                                        <Rectangle.Fill>
-                                            <SolidColorBrush Color="{DynamicResource LightenUp20}"/>
-                                        </Rectangle.Fill>
-                                    </Rectangle>
-                                    <Label x:Name="aboutTitle" VerticalAlignment="Top" HorizontalAlignment="Center" FontSize="40" Foreground="White" FontFamily="Ravie" Content="HAW Stundenplan">
-                                        <Label.Background>
-                                            <SolidColorBrush/>
-                                        </Label.Background>
-                                    </Label>
-                                    <TextBlock TextWrapping="Wrap" Margin="80,70,80,0" FontFamily="Hobo Std" FontSize="16" TextAlignment="Center" VerticalAlignment="Top" Width="350" MinHeight="55">
+                                        </SeveQsCustomControls:ResettingTabControl>
+                                    </Grid>
+                                </TabItem>
+                                <TabItem Header="Gruppen" Style="{DynamicResource MainTabItemStyle}" Foreground="White">
+                                    <Grid>
+                                        <ListBox x:Name="KnownEventsList" ItemsSource="{Binding GroupedBaseEvents}" DisplayMemberPath="BasicCode" Margin="8,37.96,0,27.96" HorizontalAlignment="Left" Width="150" BorderBrush="{x:Null}" BorderThickness="0">
+                                            <ListBox.Foreground>
+                                                <SolidColorBrush Color="{DynamicResource LightenUp50}"/>
+                                            </ListBox.Foreground>
+                                            <ListBox.Background>
+                                                <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
+                                            </ListBox.Background>
+                                        </ListBox>
+                                        <SeveQsCustomControls:RadioBox SelectedItem="{Binding SelectedItem.Group, ElementName=KnownEventsList}" ItemsSource="{Binding SelectedItem.Groups, ElementName=KnownEventsList}" Margin="162,37.96,0,27.96" BorderThickness="0" HorizontalAlignment="Left" Width="150">
+                                            <SeveQsCustomControls:RadioBox.Foreground>
+                                                <SolidColorBrush Color="{DynamicResource LightenUp50}"/>
+                                            </SeveQsCustomControls:RadioBox.Foreground>
+                                            <SeveQsCustomControls:RadioBox.Background>
+                                                <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
+                                            </SeveQsCustomControls:RadioBox.Background>
+                                        </SeveQsCustomControls:RadioBox>
+                                        <Label HorizontalAlignment="Left" VerticalAlignment="Top" Content="Veranstaltung" Margin="8,8,0,0" Width="150" Foreground="White">
+                                            <Label.Background>
+                                                <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
+                                            </Label.Background>
+                                        </Label>
+                                        <Label VerticalAlignment="Top" Content="Gruppe" Margin="162,8,0,0" HorizontalAlignment="Left" Width="150" Foreground="White">
+                                            <Label.Background>
+                                                <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
+                                            </Label.Background>
+                                        </Label>
+                                    </Grid>
+                                </TabItem>
+                                <TabItem Header="Einstellungen" Foreground="White" ToolTip="Benutzerdaten und so..." Visibility="Collapsed">
+                                    <Grid>
+                                        <GroupBox Margin="8,8,8,0" Header="Benutzerdaten" Foreground="White" VerticalAlignment="Top" Style="{DynamicResource HAWGroupBoxStyle}" BorderBrush="{x:Null}" HorizontalContentAlignment="Stretch" Padding="8,8,8,15">
+                                            <GroupBox.Background>
+                                                <SolidColorBrush Color="{DynamicResource DarkenDown40}"/>
+                                            </GroupBox.Background>
+                                            <SeveQsCustomControls:HeaderContentField Header="Name" Padding="0">
+                                                <TextBox Text="{Binding UserName, Mode=TwoWay, Source={x:Static local:Window1.MainWindow}, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap"/>
+                                            </SeveQsCustomControls:HeaderContentField>
+                                        </GroupBox>
+                                    </Grid>
+                                </TabItem>
+                                <TabItem TextElement.Foreground="White" Header="Über" Visibility="Visible">
+                                    <Grid>
+                                        <Rectangle Stroke="White" Margin="16.365,0,16.365,55" VerticalAlignment="Bottom" Height="40" HorizontalAlignment="Center" Width="480" RadiusX="5" RadiusY="5" StrokeThickness="2">
+                                            <Rectangle.Fill>
+                                                <SolidColorBrush Color="{DynamicResource LightenUp20}"/>
+                                            </Rectangle.Fill>
+                                        </Rectangle>
+                                        <Label x:Name="aboutTitle" VerticalAlignment="Top" HorizontalAlignment="Center" FontSize="40" Foreground="White" FontFamily="Ravie" Content="HAW Stundenplan">
+                                            <Label.Background>
+                                                <SolidColorBrush/>
+                                            </Label.Background>
+                                        </Label>
+                                        <TextBlock TextWrapping="Wrap" Margin="80,70,80,0" FontFamily="Hobo Std" FontSize="16" TextAlignment="Center" VerticalAlignment="Top" Width="350" MinHeight="55">
                                         <Run Text="Copyright (c) 2009-2010 by Hendrik Wiese"/><LineBreak/>
                                         <Hyperlink Foreground="Wheat" Click="MailMe" NavigateUri="mailto:hendrik.wiese@haw-hamburg.de">
                                             <Run Text="hendrik.wiese@haw-hamburg.de"/>
@@ -376,84 +382,62 @@
                                         <Run Text="Alle Angaben zu Veranstaltungen in diesem Programm beziehen sich auf die von der HAW gelieferten Vorlesungspläne in Textform. Der Entwickler dieser Software übernimmt keine Gewähr auf die Korrektheit der Angaben. Es liegt in der Verantwortung des Benutzers, die Angaben im Zweifelsfall zu verifiziern." FontSize="10" FontFamily="Verdana" />
                                         <LineBreak /><LineBreak />
                                         <Run Text="Diese Software ist Freeware. Der Urheber behält sich das Recht vor, das gewählte Lizenzmodell jederzeit zu wechseln. Jede bis dahin veröffentlichte Version behält ihren Status; d.h. jede Lizenzänderung bezieht sich ausschließlich auf zukünftige Versionen." FontSize="10" FontFamily="Verdana" />
-                                    </TextBlock>
-                                    <Button Content="Spenden (PayPal)" VerticalAlignment="Bottom" Height="30" FontWeight="Bold" FontFamily="Dotum" Click="DonateButtonClick" HorizontalAlignment="Center" Margin="0,0,0,60" Width="180" >
-                                        <Button.Background>
-                                            <LinearGradientBrush EndPoint="0,1" StartPoint="0,0">
-                                                <GradientStop Color="#FFB6C3FF" Offset="0"/>
-                                                <GradientStop Color="#FFEBEBEB" Offset="0.5"/>
-                                                <GradientStop Color="#FFE7EEFF" Offset="0.5"/>
-                                                <GradientStop Color="#FF417DFC" Offset="1"/>
-                                            </LinearGradientBrush>
-                                        </Button.Background>
-                                    </Button>
-                                </Grid>
-                            </TabItem>
-                            <TabItem Header="Debugging" Visibility="Visible">
-                                <TabItem.Foreground>
-                                    <SolidColorBrush Color="{DynamicResource WIPForeground}"/>
-                                </TabItem.Foreground>
-                                <Grid>
-                                    <Grid Margin="262,34.04,8,8">
-                                        <TreeView ItemsSource="{Binding Changes}" Margin="0,29.96,0,0" Foreground="White">
-                                            <TreeView.Background>
-                                                <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
-                                            </TreeView.Background>
-                                        </TreeView>
-                                        <Label VerticalAlignment="Top" Content="Änderungen" Foreground="White">
-                                            <Label.Background>
-                                                <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
-                                            </Label.Background>
-                                        </Label>
+                                        </TextBlock>
+                                        <Button Content="Spenden (PayPal)" VerticalAlignment="Bottom" Height="30" FontWeight="Bold" FontFamily="Dotum" Click="DonateButtonClick" HorizontalAlignment="Center" Margin="0,0,0,60" Width="180" >
+                                            <Button.Background>
+                                                <LinearGradientBrush EndPoint="0,1" StartPoint="0,0">
+                                                    <GradientStop Color="#FFB6C3FF" Offset="0"/>
+                                                    <GradientStop Color="#FFEBEBEB" Offset="0.5"/>
+                                                    <GradientStop Color="#FFE7EEFF" Offset="0.5"/>
+                                                    <GradientStop Color="#FF417DFC" Offset="1"/>
+                                                </LinearGradientBrush>
+                                            </Button.Background>
+                                        </Button>
                                     </Grid>
-                                    <Grid HorizontalAlignment="Left" Margin="8,34.04,0,8" Width="250">
-                                        <ListBox ItemsSource="{Binding AllEvents}" Margin="0,29.96,0,0" Foreground="White" >
-                                            <ListBox.Background>
-                                                <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
-                                            </ListBox.Background>
-                                            <ListBox.ItemTemplate>
-                                                <DataTemplate>
-                                                    <DockPanel>
-                                                        <TextBlock Text="{Binding Info}" Width="200" DockPanel.Dock="Left" />
-                                                        <TextBlock Text="{Binding IsEnabled}" />
-                                                    </DockPanel>
-                                                </DataTemplate>
-                                            </ListBox.ItemTemplate>
-                                        </ListBox>
-                                        <Label VerticalAlignment="Top" Content="Aktiviert/deaktiviert" Foreground="White">
-                                            <Label.Background>
-                                                <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
-                                            </Label.Background>
-                                        </Label>
+                                </TabItem>
+                                <TabItem Header="Debugging" Visibility="Visible">
+                                    <TabItem.Foreground>
+                                        <SolidColorBrush Color="{DynamicResource WIPForeground}"/>
+                                    </TabItem.Foreground>
+                                    <Grid>
+                                        <Grid Margin="262,34.04,8,8">
+                                            <TreeView ItemsSource="{Binding Changes}" Margin="0,29.96,0,0" Foreground="White">
+                                                <TreeView.Background>
+                                                    <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
+                                                </TreeView.Background>
+                                            </TreeView>
+                                            <Label VerticalAlignment="Top" Content="Änderungen" Foreground="White">
+                                                <Label.Background>
+                                                    <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
+                                                </Label.Background>
+                                            </Label>
+                                        </Grid>
+                                        <Grid HorizontalAlignment="Left" Margin="8,34.04,0,8" Width="250">
+                                            <ListBox ItemsSource="{Binding AllEvents}" Margin="0,29.96,0,0" Foreground="White" >
+                                                <ListBox.Background>
+                                                    <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
+                                                </ListBox.Background>
+                                                <ListBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <DockPanel>
+                                                            <TextBlock Text="{Binding Info}" Width="200" DockPanel.Dock="Left" />
+                                                            <TextBlock Text="{Binding IsEnabled}" />
+                                                        </DockPanel>
+                                                    </DataTemplate>
+                                                </ListBox.ItemTemplate>
+                                            </ListBox>
+                                            <Label VerticalAlignment="Top" Content="Aktiviert/deaktiviert" Foreground="White">
+                                                <Label.Background>
+                                                    <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
+                                                </Label.Background>
+                                            </Label>
+                                        </Grid>
+                                        <TextBlock Margin="9,10.08,8,0" VerticalAlignment="Top" Text="Hier sind nur Informationen zur Fehlerbereinigung zu sehen. Nichts interessantes eigentlich für den Endbenutzer, nur für den Entwickler. " Foreground="White" Background="#FF841313" Padding="2" TextTrimming="WordEllipsis"/>
                                     </Grid>
-                                    <TextBlock Margin="9,10.08,8,0" VerticalAlignment="Top" Text="Hier sind nur Informationen zur Fehlerbereinigung zu sehen. Nichts interessantes eigentlich für den Endbenutzer, nur für den Entwickler. " Foreground="White" Background="#FF841313" Padding="2" TextTrimming="WordEllipsis"/>
-                                </Grid>
-                            </TabItem>
-                        </TabControl>
-                    </Grid>
-                    <SeveQsCustomControls:Accordion HorizontalAlignment="Left" Width="130" Margin="0,0,0,64">
-                        <SeveQsCustomControls:Accordion.Background>
-                            <SolidColorBrush Color="{DynamicResource LightenUp20}"/>
-                        </SeveQsCustomControls:Accordion.Background>
-                        <Expander Header="Export" Foreground="White">
-                            <Grid>
-                                <Button Content="Als iCalendar (*.ics)" d:LayoutOverrides="Height" Style="{DynamicResource FlatButton}" Foreground="White" Click="ExportEventsClick"/>
-                            </Grid>
-                        </Expander>
-                        <Expander Header="akt. Vorlesung" Foreground="White">
-                            <Grid>
-                                <StackPanel d:LayoutOverrides="Width">
-                                    <Button Click="SelectedEventShowHideClick" Tag="Show" x:Name="selectedEventShowAllButton" Style="{DynamicResource FlatButton}" ToolTip="Blendet alle Vorlesungen des gewälten Fachs ein" Content="Alle einblenden" d:LayoutOverrides="Height" Foreground="White"/>
-                                    <Button Click="SelectedEventShowHideClick" Tag="Hide" x:Name="selectedEventHideAllButton" Margin="0" Style="{DynamicResource FlatButton}" Content="Alle ausblenden" Foreground="White" d:LayoutOverrides="Height" ToolTip="Blendet alle Vorlesungen des gewälten Fachs aus"/>
-                                </StackPanel>
-                            </Grid>
-                        </Expander>
-                        <Expander Header="Anderer Kram" Foreground="White">
-                            <Grid>
-                                <TextBlock HorizontalAlignment="Left" Text="Noch nix hier. Mal sehen, was mir noch einfällt..." TextWrapping="Wrap" d:LayoutOverrides="Height" Width="128"/>
-                            </Grid>
-                        </Expander>
-                    </SeveQsCustomControls:Accordion>
+                                </TabItem>
+                            </TabControl>
+                        </Grid>
+                    </DockPanel>
                 </Grid>
             </Grid>
         </Border>

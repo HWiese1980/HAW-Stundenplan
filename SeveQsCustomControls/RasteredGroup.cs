@@ -1,17 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using LittleHelpers;
 using System.ComponentModel;
 
 namespace SeveQsCustomControls
@@ -52,26 +41,34 @@ namespace SeveQsCustomControls
             DefaultStyleKeyProperty.OverrideMetadata(typeof(RasteredGroup), new FrameworkPropertyMetadata(typeof(RasteredGroup)));
         }
 
-        //TODO: SelectedItem funktioniert noch nicht. GetChildren findet keine Kinder in RasteredGroup...
-
-        internal void OnSelectedItemChanged()
-        {
-            OnPropertyChanged("SelectedItem");
-        }
-
-        public object SelectedItem
-        {
-            get
-            {
-                return (from tRIC in this.GetChildren<RasteredItemsControl>() where tRIC.SelectedItem != null select tRIC.SelectedItem).FirstOrDefault();
-            }
-        }
-
         #region INotifyPropertyChanged Members
 
         private void OnPropertyChanged(string property)
         {
             if (PropertyChanged != null) PropertyChanged(this, new PropertyChangedEventArgs(property));
+        }
+
+        public object SelectedItem
+        {
+            get { return (object)GetValue(SelectedItemProperty); }
+            set { SetValue(SelectedItemProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for SelectedItem.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty SelectedItemProperty =
+            DependencyProperty.Register("SelectedItem", typeof(object), typeof(RasteredGroup), new UIPropertyMetadata(null, OnSelectedItemChanged));
+
+        static void OnSelectedItemChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var oldItem = e.OldValue as ISelectable;
+            var newItem = e.NewValue as ISelectable;
+
+            Console.WriteLine("++++ RasteredGroup ++++");
+            Console.WriteLine("Unselecting {0} - Selecting {1}", oldItem, newItem);
+            Console.WriteLine("+++++++++++++++++++++++");
+
+            if (oldItem != null) oldItem.IsSelected = false;
+            if (newItem != null) newItem.IsSelected = true;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

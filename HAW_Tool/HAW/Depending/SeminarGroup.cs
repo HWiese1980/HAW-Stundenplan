@@ -11,7 +11,7 @@ namespace HAW_Tool.HAW.Depending
     {
         public SeminarGroup()
         {
-            CalendarWeeks = new ObservableCollection<IWeek>();
+            CalendarWeeks = new ObservableCollection<CalendarWeek>();
         }
 
         public string Name
@@ -46,6 +46,15 @@ namespace HAW_Tool.HAW.Depending
         public static readonly DependencyProperty LastUpdatedProperty =
             DependencyProperty.Register("LastUpdated", typeof(DateTime), typeof(SeminarGroup), new UIPropertyMetadata(DateTime.MinValue));
 
-        public ObservableCollection<IWeek> CalendarWeeks { get; set; }
+        public ObservableCollection<CalendarWeek> CalendarWeeks { get; set; }
+
+        public Day GetDayByDate(DateTime date)
+        {
+            var day = (from cw in CalendarWeeks
+                      from dy in cw.Days
+                      where dy.Date.Date == date.Date
+                      select dy).FirstOrDefault();
+            return day;
+        }
     }
 }

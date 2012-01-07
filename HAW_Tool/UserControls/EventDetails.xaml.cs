@@ -9,14 +9,15 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace HAW_Tool
+namespace HAW_Tool.UserControls
 {
     /// <summary>
-    /// Interaction logic for EventDetails.xaml
+    /// Interaktionslogik für EventDetails.xaml
     /// </summary>
-    public partial class EventDetails : Window
+    public partial class EventDetails : UserControl
     {
         public EventDetails()
         {

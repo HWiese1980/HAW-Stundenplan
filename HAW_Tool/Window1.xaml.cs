@@ -3,10 +3,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
-using HAW_Tool.HAW;
 using System.ComponentModel;
 using SeveQsCustomControls;
 using System.Reflection;
@@ -19,8 +19,12 @@ using System.Runtime.InteropServices;
 using System.Windows.Interop;
 using HAW_Tool.Properties;
 
+#if HAW_NATIVE
 using HAW_Tool.HAW.Native;
-using PlanFile = HAW_Tool.HAW.Native.PlanFile;
+#elif HAW_DEPENDING
+using HAW_Tool.HAW.Depending;
+#endif
+// using PlanFile = HAW_Tool.HAW.Native.PlanFile;
 
 // Version 0.0.1: {48119271-97D3-4E03-9D11-58A18F31D5D0}
 // Version 0.9.1: {95BE38A7-8FAC-4226-839D-247E3463E474}
@@ -57,12 +61,15 @@ namespace HAW_Tool
 
         public Window1()
         {
+            Application.Current.Resources.Add("PlanFileInstance", PlanFile.Instance);
             InitializeComponent();
 
             SourceInitialized += SourceInitializedHandler;
 
+#if HAW_NATIVE || HAW_DEPENDING
             PlanFile.StatusMessageChanged += PlanFileStatusChanged;
             PlanFile.StatusProgressChanged += PlanFileProgressChanged;
+#endif
 
             Loaded += StartUp;
             Closing += ClosingAppSaveSettings;
@@ -110,7 +117,6 @@ namespace HAW_Tool
         private void StartUp(object sender, EventArgs e)
         {
             LoadSettings();
-            Thread.Sleep(1000);
             LoadPlanFile();
         }
 
@@ -146,7 +152,9 @@ namespace HAW_Tool
 
         void ClosingAppSaveSettings(object sender, EventArgs e)
         {
+#if HAW_NATIVE
             if (PlanFile.Instance != null) PlanFile.Instance.SaveSettings();
+#endif
         }
 
         public bool IsGroupFilterActive
@@ -211,6 +219,7 @@ namespace HAW_Tool
                 }
         */
 
+#if HAW_NATIVE
         private void LoadPlanFile()
         {
             var tWrk = new BackgroundWorker();
@@ -268,6 +277,22 @@ namespace HAW_Tool
 
             tWrk.RunWorkerAsync();
         }
+#elif HAW_DEPENDING
+        private void LoadPlanFile()
+        {
+            DataContext = PlanFile.Instance;
+            var semGroupsCvs = (CollectionViewSource)FindResource("seminarGroupsCollectionView");
+            
+
+
+            var cnt = new HAWClient();
+            var schedules = cnt.Schedules();
+            foreach(var schedule in schedules)
+            {
+                PlanFile.Instance.LoadSchedule(schedule);
+            }
+        }
+#endif
 
         private void PrintWeekButtonPressed(object sender, RoutedEventArgs e)
         {
@@ -329,20 +354,12 @@ namespace HAW_Tool
             }
         }
 
-        private void RasteredItemsControlSelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            Console.WriteLine(@"Selection changed: {0}", e.AddedItems.Count);
-            if (e.AddedItems.Count <= 0)
-                _mSelectedEvent = default(Event);
-            else
-                _mSelectedEvent = (IEvent)e.AddedItems[0];
-        }
-
         private void CbIsFilteredClick(object sender, RoutedEventArgs e)
         {
             foreach (var tCtl in this.GetChildren<RasteredItemsControl>()) RefreshFiltering(tCtl);
         }
 
+#if HAW_NATIVE
         private void RefreshFiltering(RasteredItemsControl ctl)
         {
             ctl.Items.Filter = obj =>
@@ -357,6 +374,12 @@ namespace HAW_Tool
                 return (tBaseEvents.Count() > 0);
             };
         }
+#elif HAW_DEPENDING
+        private void RefreshFiltering(RasteredItemsControl ctl)
+        {
+            
+        }
+#endif
 
         private void RasteredItemsControlLoaded(object sender, RoutedEventArgs e)
         {
@@ -384,10 +407,14 @@ namespace HAW_Tool
 
             if ((bool)tDlg.ShowDialog())
             {
+#if HAW_NATIVE
                 PlanFile.Instance.ExportAs(tGrp, ExportType.iCal, tDlg.FileName);
+#elif HAW_DEPENDING
+#endif
             }
         }
 
+#if HAW_NATIVE
         IEvent _mSelectedEvent = default(IEvent);
         private void SelectedEventShowHideClick(object sender, RoutedEventArgs e)
         {
@@ -406,6 +433,12 @@ namespace HAW_Tool
                 tEvt.IsEnabled = (tTag == "Show");
             }
         }
+#elif HAW_DEPENDING
+        private void SelectedEventShowHideClick(object sender, RoutedEventArgs e)
+        {
+            
+        }
+#endif
 
         /*
 
@@ -528,6 +561,23 @@ namespace HAW_Tool
         private void TabFadeCompleted(object sender, EventArgs e)
         {
             tabFadeBorder.Visibility = Visibility.Collapsed;
+        }
+
+        private void CollectionViewSource_Filter(object sender, System.Windows.Data.FilterEventArgs e)
+        {
+            var cw = e.Item as CalendarWeek;
+            if (cw == null)
+            {
+                e.Accepted = false;
+                return;
+            }
+
+            e.Accepted = (cw.GetDateOfWeekday(6).Date >= DateTime.Now.Date);
+        }
+
+        private void SemGroups_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if(e.AddedItems.Count > 0) PlanFile.Instance.SelectedSeminarGroup = (SeminarGroup)e.AddedItems[0];
         }
     }
 }

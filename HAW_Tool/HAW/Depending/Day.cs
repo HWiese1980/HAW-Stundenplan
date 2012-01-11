@@ -54,11 +54,11 @@ namespace HAW_Tool.HAW.Depending
             for (; ; )
             {
                 var otherEventsSameRow = (from evt in Events
-                                         where !ReferenceEquals(e, evt)
-                                         let idxB = RowIndex.GetRow(evt)
-                                         where idxA == idxB && EventsOverlap(e, evt)
-                                         select evt).ToArray();
-                
+                                          where !ReferenceEquals(e, evt)
+                                          let idxB = RowIndex.GetRow(evt)
+                                          where idxA == idxB && EventsOverlap(e, evt)
+                                          select evt).ToArray();
+
                 if (otherEventsSameRow.Length <= 0) break;
 
                 foreach (var eB in otherEventsSameRow)

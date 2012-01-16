@@ -147,7 +147,6 @@
     <Reference Include="PresentationFramework">
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
     </Reference>
-    <Reference Include="WPFToolkit, Version=3.5.40128.1, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
@@ -215,10 +214,14 @@
     <Compile Include="Converters\CompareConverter.cs" />
     <Compile Include="Converters\ListBoxItemToContentConverter.cs" />
     <Compile Include="Converters\TimeToValueConverter.cs" />
+    <Compile Include="HAW\Depending\AttachedEventProperties.cs" />
     <Compile Include="HAW\Depending\CalendarWeek.cs" />
+    <Compile Include="HAW\Depending\CouchDBEventInfo.cs" />
     <Compile Include="HAW\Depending\Day.cs" />
     <Compile Include="HAW\Depending\Event.cs" />
-    <Compile Include="HAW\Depending\FreezableUIElement.cs" />
+    <Compile Include="HAW\Depending\DirtyableUIElement.cs" />
+    <Compile Include="HAW\Depending\EventSource.cs" />
+    <Compile Include="HAW\Depending\GroupID.cs" />
     <Compile Include="HAW\Depending\IEvent.cs" />
     <Compile Include="HAW\Depending\IWeek.cs" />
     <Compile Include="HAW\Depending\PlanFile.cs" />
@@ -226,6 +229,7 @@
     <Compile Include="HAW\Depending\SeminarGroup.cs" />
     <Compile Include="HAW\Depending\StringFilter.cs" />
     <Compile Include="HAW\Depending\TimeToCoord.cs" />
+    <Compile Include="HAW\Depending\TimeToThicknessConverter.cs" />
     <Compile Include="HAW\Depending\WPF\DayTemplateSelector.cs" />
     <Compile Include="HAW\LabeledItem.cs" />
     <Compile Include="HAW\Native\Comparers\WeekEqualityComparer.cs" />

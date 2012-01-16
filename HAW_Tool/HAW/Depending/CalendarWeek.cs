@@ -1,18 +1,45 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Windows;
+using Newtonsoft.Json;
 using Helper = HAW_Tool.HAW.Native.Helper;
 
 namespace HAW_Tool.HAW.Depending
 {
+    [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
     public class CalendarWeek : DependencyObject
     {
         public CalendarWeek()
         {
             Days = new ObservableCollection<Day>();
+            Days.CollectionChanged += DaysCollectionChanged;
+        }
+
+        private void DaysCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            switch(e.Action)
+            {
+                case NotifyCollectionChangedAction.Add:
+                    {
+                        foreach (var day in e.NewItems.Cast<Day>())
+                        {
+                            day.Week = this;
+                        }
+                        break;
+                    }
+                case NotifyCollectionChangedAction.Remove:
+                    {
+                        foreach (var day in e.OldItems.Cast<Day>())
+                        {
+                            day.Week = default(CalendarWeek);
+                        }
+                        break;
+                    }
+            }
         }
 
         public bool IsCurrent
@@ -34,6 +61,7 @@ namespace HAW_Tool.HAW.Depending
             }
         }
 
+        [JsonProperty]
         public int Year
         {
             get { return (int)GetValue(YearProperty); }
@@ -45,7 +73,7 @@ namespace HAW_Tool.HAW.Depending
             DependencyProperty.Register("Year", typeof(int), typeof(CalendarWeek), new UIPropertyMetadata(0));
 
 
-
+        [JsonProperty]
         public int Week
         {
             get { return (int)GetValue(WeekProperty); }
@@ -55,7 +83,6 @@ namespace HAW_Tool.HAW.Depending
         // Using a DependencyProperty as the backing store for Week.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty WeekProperty =
             DependencyProperty.Register("Week", typeof(int), typeof(CalendarWeek), new UIPropertyMetadata(0));
-
 
 
         public SeminarGroup SeminarGroup
@@ -83,6 +110,11 @@ namespace HAW_Tool.HAW.Depending
         public DateTime GetDateOfWeekday(int day)
         {
             return Helper.StartOfWeek(Week, Year).AddDays(day);
+        }
+
+        public override string ToString()
+        {
+            return string.Format("[{0}:{1}]", Week, Year);
         }
     }
 }

@@ -1,34 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Windows;
-using System.Xml.Linq;
-using HAW_Tool.HAW.Native;
-using RedBranch.Hammock;
+using Newtonsoft.Json;
 using SeveQsCustomControls;
 
 namespace HAW_Tool.HAW.Depending
 {
-    public class Event : FreezableUIElement, IEvent, ISelectable
+    [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
+    public class Event : DirtyableUIElement, IEvent, ISelectable
     {
         public event EventHandler TimeChanged;
-
-
-
-        public override bool IsDirty
-        {
-            get { return (bool)GetValue(IsDirtyProperty); }
-            set { SetValue(IsDirtyProperty, value); }
-        }
-
-        // Using a DependencyProperty as the backing store for IsDirty.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty IsDirtyProperty =
-            DependencyProperty.Register("IsDirty", typeof(bool), typeof(Event), new UIPropertyMetadata(false));
-
-
 
         public void OnTimeChanged(EventArgs e)
         {
@@ -38,7 +19,7 @@ namespace HAW_Tool.HAW.Depending
 
         public override string ToString()
         {
-            return string.Format("Event {0}", Code);
+            return string.Format("Event {0} {1}", Code, Source);
         }
 
         public bool IsSelected
@@ -51,40 +32,42 @@ namespace HAW_Tool.HAW.Depending
         public static readonly DependencyProperty IsSelectedProperty =
             DependencyProperty.Register("IsSelected", typeof(bool), typeof(Event), new UIPropertyMetadata(false));
 
-
-
-        private EventCode ParseCode(string xmlCode)
+        private void ParseCode(string Code)
         {
-            var tParts = xmlCode.Split('/');
+            var tParts = Code.Split('/');
             if (tParts.Count() > 1 && GroupID.IsValidGroup(tParts[1]))
             {
-                return new EventCode { Code = tParts[0], Group = new GroupID(tParts[1]) };
+                Group = new GroupID(tParts[1]);
             }
-            return new EventCode { Code = xmlCode, Group = GroupID.Empty };
+            ShortCode = tParts[0];
         }
 
-        private byte[] ID
-        {
-            get { return Encoding.ASCII.GetBytes(Info); }
-        }
+        private string _loadedHashInfo = String.Empty;
 
-        public string Info
+        [JsonProperty]
+        public override string HashInfo
         {
-            get { return String.Format("{0};{1};{2}", Code, CalendarWeek, DayOfWeek); }
-        }
-
-        private void ReGenerateHash()
-        {
-            var tMD5 = MD5.Create();
-            Hash = Convert.ToBase64String(tMD5.ComputeHash(ID), Base64FormattingOptions.InsertLineBreaks);
+            get
+            {
+                return (
+                           !String.IsNullOrEmpty(_loadedHashInfo)
+                               ? _loadedHashInfo
+                               : String.Format("{0};{1};{2};{3}", Code, Room, CalendarWeek, DayOfWeek)
+                               );
+            }
+            set
+            {
+                _loadedHashInfo = value;
+            }
         }
 
         static void HashInvalidatingPropertyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs e)
         {
-            var ev = (Event) obj;
+            var ev = (Event)obj;
             ev.ReGenerateHash();
         }
 
+        [JsonProperty]
         public int CalendarWeek
         {
             get { return (int)GetValue(CalendarWeekProperty); }
@@ -97,26 +80,15 @@ namespace HAW_Tool.HAW.Depending
 
         static object CoerceTime(DependencyObject d, object value)
         {
-            var ts = (TimeSpan) value;
+            var ts = (TimeSpan)value;
             var minutes = ts.Minutes;
-            var minutesLeft = minutes%5;
-            var tsub = new TimeSpan(0, 0, minutesLeft, 0);
+            var minutesLeft = minutes % 5;
+            var newTime = new TimeSpan(0, ts.Hours, ts.Minutes - minutesLeft, 0, 0);
 
-            return ts.Subtract(tsub);
+            return newTime;
         }
 
-        public string Hash
-        {
-            get { return (string)GetValue(HashProperty); }
-            private set { SetValue(HashProperty, value); }
-        }
-
-        // Using a DependencyProperty as the backing store for Hash.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty HashProperty =
-            DependencyProperty.Register("Hash", typeof(string), typeof(Event), new UIPropertyMetadata(""));
-
-
-
+        [JsonProperty]
         public string Code
         {
             get { return (string)GetValue(CodeProperty); }
@@ -125,34 +97,58 @@ namespace HAW_Tool.HAW.Depending
 
         // Using a DependencyProperty as the backing store for Code.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty CodeProperty =
-            DependencyProperty.Register("Code", typeof(string), typeof(Event), new UIPropertyMetadata("", HashInvalidatingPropertyChanged));
+            DependencyProperty.Register("Code", typeof(string), typeof(Event), new UIPropertyMetadata("CODE", CodeChanged));
 
-
-
-        public string BasicCode
+        private static void CodeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            get { return (string)GetValue(BasicCodeProperty); }
-            set { SetValue(BasicCodeProperty, value); }
+            HashInvalidatingPropertyChanged(d, e);
+
+            var evt = (Event) d;
+            evt.ParseCode((string) e.NewValue);
         }
 
-        // Using a DependencyProperty as the backing store for BasicCode.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty BasicCodeProperty =
-            DependencyProperty.Register("BasicCode", typeof(string), typeof(Event), new UIPropertyMetadata(""));
 
 
-
-        public string SeminarGroup
+        public string ShortCode
         {
-            get { return (string)GetValue(SeminarGroupProperty); }
+            get { return (string)GetValue(ShortCodeProperty); }
+            set { SetValue(ShortCodeProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for ShortCode.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty ShortCodeProperty =
+            DependencyProperty.Register("ShortCode", typeof (string), typeof (Event), new UIPropertyMetadata("SCODE"));
+
+
+
+        // Using a DependencyProperty as the backing store for BasicCode.  This enables animation, styling, binding, etc...
+
+
+        [JsonProperty]
+        public SeminarGroup SeminarGroup
+        {
+            get { return (SeminarGroup)GetValue(SeminarGroupProperty); }
             set { SetValue(SeminarGroupProperty, value); }
         }
 
         // Using a DependencyProperty as the backing store for SeminarGroup.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty SeminarGroupProperty =
-            DependencyProperty.Register("SeminarGroup", typeof(string), typeof(Event), new UIPropertyMetadata(""));
+            DependencyProperty.Register("SeminarGroup", typeof (SeminarGroup), typeof (Event),
+                                        new UIPropertyMetadata(default(SeminarGroup)));
 
 
 
+        public EventSource Source
+        {
+            get { return (EventSource)GetValue(SourceProperty); }
+            set { SetValue(SourceProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for Source.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty SourceProperty =
+            DependencyProperty.Register("Source", typeof(EventSource), typeof(Event), new UIPropertyMetadata(EventSource.School));
+
+        [JsonProperty]
         public string Room
         {
             get { return (string)GetValue(RoomProperty); }
@@ -161,11 +157,10 @@ namespace HAW_Tool.HAW.Depending
 
         // Using a DependencyProperty as the backing store for Room.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty RoomProperty =
-            DependencyProperty.Register("Room", typeof(string), typeof(Event), new UIPropertyMetadata(""));
+            DependencyProperty.Register("Room", typeof(string), typeof(Event), new UIPropertyMetadata("ROOM"));
 
 
-
-
+        [JsonProperty]
         public string Tutor
         {
             get { return (string)GetValue(TutorProperty); }
@@ -174,22 +169,9 @@ namespace HAW_Tool.HAW.Depending
 
         // Using a DependencyProperty as the backing store for Tutor.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty TutorProperty =
-            DependencyProperty.Register("Tutor", typeof(string), typeof(Event), new UIPropertyMetadata(""));
-
-
-
-        public int Priority
-        {
-            get { return (int)GetValue(PriorityProperty); }
-            set { SetValue(PriorityProperty, value); }
-        }
+            DependencyProperty.Register("Tutor", typeof(string), typeof(Event), new UIPropertyMetadata("[TUT]"));
 
         // Using a DependencyProperty as the backing store for Priority.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty PriorityProperty =
-            DependencyProperty.Register("Priority", typeof(int), typeof(Event), new UIPropertyMetadata(0));
-
-
-
 
         public int DayOfWeek
         {
@@ -201,8 +183,7 @@ namespace HAW_Tool.HAW.Depending
         public static readonly DependencyProperty DayOfWeekProperty =
             DependencyProperty.Register("DayOfWeek", typeof(int), typeof(Event), new UIPropertyMetadata(0, HashInvalidatingPropertyChanged));
 
-
-
+        [JsonProperty]
         public DateTime Date
         {
             get { return (DateTime)GetValue(DateProperty); }
@@ -211,40 +192,13 @@ namespace HAW_Tool.HAW.Depending
 
         // Using a DependencyProperty as the backing store for Date.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty DateProperty =
-            DependencyProperty.Register("Date", typeof(DateTime), typeof(Event), new UIPropertyMetadata(DateTime.MinValue, DateChanged));
+            DependencyProperty.Register("Date", typeof(DateTime), typeof(Event), new UIPropertyMetadata(DateTime.MinValue));
 
-        static void DateChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            if (PlanFile.Instance.SelectedSeminarGroup == null) return;
-
-            var oldDate = (DateTime) e.OldValue;
-            var newDate = (DateTime) e.NewValue;
-
-            var oldDay = PlanFile.Instance.SelectedSeminarGroup.GetDayByDate(oldDate);
-            var newDay = PlanFile.Instance.SelectedSeminarGroup.GetDayByDate(newDate);
-
-            var evt = (Event) d;
-
-            oldDay.Events.Remove(evt);
-            newDay.Events.Add(evt);
-
-            evt.Day = newDay;
-        }
-
-
-
-        public IEnumerable<DateTime> OtherDates
-        {
-            get { return (IEnumerable<DateTime>)GetValue(OtherDatesProperty); }
-            set { SetValue(OtherDatesProperty, value); }
-        }
 
         // Using a DependencyProperty as the backing store for OtherDates.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty OtherDatesProperty =
-            DependencyProperty.Register("OtherDates", typeof(IEnumerable<DateTime>), typeof(Event), new UIPropertyMetadata(default(IEnumerable<DateTime>)));
 
 
-
+        [JsonProperty]
         public TimeSpan From
         {
             get { return (TimeSpan)GetValue(FromProperty); }
@@ -253,8 +207,9 @@ namespace HAW_Tool.HAW.Depending
 
         // Using a DependencyProperty as the backing store for From.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty FromProperty =
-            DependencyProperty.Register("From", typeof(TimeSpan), typeof(Event), new UIPropertyMetadata(default(TimeSpan), OnDepTimeChanged, CoerceTime));
+            DependencyProperty.Register("From", typeof(TimeSpan), typeof(Event), new UIPropertyMetadata(TimeSpan.Parse("08:10"), OnDepTimeChanged, CoerceTime));
 
+        [JsonProperty]
         public TimeSpan Till
         {
             get { return (TimeSpan)GetValue(TillProperty); }
@@ -263,16 +218,16 @@ namespace HAW_Tool.HAW.Depending
 
         // Using a DependencyProperty as the backing store for Till.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty TillProperty =
-            DependencyProperty.Register("Till", typeof(TimeSpan), typeof(Event), new UIPropertyMetadata(default(TimeSpan), OnDepTimeChanged, CoerceTime));
+            DependencyProperty.Register("Till", typeof(TimeSpan), typeof(Event), new UIPropertyMetadata(TimeSpan.Parse("11:25"), OnDepTimeChanged, CoerceTime));
 
 
         private static void OnDepTimeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var evt = (Event) d;
+            var evt = (Event)d;
             evt.OnTimeChanged(new EventArgs());
         }
 
-        
+
 
         public Day Day
         {
@@ -282,9 +237,15 @@ namespace HAW_Tool.HAW.Depending
 
         // Using a DependencyProperty as the backing store for Day.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty DayProperty =
-            DependencyProperty.Register("Day", typeof(Day), typeof(Event), new UIPropertyMetadata(default(Day)));
+            DependencyProperty.Register("Day", typeof(Day), typeof(Event), new UIPropertyMetadata(default(Day), DayChanged));
 
-
+        private static void DayChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if(e.NewValue == null) return;
+            var evt = (Event) d;
+            var day = (Day) e.NewValue;
+            evt.DayOfWeek = (int)day.DOW;
+        }
 
         public GroupID Group
         {
@@ -294,23 +255,9 @@ namespace HAW_Tool.HAW.Depending
 
         // Using a DependencyProperty as the backing store for Group.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty GroupProperty =
-            DependencyProperty.Register("Group", typeof(GroupID), typeof(Event), new UIPropertyMetadata(default(GroupID)));
+            DependencyProperty.Register("Group", typeof(GroupID), typeof(Event), new UIPropertyMetadata(null));
 
-
-
-        public bool IsEnabled
-        {
-            get { return (bool)GetValue(IsEnabledProperty); }
-            set { SetValue(IsEnabledProperty, value); }
-        }
-
-        // Using a DependencyProperty as the backing store for IsEnabled.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty IsEnabledProperty =
-            DependencyProperty.Register("IsEnabled", typeof(bool), typeof(Event), new UIPropertyMetadata(true));
-
-
-
-
+        [JsonProperty]
         public bool IsObligatory
         {
             get { return (bool)GetValue(IsObligatoryProperty); }
@@ -321,8 +268,7 @@ namespace HAW_Tool.HAW.Depending
         public static readonly DependencyProperty IsObligatoryProperty =
             DependencyProperty.Register("IsObligatory", typeof(bool), typeof(Event), new UIPropertyMetadata(false));
 
-
-
+        [JsonProperty]
         public bool TakesPlace
         {
             get { return (bool)GetValue(TakesPlaceProperty); }
@@ -333,7 +279,17 @@ namespace HAW_Tool.HAW.Depending
         public static readonly DependencyProperty TakesPlaceProperty =
             DependencyProperty.Register("TakesPlace", typeof(bool), typeof(Event), new UIPropertyMetadata(true));
 
+        internal void Save()
+        {
+            var s = PlanFile.Instance.CouchConnection.CreateSession("haw_events");
 
-        
+            var cdbi = new CouchDBEventInfo();
+            cdbi.Event = this;
+            cdbi.EventInfoHash = HashInfo;
+            cdbi.TimeStamp = DateTime.Now;
+
+            s.Save(cdbi);
+            Reset();
+        }
     }
 }

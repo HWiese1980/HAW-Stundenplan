@@ -239,7 +239,7 @@ namespace HAW_Tool.HAW.Native
         public Event GetEventByCode(string hash)
         {
             var tOut = (from p in AllEvents where p is Event && p.Hash == hash select (Event)p).ToList();
-            return tOut.Count <= 0 ? default(Event) : tOut.First();
+            return tOut.FirstOrDefault();
         }
 
         public IEnumerable<GroupID> GetEventGroups(IEvent Event)

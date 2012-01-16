@@ -291,6 +291,8 @@ namespace HAW_Tool
             {
                 PlanFile.Instance.LoadSchedule(schedule);
             }
+
+            PlanFile.Instance.LoadCouchEvents();
         }
 #endif
 
@@ -308,48 +310,51 @@ namespace HAW_Tool
             {
 
                 var tBut = sender as DependencyObject;
-                var tPrintVis = tBut.GetParent<Grid>().GetChildren<RasteredGroup>().First();
+                var tPrintVis = tBut.GetParent<Grid>().GetChildren<RasteredGroup>().FirstOrDefault();
 
                 var tCaps = tDlg.PrintQueue.GetPrintCapabilities(tDlg.PrintTicket);
                 Debug.Assert(tCaps.PageImageableArea != null, "tCaps.PageImageableArea != null");
-                var scale = Math.Min(tCaps.PageImageableArea.ExtentWidth / tPrintVis.ActualWidth,
-                    tCaps.PageImageableArea.ExtentHeight / tPrintVis.ActualHeight);
-
-                var tBrush = new VisualBrush(tPrintVis);
-
-                var tGrid = new Border
-                                {
-                                    Width = tPrintVis.ActualWidth,
-                                    Height = tPrintVis.ActualHeight,
-                                    HorizontalAlignment = HorizontalAlignment.Stretch,
-                                    VerticalAlignment = VerticalAlignment.Stretch
-                                };
-
-                var tRect = new Rectangle
-                                {
-                                    Margin = new Thickness(30.0D),
-                                    //Width = tPrintVis.ActualWidth,
-                                    //Height = tPrintVis.ActualHeight,
-                                    HorizontalAlignment = HorizontalAlignment.Stretch,
-                                    VerticalAlignment = VerticalAlignment.Stretch,
-                                    Fill = tBrush
-                                };
-
-                tGrid.Child = tRect;
-                tGrid.LayoutTransform = new ScaleTransform(scale, scale);
-
-
-                var sz = new Size(tCaps.PageImageableArea.ExtentWidth, tCaps.PageImageableArea.ExtentHeight);
-                tGrid.Measure(sz);
-                tGrid.Arrange(new Rect(new Point(tCaps.PageImageableArea.OriginWidth, tCaps.PageImageableArea.OriginHeight), sz));
-
-                try
+                if (tPrintVis != null)
                 {
-                    tDlg.PrintVisual(tGrid, "HAW Stundenplan Tool Wochenausdruck");
-                }
-                catch (Exception exp)
-                {
-                    MessageBox.Show(String.Format("Beim Drucken trat ein Fehler auf: {0}", exp.Message), "Drucken", MessageBoxButton.OK, MessageBoxImage.Error);
+                    var scale = Math.Min(tCaps.PageImageableArea.ExtentWidth / tPrintVis.ActualWidth,
+                                         tCaps.PageImageableArea.ExtentHeight / tPrintVis.ActualHeight);
+
+                    var tBrush = new VisualBrush(tPrintVis);
+
+                    var tGrid = new Border
+                                    {
+                                        Width = tPrintVis.ActualWidth,
+                                        Height = tPrintVis.ActualHeight,
+                                        HorizontalAlignment = HorizontalAlignment.Stretch,
+                                        VerticalAlignment = VerticalAlignment.Stretch
+                                    };
+
+                    var tRect = new Rectangle
+                                    {
+                                        Margin = new Thickness(30.0D),
+                                        //Width = tPrintVis.ActualWidth,
+                                        //Height = tPrintVis.ActualHeight,
+                                        HorizontalAlignment = HorizontalAlignment.Stretch,
+                                        VerticalAlignment = VerticalAlignment.Stretch,
+                                        Fill = tBrush
+                                    };
+
+                    tGrid.Child = tRect;
+                    tGrid.LayoutTransform = new ScaleTransform(scale, scale);
+
+
+                    var sz = new Size(tCaps.PageImageableArea.ExtentWidth, tCaps.PageImageableArea.ExtentHeight);
+                    tGrid.Measure(sz);
+                    tGrid.Arrange(new Rect(new Point(tCaps.PageImageableArea.OriginWidth, tCaps.PageImageableArea.OriginHeight), sz));
+
+                    try
+                    {
+                        tDlg.PrintVisual(tGrid, "HAW Stundenplan Tool Wochenausdruck");
+                    }
+                    catch (Exception exp)
+                    {
+                        MessageBox.Show(String.Format("Beim Drucken trat ein Fehler auf: {0}", exp.Message), "Drucken", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
                 }
             }
         }
@@ -578,6 +583,11 @@ namespace HAW_Tool
         private void SemGroups_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if(e.AddedItems.Count > 0) PlanFile.Instance.SelectedSeminarGroup = (SeminarGroup)e.AddedItems[0];
+        }
+
+        private void EventCouchDBInvalid(object sender, EventArgs e)
+        {
+            PlanFile.Instance.LoadCouchEvents();
         }
     }
 }

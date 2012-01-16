@@ -18,24 +18,24 @@
 	</UserControl.Resources>
     <Grid Margin="5">
         <Grid.Resources>
-            <Style TargetType="{x:Type Label}" x:Key="H1">
+            <Style TargetType="{x:Type ContentControl}" x:Key="H1">
                 <Setter Property="Foreground" Value="White" />
                 <Setter Property="FontWeight" Value="Bold" />
                 <Setter Property="FontSize" Value="20" />
             </Style>
-            <Style TargetType="{x:Type Label}" x:Key="H2" BasedOn="{StaticResource H1}">
+            <Style TargetType="{x:Type ContentControl}" x:Key="H2" BasedOn="{StaticResource H1}">
                 <Setter Property="FontSize" Value="18" />
             </Style>
-            <Style TargetType="{x:Type Label}" x:Key="H3" BasedOn="{StaticResource H1}">
+            <Style TargetType="{x:Type ContentControl}" x:Key="H3" BasedOn="{StaticResource H1}">
                 <Setter Property="FontSize" Value="16" />
             </Style>
-            <Style TargetType="{x:Type Label}" x:Key="H4" BasedOn="{StaticResource H1}">
+            <Style TargetType="{x:Type ContentControl}" x:Key="H4" BasedOn="{StaticResource H1}">
                 <Setter Property="FontSize" Value="14" />
             </Style>
-            <Style TargetType="{x:Type Label}" x:Key="H5" BasedOn="{StaticResource H1}">
+            <Style TargetType="{x:Type ContentControl}" x:Key="H5" BasedOn="{StaticResource H1}">
                 <Setter Property="FontSize" Value="12" />
             </Style>
-            <Style TargetType="{x:Type Label}" x:Key="H6" BasedOn="{StaticResource H1}">
+            <Style TargetType="{x:Type ContentControl}" x:Key="H6" BasedOn="{StaticResource H1}">
                 <Setter Property="FontSize" Value="10" />
             </Style>
         </Grid.Resources>
@@ -71,13 +71,13 @@
     			<Label Content="Findet statt" Style="{DynamicResource H5}" d:LayoutOverrides="Height" Grid.Row="6"/>
     			<Label Content="Ist Pflicht" Style="{DynamicResource H5}" d:LayoutOverrides="Height" Grid.Row="7"/>
     			<DatePicker SelectedDate="{Binding Date}"  d:LayoutOverrides="Height" Grid.Column="1" Grid.Row="3" VerticalAlignment="Center" FirstDayOfWeek="Monday" BorderBrush="{x:Null}" HorizontalAlignment="Left" Width="160"/>
+                <Label Content="{Binding Code, Mode=OneWay}" Style="{StaticResource H5}" Grid.Column="1" Margin="2,0,0,0" d:LayoutOverrides="Height" HorizontalAlignment="Left" Width="130" VerticalAlignment="Center"/>
                 <TextBox TextWrapping="Wrap" Text="{Binding Room}" Grid.Column="1" Grid.Row="2" VerticalAlignment="Center" Margin="2,0,0,0" HorizontalAlignment="Left" Width="130"/>
-                <TextBox TextWrapping="Wrap" Text="{Binding Code}" Grid.Column="1" Margin="2,0,0,0" d:LayoutOverrides="Height" HorizontalAlignment="Left" Width="130" VerticalAlignment="Center"/>
                 <TextBox TextWrapping="Wrap" Text="{Binding Tutor}" Grid.Column="1" Grid.Row="1" d:LayoutOverrides="Height" VerticalAlignment="Center" HorizontalAlignment="Left" Width="130" Margin="2,0,0,0"/>
     			<Slider Value="{Binding From, Converter={Converters:TimeToValueConverter MinTime='7:00', MaxTime='22:00', SizeOfSlider=100}}" Minimum="0" Maximum="100" Grid.Column="1" Grid.Row="4" TickPlacement="TopLeft" HorizontalAlignment="Left" Width="130" Margin="2,0,0,0"/>
                 <Slider Value="{Binding Till, Converter={Converters:TimeToValueConverter MinTime='7:00', MaxTime='22:00', SizeOfSlider=100}}" Minimum="0" Maximum="100" Grid.Column="1" Grid.Row="5" TickPlacement="TopLeft" HorizontalAlignment="Left" Width="130" Margin="2,0,0,0"/>
-                <CheckBox Content="{Binding TakesPlace, Converter={Converters:CheckBoxContentConverter CheckedText='ja', UncheckedText='nein'}}" IsChecked="{Binding TakesPlace}" Grid.Column="1" Grid.Row="6" Width="130" HorizontalAlignment="Left" Margin="2,0,0,0" VerticalAlignment="Center"/>
-                <CheckBox Content="{Binding IsObligatory, Converter={Converters:CheckBoxContentConverter CheckedText='ja', UncheckedText='nein'}}" IsChecked="{Binding IsObligatory}" Grid.Column="1" Grid.Row="7" Width="130" HorizontalAlignment="Left" d:LayoutOverrides="Height" VerticalAlignment="Center" Margin="2,0,0,0"/>
+                <CheckBox Style="{DynamicResource H5}" Content="{Binding TakesPlace, Converter={Converters:CheckBoxContentConverter CheckedText='ja', UncheckedText='nein'}}" IsChecked="{Binding TakesPlace}" Grid.Column="1" Grid.Row="6" Width="130" HorizontalAlignment="Left" Margin="2,0,0,0" VerticalAlignment="Center"/>
+                <CheckBox Style="{DynamicResource H5}" Content="{Binding IsObligatory, Converter={Converters:CheckBoxContentConverter CheckedText='ja', UncheckedText='nein'}}" IsChecked="{Binding IsObligatory}" Grid.Column="1" Grid.Row="7" Width="130" HorizontalAlignment="Left" d:LayoutOverrides="Height" VerticalAlignment="Center" Margin="2,0,0,0"/>
     		</Grid>
     	</DockPanel>
     </Grid>

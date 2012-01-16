@@ -7,7 +7,7 @@
     xmlns:UserControls="clr-namespace:HAW_Tool.UserControls">
 
     <sys:Double x:Key="RasterH">90</sys:Double>
-    <sys:Double x:Key="RasterV">50</sys:Double>
+    <sys:Double x:Key="RasterV">100</sys:Double>
     <SolidColorBrush x:Key="PR" Color="AliceBlue" />
 
     <Style x:Key="ScrollableItemsControl" TargetType="{x:Type ItemsControl}">
@@ -26,6 +26,7 @@
     <HAW_Tool_HAW:ToStringConverter x:Key="ShortTime" Format="{}{0:t}" />
     <Depending:TimeToCoord x:Key="TimeToLeft" Multiplier="{StaticResource RasterH}" />
     <Depending:TimeToCoord x:Key="TimeToTop" Multiplier="{StaticResource RasterV}" />
+    <Depending:TimeToThicknessConverter x:Key="TimeToLeftMargin" Multiplier="{StaticResource RasterH}" />
     <BorderGapMaskConverter x:Key="BorderGapMaskConverter"/>
     <Style x:Key="HAWGroupBoxStyle" TargetType="{x:Type GroupBox}">
         <Setter Property="BorderBrush" Value="#D5DFE5"/>
@@ -142,12 +143,12 @@
     <DataTemplate x:Key="EventCompact">
         <Canvas Background="{x:Null}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <Grid DataContext="{Binding}">
-                <Canvas.Top>
+                <!--<Canvas.Top>
                     <MultiBinding Converter="{StaticResource TimeToTop}" ConverterParameter="RowIndex">
                         <Binding Path="HasChanges" />
                         <Binding />
                     </MultiBinding>
-                </Canvas.Top>
+                </Canvas.Top>-->
                 <Canvas.Left>
                     <MultiBinding Converter="{StaticResource TimeToLeft}">
                         <Binding Path="HasChanges" />

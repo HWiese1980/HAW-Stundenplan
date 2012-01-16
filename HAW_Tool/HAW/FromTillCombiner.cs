@@ -12,8 +12,7 @@ namespace HAW_Tool.HAW
 
         public object Convert(object[] values, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            if (values.Length <= 0) return null;
-            return values.First();
+            return values.FirstOrDefault();
         }
 
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, System.Globalization.CultureInfo culture)

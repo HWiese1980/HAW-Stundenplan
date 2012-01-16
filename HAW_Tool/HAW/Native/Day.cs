@@ -16,9 +16,9 @@ namespace HAW_Tool.HAW.Native
         bool _bInitlialized;
         bool _bRecalculatingOccupiedRanges;
         readonly List<IEvent> _mEvents;
-/*
-        HAWClient _mHawClient = new HAWClient();
-*/
+        /*
+                HAWClient _mHawClient = new HAWClient();
+        */
         IEvent[] _mOccupiedMinutes;
 
         #endregion Fields
@@ -31,7 +31,8 @@ namespace HAW_Tool.HAW.Native
             Debug.Assert(events != null, "events != null");
             var ev = events.ToList();
             _mEvents.AddRange(ev);
-            Date = ev.First().Date;
+            var evFirst = ev.FirstOrDefault();
+            if (evFirst != null) Date = evFirst.Date;
         }
 
         private Day(int dayNo, IWeek week)
@@ -61,9 +62,9 @@ namespace HAW_Tool.HAW.Native
                 RecalculateOccupiedRanges();
 
                 var todays = (from p in StoredEvents
-                             where p.SeminarGroup == Week.SeminarGroup.FullName
-                             where p.OtherDates.Contains(Date.Date) | p.Date == Date & (p.Replaces ?? "") == ""
-                             select p).ToList();
+                              where p.SeminarGroup == Week.SeminarGroup.FullName
+                              where p.OtherDates.Contains(Date.Date) | p.Date == Date & (p.Replaces ?? "") == ""
+                              select p).ToList();
 
                 // int tExmCount = exams.Count();
 
@@ -120,14 +121,17 @@ namespace HAW_Tool.HAW.Native
                         var tConv = new TimeToCoord { AsWidth = false, Multiplier = rasterW };
                         var tWConv = new TimeToCoord { AsWidth = true, Multiplier = rasterW };
 
-                        var tLatest = from p in Events
-                                      orderby p.From descending
-                                      select p;
+                        var tLatest = (from p in Events
+                                       orderby p.From descending
+                                       select p).FirstOrDefault();
 
-                        var tPos = (double)tConv.Convert(new object[] { tLatest.First().From, tLatest.First() }, null, null, CultureInfo.CurrentCulture);
-                        tPos += (double)tWConv.Convert(new object[] { tLatest.First().From, tLatest.First() }, null, null, CultureInfo.CurrentCulture);
+                        if (tLatest != null)
+                        {
+                            var tPos = (double)tConv.Convert(new object[] { tLatest.From, tLatest }, null, null, CultureInfo.CurrentCulture);
+                            tPos += (double)tWConv.Convert(new object[] { tLatest.From, tLatest }, null, null, CultureInfo.CurrentCulture);
 
-                        return tPos + rasterW;
+                            return tPos + rasterW;
+                        }
                     }
                 }
                 catch (Exception e)
@@ -195,13 +199,13 @@ namespace HAW_Tool.HAW.Native
 
         // Private Methods (3) 
 
-/*
-        private bool ContainsCode(string p)
-        {
-            var evt = from q in _mEvents where q.BasicCode == p select q;
-            return evt.Count() > 0;
-        }
-*/
+        /*
+                private bool ContainsCode(string p)
+                {
+                    var evt = from q in _mEvents where q.BasicCode == p select q;
+                    return evt.Count() > 0;
+                }
+        */
 
         private void InitializeEvents()
         {
@@ -236,7 +240,7 @@ namespace HAW_Tool.HAW.Native
         #region Nested Classes (1)
 
 
-/*
+        /*
         class Range
         {
             #region Fields (2)

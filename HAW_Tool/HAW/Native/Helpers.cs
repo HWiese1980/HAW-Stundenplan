@@ -114,7 +114,7 @@ namespace HAW_Tool.HAW.Native
                     orderby p ascending
                     select p;
 
-            return t.First();
+            return t.FirstOrDefault();
         }
 
         public static TimeSpan Earliest(params TimeSpan[] times)
@@ -123,7 +123,7 @@ namespace HAW_Tool.HAW.Native
                     orderby p ascending
                     select p;
 
-            return t.First();
+            return t.FirstOrDefault();
         }
 
         public static DateTime EndOfWeek(int week, int year)
@@ -157,7 +157,7 @@ namespace HAW_Tool.HAW.Native
                     orderby p descending
                     select p;
 
-            return t.First();
+            return t.FirstOrDefault();
         }
 
         public static TimeSpan Latest(params TimeSpan[] times)
@@ -166,7 +166,7 @@ namespace HAW_Tool.HAW.Native
                     orderby p descending
                     select p;
 
-            return t.First();
+            return t.FirstOrDefault();
         }
 
         public static bool PeriodsOverlap(DateTime aStart, DateTime aEnd, DateTime bStart, DateTime bEnd)

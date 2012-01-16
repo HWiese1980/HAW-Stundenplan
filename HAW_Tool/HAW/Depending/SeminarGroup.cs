@@ -4,9 +4,11 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Windows;
+using Newtonsoft.Json;
 
 namespace HAW_Tool.HAW.Depending
 {
+    [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
     public class SeminarGroup : DependencyObject
     {
         public SeminarGroup()
@@ -14,6 +16,7 @@ namespace HAW_Tool.HAW.Depending
             CalendarWeeks = new ObservableCollection<CalendarWeek>();
         }
 
+        [JsonProperty]
         public string Name
         {
             get { return (string)GetValue(NameProperty); }
@@ -33,7 +36,6 @@ namespace HAW_Tool.HAW.Depending
         // Using a DependencyProperty as the backing store for Version.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty VersionProperty =
             DependencyProperty.Register("Version", typeof(string), typeof(SeminarGroup), new UIPropertyMetadata(""));
-
 
 
         public DateTime LastUpdated

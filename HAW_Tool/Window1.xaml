@@ -37,17 +37,18 @@
         </ControlTemplate>
 
         <DataTemplate x:Key="EventItemTemplate">
-                <uc:EventControl DataContext="{Binding}" RasterWidth="{Binding RasterWidth, RelativeSource={RelativeSource AncestorType=SeveQsCustomControls:RasteredItemsControl}}" />
+                <uc:EventControl CouchDBDataInvalid="EventCouchDBInvalid"  DataContext="{Binding}" RasterWidth="{Binding RasterWidth, RelativeSource={RelativeSource AncestorType=SeveQsCustomControls:RasteredItemsControl}}" />
         </DataTemplate>
 
         <DataTemplate x:Key="DayItemTemplate">
             <AdornerDecorator>
                 <Grid x:Name="dayGrid" MinWidth="{Binding MinWidth}" MaxWidth="{x:Static Native:Helper.MaxDayWidth}" Height="{DynamicResource DayHeight}" Margin="1" Background="#0F092D4D">
+                    <Button x:Name="AddButton"  Panel.ZIndex="1" HorizontalAlignment="Left" VerticalAlignment="Top" Style="{DynamicResource FlatButton}" Margin="16,28,0,0">Hinzufügen</Button>
                     <!-- #2F092D4D -->
                     <!--StartDragging="EventDraggingStart" 
                         EndDragging="EventDraggingEnd" 
                         Dragging="EventDragging"-->
-                    <SeveQsCustomControls:RasteredItemsControl 
+                    <SeveQsCustomControls:RasteredItemsControl
                         x:Name="raster"
                         Header="{Binding Date, StringFormat='{}[{0:dd} - {0:ddd}]'}" 
                         FontSize="24" FontWeight="Bold"
@@ -77,6 +78,7 @@
                 <DataTrigger Binding="{Binding Events.Count, Converter={Cvt:CompareConverter Value=1, Operator='LessThan'}}" Value="True">
                     <Setter TargetName="raster" Property="Header" Value="{Binding Date, StringFormat='{}[{0:dd} - {0:ddd}] keine Veranstaltung geplant'}" />
                     <Setter TargetName="dayGrid" Property="Opacity" Value="0.2" />
+                    <Setter TargetName="dayGrid" Property="Height" Value="60" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding HasAdditions}" Value="True">
                     <Setter TargetName="dayGrid" Property="Background" Value="#2F098D4D" />
@@ -232,6 +234,7 @@
                                 </StatusBarItem.Background>
                             </StatusBarItem>
                             <StatusBarItem Content="{Binding SelectedItem.Code, ElementName='TheWeek'}" />
+                            <StatusBarItem Content="{Binding SelectedItem.Hash, ElementName='TheWeek'}" />
                             <Grid Margin="0,6,5,6" Width="24" DockPanel.Dock="Right">
                                 <SeveQsCustomControls:ReflectionControl HorizontalAlignment="Right" VerticalAlignment="Center" ReflectionMask="{DynamicResource DefaultReflectionBrush}" Margin="0">
                                     <Button x:Name="aboutButton" Margin="0" Style="{DynamicResource FlatButton}" ToolTip="Über">
@@ -395,42 +398,13 @@
                                         </Button>
                                     </Grid>
                                 </TabItem>
-                                <TabItem Header="Debugging" Visibility="Visible">
+                                <TabItem DataContext="{Binding Source={x:Static Depending:PlanFile.Instance}}"  Header="Debugging" Visibility="Visible">
                                     <TabItem.Foreground>
                                         <SolidColorBrush Color="{DynamicResource WIPForeground}"/>
                                     </TabItem.Foreground>
                                     <Grid>
-                                        <Grid Margin="262,34.04,8,8">
-                                            <TreeView ItemsSource="{Binding Changes}" Margin="0,29.96,0,0" Foreground="White">
-                                                <TreeView.Background>
-                                                    <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
-                                                </TreeView.Background>
-                                            </TreeView>
-                                            <Label VerticalAlignment="Top" Content="Änderungen" Foreground="White">
-                                                <Label.Background>
-                                                    <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
-                                                </Label.Background>
-                                            </Label>
-                                        </Grid>
-                                        <Grid HorizontalAlignment="Left" Margin="8,34.04,0,8" Width="250">
-                                            <ListBox ItemsSource="{Binding AllEvents}" Margin="0,29.96,0,0" Foreground="White" >
-                                                <ListBox.Background>
-                                                    <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
-                                                </ListBox.Background>
-                                                <ListBox.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <DockPanel>
-                                                            <TextBlock Text="{Binding Info}" Width="200" DockPanel.Dock="Left" />
-                                                            <TextBlock Text="{Binding IsEnabled}" />
-                                                        </DockPanel>
-                                                    </DataTemplate>
-                                                </ListBox.ItemTemplate>
-                                            </ListBox>
-                                            <Label VerticalAlignment="Top" Content="Aktiviert/deaktiviert" Foreground="White">
-                                                <Label.Background>
-                                                    <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
-                                                </Label.Background>
-                                            </Label>
+                                        <Grid Margin="8,34.04,8,8">
+                                            <DataGrid ItemsSource="{Binding CouchDBEvents}" AutoGenerateColumns="True" />
                                         </Grid>
                                         <TextBlock Margin="9,10.08,8,0" VerticalAlignment="Top" Text="Hier sind nur Informationen zur Fehlerbereinigung zu sehen. Nichts interessantes eigentlich für den Endbenutzer, nur für den Entwickler. " Foreground="White" Background="#FF841313" Padding="2" TextTrimming="WordEllipsis"/>
                                     </Grid>

@@ -19,6 +19,7 @@ namespace SeveQsCustomControls
     [TemplatePart(Name = "PART_RasterCanvas", Type = typeof(Canvas))]
     public class RasteredItemsControl : ListBox
     {
+
         private double RasterWidth
         {
             get { return (double)GetValue(RasterWidthProperty); }

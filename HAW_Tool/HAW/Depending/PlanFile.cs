@@ -1,24 +1,56 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Net;
-using System.Text;
+using System.Timers;
 using LittleHelpers;
 using System.Text.RegularExpressions;
 using System.IO;
 using System.Windows;
-using System.Windows.Data;
+using RedBranch.Hammock;
 
 namespace HAW_Tool.HAW.Depending
 {
     public class PlanFile : DependencyObject
     {
+        private static object _couchDbLock = new object();
+
         private PlanFile()
         {
+            CouchConnection = new Connection(new Uri("http://seveq.de:5984"));
             SeminarGroups = new ObservableCollection<SeminarGroup>();
+            ReplacedSchoolEvents = new ObservableCollection<Event>();
+            CouchDBEvents = new ObservableCollection<CouchDBEventInfo>();
+
+            var refreshCouchDBTimer = new Timer {Interval = (10000)};
+            // alle 10 Sekunden CouchDB refreshen
+            refreshCouchDBTimer.Elapsed += (x, y) => Dispatcher.Invoke(new Action(LoadCouchEvents));
+            refreshCouchDBTimer.Enabled = true;
+        }
+
+        private void ResetCouchDBEvents()
+        {
+            CouchDBEvents.Clear();
+            foreach (var evt in GetAllModifiedEvents())
+            {
+                if(!evt.IsDirty) evt.Reset(); // nur auf Ursprungsdaten zurücksetzen, wenn keine vom Benutzer vorgenommenen Änderungen vorliegen
+            }
+        }
+
+        private IEnumerable<Event> GetAllModifiedEvents()
+        {
+            return from s in SeminarGroups
+                   from c in s.CalendarWeeks
+                   from d in c.Days
+                   from e in d.Events
+                   where e.Source == EventSource.School
+                   where e.IsDirty
+                   select e;
         }
 
         static PlanFile()
@@ -64,7 +96,7 @@ namespace HAW_Tool.HAW.Depending
 
         public static event EventHandler<ValueEventArgs<string>> StatusMessageChanged;
 
-        public static void OnStatusMessageChanged(string format, params object[] parameter)
+        private static void OnStatusMessageChanged(string format, params object[] parameter)
         {
             var args = new ValueEventArgs<string> { Value = string.Format(format, parameter) };
             if (StatusMessageChanged != null) StatusMessageChanged(null, args);
@@ -87,6 +119,109 @@ namespace HAW_Tool.HAW.Depending
                                        exp.Message);
                 Debugger.Break();
             }
+        }
+
+        public Connection CouchConnection { get; private set; }
+
+        internal void LoadCouchEvents()
+        {
+            if (LittleHelpers.Helper.IsInDesignModeStatic || SeminarGroups == null || SeminarGroups.Count <= 0) return;
+
+            if (SelectedSeminarGroup == null) SelectedSeminarGroup = SeminarGroups.FirstOrDefault();
+
+            lock (_couchDbLock)
+            {
+                var couchS = CouchConnection.CreateSession("haw_events");
+                var cdbDocs = couchS.ListDocuments();
+
+                ResetCouchDBEvents();
+
+                foreach (var cdbDoc in cdbDocs)
+                {
+                    if (!cdbDoc.Id.StartsWith("couchdbeventinfo")) continue;
+
+                    var evtdoc = couchS.Load<CouchDBEventInfo>(cdbDoc.Id);
+                    evtdoc.Event.Source = EventSource.CouchDB;
+
+                    CouchDBEvents.Add(evtdoc);
+                }
+
+                CleanUpCouchDBEvents();
+                ReplaceSchoolEvents();
+            }
+        }
+
+        private void ReplaceSchoolEvents()
+        {
+            foreach (var evtinfo in CouchDBEvents)
+            {
+                var originalEvent = GetEventByHashInfo(evtinfo.EventInfoHash);
+                if (originalEvent.IsDirty) continue;
+
+                var itemDay = GetDayByDate(evtinfo.Event.Date.Date, evtinfo.Event.SeminarGroup.Name);
+                
+                itemDay.RemoveAllCouchDBEvents(evtinfo.EventInfoHash);
+                itemDay.Events.Add(evtinfo.Event);
+                evtinfo.Event.CleanUp();
+
+                originalEvent.Visibility = Visibility.Hidden;
+            }
+        }
+
+        void CleanUpCouchDBEvents()
+        {
+// ReSharper disable AccessToModifiedClosure
+            var dirtyHashes = new List<string>();
+            foreach (var item in CouchDBEvents)
+            {
+                if (!dirtyHashes.Contains(item.EventInfoHash)) dirtyHashes.Add(item.EventInfoHash);
+            }
+
+            foreach (var infohash in dirtyHashes)
+            {
+                var eventsByStamp = CouchDBEvents.Where(evt => evt.EventInfoHash == infohash).OrderByDescending(evt => evt.TimeStamp);
+
+                while (true)
+                {
+                    var older = eventsByStamp.Skip(1).ToArray();
+                    if (older.Length <= 0)
+                    {
+                        var newestEvent = eventsByStamp.FirstOrDefault();
+                        if(newestEvent != null) Console.WriteLine(@"{0} already clean", newestEvent.Event.Code);
+                        break;
+                    }
+
+                    for (int i = 0; i < older.Length; i++)
+                    {
+                        CouchDBEvents.Remove(older[i]);
+                    }
+                }
+            }
+// ReSharper restore AccessToModifiedClosure
+        }
+
+        public Day GetDayByDate(DateTime date, string seminargroupname)
+        {
+            var days = from s in SeminarGroups
+                       where s.Name == seminargroupname
+                       from c in s.CalendarWeeks
+                       from d in c.Days
+                       where d.Date.Date == date.Date
+                       select d;
+            return days.FirstOrDefault();
+        }
+
+        public Event GetEventByHashInfo(string hashInfo)
+        {
+            var evt = from s in SeminarGroups
+                      from c in s.CalendarWeeks
+                      from d in c.Days
+                      from e in d.Events
+                      where e.Source == EventSource.School
+                      where e.HashInfo == hashInfo
+                      select e;
+
+            return evt.FirstOrDefault();
         }
 
         /*
@@ -282,23 +417,27 @@ namespace HAW_Tool.HAW.Depending
                                         Debugger.Break();
                                     }
 
-                                    var evt = new Event
-                                                  {
-                                                      Code = values["Code"],
-                                                      Date = cw.GetDateOfWeekday(i_dow),
-                                                      From =
-                                                          from,
-                                                      Till =
-                                                          till,
-                                                      Tutor = values["Tutor"],
-                                                      DayOfWeek = i_dow,
-                                                      Day = day,
-                                                      CalendarWeek = cw.Week,
-                                                      Room = values["Room"]
-                                                  };
+                                    if (day == null) throw new Exception("Day is null! Verify why!");
+
+                                    var evt = new Event();
+
+                                    evt.BeginCleanInit();
+
+                                    evt.Code = values["Code"];
+                                    evt.Date = cw.GetDateOfWeekday(i_dow);
+                                    evt.From = from;
+                                    evt.Till = till;
+                                    evt.Tutor = values["Tutor"];
+                                    evt.DayOfWeek = i_dow;
+                                    evt.Day = day;
+                                    evt.CalendarWeek = cw.Week;
+                                    evt.Room = values["Room"];
+                                    evt.SeminarGroup = currentSeminarGroup;
+
+                                    evt.EndCleanInit();
 
                                     evt.Day.Events.Add(evt);
-                                    evt.Freeze();
+                                    evt.CleanUp();
                                 }
                             break;
                         }
@@ -318,6 +457,8 @@ namespace HAW_Tool.HAW.Depending
         #region Daten
 
         public ObservableCollection<SeminarGroup> SeminarGroups { get; set; }
+        public ObservableCollection<CouchDBEventInfo> CouchDBEvents { get; set; }
+        public ObservableCollection<Event> ReplacedSchoolEvents { get; set; }
 
         #endregion
     }

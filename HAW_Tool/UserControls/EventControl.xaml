@@ -4,51 +4,60 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:SeveQsCustomControls="clr-namespace:SeveQsCustomControls;assembly=SeveQsCustomControls"
-             xmlns:UserControls="clr-namespace:HAW_Tool.UserControls" mc:Ignorable="d"
-             xmlns:sw ="clr-namespace:System.Windows;assembly=PresentationFramework"
-             x:Name="MyEventControl"
-             Visibility="{Binding Visibility}"
-             xmlns:Controls="clr-namespace:AC.AvalonControlsLibrary.Controls;assembly=AvalonControlsLibrary"
-             Loaded="MyEventControl_Loaded"
+             xmlns:UserControls="clr-namespace:HAW_Tool.UserControls" mc:Ignorable="d" x:Name="MyEventControl"
+             Visibility="{Binding Visibility}" Loaded="MyEventControl_Loaded"
              d:DataContext="{d:DesignInstance Type=Depending:Event, IsDesignTimeCreatable=True}"
-             xmlns:Depending="clr-namespace:HAW_Tool.HAW.Depending" d:DesignHeight="140.2" d:DesignWidth="388">
-    <UserControl.Style>
+             xmlns:Depending="clr-namespace:HAW_Tool.HAW.Depending"
+             xmlns:MarkupExtensions="clr-namespace:HAW_Tool.HAW.Depending.MarkupExtensions" d:DesignHeight="140.2" d:DesignWidth="388" Background="{x:Null}">
+	<UserControl.Style>
         <Style TargetType="{x:Type UserControls:EventControl}">
             <Style.Triggers>
-                <DataTrigger Binding="{Binding IsDirty}" Value="True">
-                    <Setter Property="BackBorderBrush" Value="#FFFFAA00" />
-                    <Setter Property="BackBorderBackground" Value="#88FFFF00" />
-                </DataTrigger>
                 <DataTrigger Binding="{Binding IsEnabled}" Value="False">
                     <Setter Property="Opacity" Value="0.3" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Path='Source'}" Value="CouchDB">
-                    <Setter Property="BackBorderBrush" Value="Green" />
-                    <Setter Property="BackBorderBackground" Value="LightGreen" />
+                    <Setter Property="EventBorderBrush" Value="{StaticResource CouchDBEventBorderBrush}" />
+                    <!--<Setter Property="EventBorderBackground" Value="{StaticResource CouchDBEventBrush}" />-->
                     <Setter Property="ResetCouchDBButtonVisibility" Value="Visible" />
                 </DataTrigger>
+                <DataTrigger Binding="{Binding IsDirty}" Value="True">
+                    <Setter Property="EventBorderBrush" Value="{StaticResource DirtyBorderBrush}" />
+                    <!--<Setter Property="EventBorderBackground" Value="{StaticResource DirtyBrush}" />-->
+                </DataTrigger>
                 <DataTrigger Binding="{Binding IsObligatory}" Value="True">
-                    <Setter Property="BackBorderBackground" Value="#44FF0000" />
+                    <Setter Property="EventBorderBrush" Value="{StaticResource ObligatoryBrush}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding TakesPlace}" Value="False">
-                    <Setter Property="BackBorderBackground" Value="#88FF0000" />
+                    <Setter Property="EventBorderBrush" Value="{StaticResource NotTakingPlaceBrush}" />
                     <Setter Property="StrikeOutVisibility" Value="Visible" />
                     <Setter Property="Opacity" Value="0.6" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding IsSelected}" Value="True">
                     <Setter Property="ZIndex" Value="100" />
-                    <Setter Property="EventBorderBrush" Value="White"/>
-                    <Setter Property="EventBorderBackground" Value="#22FFFFFF" />
+                    <!--<Setter Property="EventBorderBrush" Value="White"/>-->
+                    <Setter Property="EventBorderBackground" Value="{StaticResource SelectedBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Group, Converter={MarkupExtensions:HasValueConverter PropertyPath='GroupID.Value'}}" Value="True">
+                    <Setter Property="GroupVisibility" Value="Visible" />
                 </DataTrigger>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Panel.ZIndex" Value="100" />
                     <Setter Property="EventBorderOpacity" Value="1.0" />
                     <Setter Property="BackBorderBackground" Value="#FFFFFFFF"/>
+                    <Setter Property="BackBorderVisibility" Value="Visible" />
                 </Trigger>
             </Style.Triggers>
         </Style>
     </UserControl.Style>
     <UserControl.Resources>
+    	<SolidColorBrush Color="#FFFFFF64" x:Key="DirtyBorderBrush" />
+    	<SolidColorBrush Color="#FFFFFFAF" x:Key="DirtyBrush" />
+    	<SolidColorBrush Color="#FF62D740" x:Key="CouchDBEventBorderBrush" />
+    	<SolidColorBrush Color="#FF93CE83" x:Key="CouchDBEventBrush" />
+    	<SolidColorBrush Color="#FF933E3E" x:Key="ObligatoryBrush" />
+    	<SolidColorBrush Color="#FF836A23" x:Key="NotTakingPlaceBrush" />
+    	<SolidColorBrush Color="#FF92C0FD" x:Key="SelectedBrush" />
+
         <BooleanToVisibilityConverter x:Key="btvc" />
         <Style x:Key="EventThumb" TargetType="{x:Type Thumb}">
             <Setter Property="Stylus.IsPressAndHoldEnabled" Value="false"/>
@@ -59,80 +68,80 @@
                     <ControlTemplate TargetType="{x:Type Thumb}">
                         <Border x:Name="border" Width="4" Height="6" VerticalAlignment="{TemplateBinding VerticalAlignment}" Margin="0" CornerRadius="0" BorderBrush="Black" BorderThickness="1" HorizontalAlignment="{TemplateBinding HorizontalAlignment}">
                             <Border.Background>
-                                <SolidColorBrush Color="{StaticResource LightenUp20}" />
+                                <SolidColorBrush Color="{DynamicResource LightenUp20}"/>
                             </Border.Background>
-                            <sw:VisualStateManager.VisualStateGroups>
-                                <sw:VisualStateGroup x:Name="CommonStates">
-                                    <sw:VisualStateGroup.Transitions>
-                                        <sw:VisualTransition GeneratedDuration="0:0:0.3" To="MouseOver">
-                                            <sw:VisualTransition.GeneratedEasingFunction>
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualStateGroup.Transitions>
+                                        <VisualTransition GeneratedDuration="0:0:0.3" To="MouseOver">
+                                            <VisualTransition.GeneratedEasingFunction>
                                                 <BackEase EasingMode="EaseOut"/>
-                                            </sw:VisualTransition.GeneratedEasingFunction>
-                                        </sw:VisualTransition>
-                                        <sw:VisualTransition GeneratedDuration="0:0:1" To="Normal">
-                                            <sw:VisualTransition.GeneratedEasingFunction>
+                                            </VisualTransition.GeneratedEasingFunction>
+                                        </VisualTransition>
+                                        <VisualTransition GeneratedDuration="0:0:1" To="Normal">
+                                            <VisualTransition.GeneratedEasingFunction>
                                                 <BounceEase EasingMode="EaseOut" Bounces="5"/>
-                                            </sw:VisualTransition.GeneratedEasingFunction>
-                                        </sw:VisualTransition>
-                                        <sw:VisualTransition GeneratedDuration="0:0:0.3" To="Pressed">
-                                            <sw:VisualTransition.GeneratedEasingFunction>
+                                            </VisualTransition.GeneratedEasingFunction>
+                                        </VisualTransition>
+                                        <VisualTransition GeneratedDuration="0:0:0.3" To="Pressed">
+                                            <VisualTransition.GeneratedEasingFunction>
                                                 <BackEase EasingMode="EaseOut"/>
-                                            </sw:VisualTransition.GeneratedEasingFunction>
-                                        </sw:VisualTransition>
-                                        <sw:VisualTransition GeneratedDuration="0:0:1" To="Disabled">
-                                            <sw:VisualTransition.GeneratedEasingFunction>
-                                        		<BounceEase EasingMode="EaseInOut"/>
-                                            </sw:VisualTransition.GeneratedEasingFunction>
-                                        </sw:VisualTransition>
-                                    </sw:VisualStateGroup.Transitions>
-                                    <sw:VisualState x:Name="Normal">
-                                		<Storyboard>
-                                			<DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(FrameworkElement.Width)" Storyboard.TargetName="border">
-                                				<EasingDoubleKeyFrame KeyTime="0" Value="6"/>
-                                			</DoubleAnimationUsingKeyFrames>
-                                		</Storyboard>
-                                    </sw:VisualState>
-                                    <sw:VisualState x:Name="MouseOver">
+                                            </VisualTransition.GeneratedEasingFunction>
+                                        </VisualTransition>
+                                        <VisualTransition GeneratedDuration="0:0:1" To="Disabled">
+                                            <VisualTransition.GeneratedEasingFunction>
+                                                <BounceEase EasingMode="EaseInOut"/>
+                                            </VisualTransition.GeneratedEasingFunction>
+                                        </VisualTransition>
+                                    </VisualStateGroup.Transitions>
+                                    <VisualState x:Name="Normal">
+                                        <Storyboard>
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(FrameworkElement.Width)" Storyboard.TargetName="border">
+                                                <EasingDoubleKeyFrame KeyTime="0" Value="6"/>
+                                            </DoubleAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </VisualState>
+                                    <VisualState x:Name="MouseOver">
                                         <Storyboard>
                                             <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)" Storyboard.TargetName="border">
                                                 <EasingColorKeyFrame KeyTime="0" Value="{StaticResource LightenUp50}"/>
                                             </ColorAnimationUsingKeyFrames>
                                             <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(FrameworkElement.Width)" Storyboard.TargetName="border">
-                                            	<EasingDoubleKeyFrame KeyTime="0" Value="12"/>
+                                                <EasingDoubleKeyFrame KeyTime="0" Value="12"/>
                                             </DoubleAnimationUsingKeyFrames>
                                             <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(FrameworkElement.Height)" Storyboard.TargetName="border">
-                                            	<EasingDoubleKeyFrame KeyTime="0" Value="12"/>
+                                                <EasingDoubleKeyFrame KeyTime="0" Value="12"/>
                                             </DoubleAnimationUsingKeyFrames>
                                         </Storyboard>
-                                    </sw:VisualState>
-                                    <sw:VisualState x:Name="Pressed">
+                                    </VisualState>
+                                    <VisualState x:Name="Pressed">
                                         <Storyboard>
                                             <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)" Storyboard.TargetName="border">
                                                 <EasingColorKeyFrame KeyTime="0" Value="{StaticResource WIPForeground}"/>
                                             </ColorAnimationUsingKeyFrames>
                                             <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(FrameworkElement.Width)" Storyboard.TargetName="border">
-                                            	<EasingDoubleKeyFrame KeyTime="0" Value="12"/>
+                                                <EasingDoubleKeyFrame KeyTime="0" Value="12"/>
                                             </DoubleAnimationUsingKeyFrames>
                                             <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(FrameworkElement.Height)" Storyboard.TargetName="border">
-                                            	<EasingDoubleKeyFrame KeyTime="0" Value="12"/>
+                                                <EasingDoubleKeyFrame KeyTime="0" Value="12"/>
                                             </DoubleAnimationUsingKeyFrames>
                                         </Storyboard>
-                                    </sw:VisualState>
-                                    <sw:VisualState x:Name="Disabled">
+                                    </VisualState>
+                                    <VisualState x:Name="Disabled">
                                         <Storyboard>
                                             <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(Panel.Background).(SolidColorBrush.Color)" Storyboard.TargetName="border">
                                                 <EasingColorKeyFrame KeyTime="0" Value="#CAE31818"/>
                                             </ColorAnimationUsingKeyFrames>
                                             <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="(FrameworkElement.Width)" Storyboard.TargetName="border">
-                                            	<EasingDoubleKeyFrame KeyTime="0" Value="6"/>
+                                                <EasingDoubleKeyFrame KeyTime="0" Value="6"/>
                                             </DoubleAnimationUsingKeyFrames>
                                             <ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)" Storyboard.TargetName="border">
-                                            	<EasingColorKeyFrame KeyTime="0" Value="Black"/>
+                                                <EasingColorKeyFrame KeyTime="0" Value="Black"/>
                                             </ColorAnimationUsingKeyFrames>
                                         </Storyboard>
-                                    </sw:VisualState>
-                                </sw:VisualStateGroup>
-                            </sw:VisualStateManager.VisualStateGroups>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>
@@ -140,81 +149,79 @@
         </Style>
     </UserControl.Resources>
     <Grid Tag="EventControl">
-        <Canvas Background="{x:Null}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-        	<Grid Margin="0,25,0,0">
-        		<Grid.RowDefinitions>
-        			<RowDefinition/>
-        			<RowDefinition/>
-        			<RowDefinition/>
-        		</Grid.RowDefinitions>
-        		<Grid d:LayoutOverrides="Width, Height" Grid.Row="{Binding (Depending:RowIndex.Row)}">
-        			<Grid.Width>
-        				<MultiBinding Converter="{StaticResource TimeToWidth}">
-        					<Binding />
-        					<Binding Path="From" />
-        					<Binding Path="Till" />
-        				</MultiBinding>
-        			</Grid.Width>
-                    <Grid.Margin>
-                        <MultiBinding Converter="{StaticResource TimeToLeftMargin}" ConverterParameter="left">
-                            <Binding />
-                            <Binding Path="From" />
-                            <Binding Path="Till" />
-                        </MultiBinding>
-                    </Grid.Margin>
-        			<SeveQsCustomControls:StrikeOut Opacity="0.6" Panel.ZIndex="100" StrikeOutThickness="3.0" Visibility="{Binding StrikeOutVisibility, ElementName=MyEventControl}" x:Name="strikeOut" d:IsHidden="True" />
-        			<Border x:Name="backBorder" Background="{Binding BackBorderBackground, ElementName=MyEventControl}" CornerRadius="0"/>
-        			<Border x:Name="eventBorder" TextElement.FontSize="9" CornerRadius="0" BorderBrush="{Binding EventBorderBrush, ElementName=MyEventControl}" BorderThickness="2,2,2,10" Background="{Binding EventBorderBackground, ElementName=MyEventControl}">
-        				<Grid>
-        					<StackPanel Margin="0,2,2,0" Orientation="Horizontal" VerticalAlignment="Top" d:LayoutOverrides="Width" Panel.ZIndex="100" HorizontalAlignment="Right" d:IsHidden="True">
-        						<Button Panel.ZIndex="100" Width="30" HorizontalAlignment="Right" Click="ResetChanges" Content="X" Visibility="{Binding ResetCouchDBButtonVisibility, ElementName=MyEventControl}" d:LayoutOverrides="Height" Style="{DynamicResource FlatButton}" />
+        <!--         <Grid d:LayoutOverrides="Width" Grid.Row="{Binding (SeveQsCustomControls:RasteredItemExtension.Row)}" HorizontalAlignment="Left" VerticalAlignment="Top"> -->
+        <Grid d:LayoutOverrides="Width" Grid.Row="{Binding Row}" HorizontalAlignment="Left" VerticalAlignment="Top">
+            <Grid.Width>
+                <MultiBinding Converter="{StaticResource TimeToWidth}">
+                    <Binding />
+                    <Binding Path="From" />
+                    <Binding Path="Till" />
+                </MultiBinding>
+            </Grid.Width>
+            <Grid.Margin>
+                <MultiBinding Converter="{StaticResource TimeToLeftMargin}" ConverterParameter="left">
+                    <Binding />
+                    <Binding Path="From" />
+                    <Binding Path="Till" />
+                </MultiBinding>
+            </Grid.Margin>
+            <SeveQsCustomControls:StrikeOut Opacity="0.6" Panel.ZIndex="100" StrikeOutThickness="3.0" Visibility="{Binding StrikeOutVisibility, ElementName=MyEventControl}" x:Name="strikeOut" d:IsHidden="True" />
+            <Border x:Name="eventBorder" TextElement.FontSize="9" CornerRadius="0" BorderBrush="{Binding EventBorderBrush, ElementName=MyEventControl}" BorderThickness="2,2,2,10" Background="{Binding EventBorderBackground, ElementName=MyEventControl}">
+                <Grid>
+                    <Label x:Name="codeGross" Content="{Binding Code}" FontWeight="Bold" Foreground="#05FFFFFF" FontStretch="Expanded" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontSize="20" />
+                    <StackPanel Margin="0,2,2,0" Orientation="Horizontal" VerticalAlignment="Top" d:LayoutOverrides="Width" Panel.ZIndex="100" HorizontalAlignment="Right" d:IsHidden="True">
+                        <Button Panel.ZIndex="100" Width="30" HorizontalAlignment="Right" Click="ResetChanges" Content="X" Visibility="{Binding ResetCouchDBButtonVisibility, ElementName=MyEventControl}" d:LayoutOverrides="Height" Style="{DynamicResource FlatButton}" />
 
-        						<Button Panel.ZIndex="100" Width="30" VerticalAlignment="Top" HorizontalAlignment="Right" Click="ResetChanges" Content="X" Visibility="{Binding IsDirty, Converter={StaticResource btvc}}" Style="{DynamicResource FlatButton}" />
-                        
-        						<Button Panel.ZIndex="100" Width="30" VerticalAlignment="Top" Click="SaveChanges" Content="OK" Visibility="{Binding IsDirty, Converter={StaticResource btvc}}" Style="{DynamicResource FlatButton}" />
-        					</StackPanel>
-        					<StackPanel Orientation="Vertical" d:LayoutOverrides="Height">
-        						<Label x:Name="codeKlein" Content="{Binding Code}" FontWeight="Bold" Foreground="White" Margin="0" FontSize="10.667" Padding="5,0" HorizontalContentAlignment="Center" />
-        						<Expander Header="Details" Foreground="White" MaxHeight="150">
-        							<Grid>
-        								<Label x:Name="codeGross" Content="{Binding Code}" FontWeight="Bold" Foreground="#05FFFFFF" FontStretch="Expanded" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontSize="20" />
-        								<StackPanel Orientation="Vertical" Width="63.783">
-        									<SeveQsCustomControls:HeaderContentField Header="Gruppe: " Foreground="White" Padding="5,0" HorizontalAlignment="Center" FontSize="10.667">
-        										<Label x:Name="gruppe" Content="{Binding Group.Value}" FontWeight="Bold" Foreground="White" Margin="0" Padding="5,0" HorizontalContentAlignment="Center" />
-        									</SeveQsCustomControls:HeaderContentField>
-        									<Label Content="{Binding Tutor}" Foreground="White" VerticalAlignment="Top" Margin="0" FontSize="10.667" Padding="5,0" HorizontalContentAlignment="Center" />
-        									<Label Content="{Binding Room}" Foreground="White" VerticalAlignment="Top" Margin="0" FontSize="10.667" Padding="5,0" HorizontalContentAlignment="Center" />
-        								</StackPanel>
-        								<Label x:Name="from" Content="{Binding From, Converter={StaticResource ShortTime}, Mode=Default}" Foreground="White" VerticalAlignment="Top" HorizontalAlignment="Left" RenderTransformOrigin="0.5,0.5" Padding="0" Margin="0,15,0,0" >
-        									<Label.RenderTransform>
-        										<TransformGroup>
-        											<ScaleTransform/>
-        											<SkewTransform/>
-        											<RotateTransform Angle="-90"/>
-        											<TranslateTransform/>
-        										</TransformGroup>
-        									</Label.RenderTransform>
-        								</Label>
-        								<Label x:Name="till" Content="{Binding Till, Converter={StaticResource ShortTime}, Mode=Default}" Foreground="White" VerticalAlignment="Top" HorizontalAlignment="Right" RenderTransformOrigin="0.5,0.5" Padding="0" Margin="0,15,0,0" >
-        									<Label.RenderTransform>
-        										<TransformGroup>
-        											<ScaleTransform/>
-        											<SkewTransform/>
-        											<RotateTransform Angle="-90"/>
-        											<TranslateTransform/>
-        										</TransformGroup>
-        									</Label.RenderTransform>
-        								</Label>
-        							</Grid>
-        						</Expander>
-        					</StackPanel>
-        				</Grid>
-        			</Border>
-        			<Thumb DragDelta="LeftDelta"  VerticalAlignment="Center" HorizontalAlignment="Left" Cursor="SizeWE" Style="{DynamicResource EventThumb}" />
-        			<Thumb DragDelta="RightDelta" VerticalAlignment="Center" HorizontalAlignment="Right" Cursor="SizeWE" Style="{DynamicResource EventThumb}" />
-        			<Thumb DragDelta="BothDelta" VerticalAlignment="Bottom" Cursor="ScrollWE" Style="{DynamicResource EventThumb}" />
-        		</Grid>
-        	</Grid>
-        </Canvas>
+                        <Button Panel.ZIndex="100" Width="30" VerticalAlignment="Top" Click="SaveChanges" Content="OK" Visibility="{Binding IsDirty, Converter={StaticResource btvc}}" Style="{DynamicResource FlatButton}" />
+                    </StackPanel>
+                    <StackPanel Orientation="Vertical" d:LayoutOverrides="Height">
+                        <Label x:Name="codeKlein" Content="{Binding Code}" FontWeight="Bold" Foreground="White" Margin="0" FontSize="13.333" Padding="5,0" HorizontalContentAlignment="Center" FontStyle="Italic" >
+                            <Label.Effect>
+                                <DropShadowEffect/>
+                            </Label.Effect>
+                        </Label>
+                        <!--                         <Expander Header="Details" Foreground="White" MaxHeight="150" IsExpanded="{Binding (SeveQsCustomControls:RasteredItemExtension.IsExpanded)}"> -->
+                        <Expander Header="Details" Foreground="White" MaxHeight="150" IsExpanded="{Binding IsExpanded}">
+                            <Grid>
+                                <StackPanel Orientation="Vertical" Width="63.783" Margin="20,0" VerticalAlignment="Top">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Visibility="{Binding GroupVisibility, ElementName='MyEventControl'}">
+                                        <Label Content="Grp.: " Foreground="White" FontSize="13.333" FontWeight="Bold" Padding="0" VerticalContentAlignment="Center"/>
+                                        <Label Content="{Binding Group.Value, Mode=OneWay}" FontSize="13.333" Foreground="White" VerticalContentAlignment="Center" Padding="0"/>
+                                    </StackPanel>
+                                    <Label Content="{Binding Tutor}" Foreground="White" VerticalAlignment="Top" Margin="0" FontSize="10.667" Padding="5,0" HorizontalContentAlignment="Center" />
+                                    <Label Content="{Binding Room}" Foreground="White" VerticalAlignment="Top" Margin="0" FontSize="10.667" Padding="5,0" HorizontalContentAlignment="Center" />
+                                    <Label x:Name="DayOfWeek" Content="{Binding DayOfWeek}" Foreground="White" HorizontalContentAlignment="Center"/>
+                                </StackPanel>
+                                <Label x:Name="from" Content="{Binding From, Converter={StaticResource ShortTime}, Mode=Default}" Foreground="White" VerticalAlignment="Top" HorizontalAlignment="Left" RenderTransformOrigin="0.5,0.5" Padding="0" Margin="0,15,0,0" >
+                                    <Label.RenderTransform>
+                                        <TransformGroup>
+                                            <ScaleTransform/>
+                                            <SkewTransform/>
+                                            <RotateTransform Angle="-90"/>
+                                            <TranslateTransform/>
+                                        </TransformGroup>
+                                    </Label.RenderTransform>
+                                </Label>
+                                <Label x:Name="till" Content="{Binding Till, Converter={StaticResource ShortTime}, Mode=Default}" Foreground="White" VerticalAlignment="Top" HorizontalAlignment="Right" RenderTransformOrigin="0.5,0.5" Padding="0" Margin="0,15,0,0" >
+                                    <Label.RenderTransform>
+                                        <TransformGroup>
+                                            <ScaleTransform/>
+                                            <SkewTransform/>
+                                            <RotateTransform Angle="-90"/>
+                                            <TranslateTransform/>
+                                        </TransformGroup>
+                                    </Label.RenderTransform>
+                                </Label>
+                            </Grid>
+                        </Expander>
+                    </StackPanel>
+                </Grid>
+            </Border>
+            <Border IsHitTestVisible="False"  Visibility="{Binding BackBorderVisibility, ElementName='MyEventControl'}"  Opacity="0.33"  VerticalAlignment="Stretch" HorizontalAlignment="Stretch" x:Name="backBorder" Background="#FF330000" />
+            <Thumb DragDelta="LeftDelta"  VerticalAlignment="Center" HorizontalAlignment="Left" Cursor="SizeWE" Style="{DynamicResource EventThumb}" />
+            <Thumb DragDelta="RightDelta" VerticalAlignment="Center" HorizontalAlignment="Right" Cursor="SizeWE" Style="{DynamicResource EventThumb}" />
+            <Thumb DragDelta="BothDelta" VerticalAlignment="Bottom" Cursor="ScrollWE" Style="{DynamicResource EventThumb}" />
+        </Grid>
+        <!--</Canvas>-->
     </Grid>
 </UserControl>

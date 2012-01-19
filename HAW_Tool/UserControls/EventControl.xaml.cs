@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using HAW_Tool.HAW.Depending;
 using LittleHelpers;
-using RedBranch.Hammock;
 using SeveQsCustomControls;
 
 namespace HAW_Tool.UserControls
@@ -13,7 +11,7 @@ namespace HAW_Tool.UserControls
     /// <summary>
     /// Interaktionslogik für EventControl.xaml
     /// </summary>
-    public partial class EventControl : UserControl
+    public partial class EventControl
     {
         private static void OnDepPropChg(DependencyObject obj, DependencyPropertyChangedEventArgs e)
         {
@@ -97,6 +95,29 @@ namespace HAW_Tool.UserControls
             DependencyProperty.Register("BackBorderBrush", typeof(Brush), typeof(EventControl), new UIPropertyMetadata(Brushes.DarkBlue, OnDepPropChg));
 
 
+
+        public Visibility BackBorderVisibility
+        {
+            get { return (Visibility)GetValue(BackBorderVisibilityProperty); }
+            set { SetValue(BackBorderVisibilityProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for BackBorderVisibility.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty BackBorderVisibilityProperty =
+            DependencyProperty.Register("BackBorderVisibility", typeof(Visibility), typeof(EventControl), new UIPropertyMetadata(Visibility.Hidden));
+
+
+
+
+        public Visibility GroupVisibility
+        {
+            get { return (Visibility)GetValue(GroupVisibilityProperty); }
+            set { SetValue(GroupVisibilityProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for GroupVisibility.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty GroupVisibilityProperty =
+            DependencyProperty.Register("GroupVisibility", typeof(Visibility), typeof(EventControl), new UIPropertyMetadata(Visibility.Collapsed));
 
         public Visibility StrikeOutVisibility
         {
@@ -221,8 +242,7 @@ namespace HAW_Tool.UserControls
                         var originalEvent =
                             PlanFile.Instance.GetEventByHashInfo(evt.HashInfo);
 
-                        evt.SetValue(VisibilityProperty, Visibility.Hidden);
-                        originalEvent.SetValue(VisibilityProperty, Visibility.Visible);
+                        evt.Visibility = Visibility.Hidden;
                         
                         var s = PlanFile.Instance.CouchConnection.CreateSession("haw_events");
                         var docs = s.ListDocuments();
@@ -233,7 +253,11 @@ namespace HAW_Tool.UserControls
                                 s.Delete(elm);
                         }
 
-                        originalEvent.Reset();
+                        if (originalEvent != null)
+                        {
+                            originalEvent.Visibility = Visibility.Visible;
+                            originalEvent.Reset();
+                        }
 
                         break;
                     }

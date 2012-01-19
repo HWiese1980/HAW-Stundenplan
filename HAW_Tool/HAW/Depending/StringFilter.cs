@@ -13,24 +13,27 @@ namespace HAW_Tool.HAW.Depending
         {
             return _rgx.IsMatch(line);
         }
-
+        object _threadSafety = new object();
         public IDictionary<string, string> GetValues(string line)
         {
-            if (!_rgx.IsMatch(line)) return null;
-
-            var tmatch = _rgx.Match(line);
-            var ret = new Dictionary<string, string>();
-
-            // Console.WriteLine("-------- matching string filter {0} -----------------------", this.Name);
-            for (int g = 0; g < tmatch.Groups.Count; g++)
+            lock(_threadSafety)
             {
-                var tgrp = tmatch.Groups[g];
-                string name = _rgx.GroupNameFromNumber(g);
-                // Console.WriteLine("| Group {0} -> Value: {1}", name, tgrp.Value);
-                ret.Add(name, tgrp.Value);
+                if (!_rgx.IsMatch(line)) return null;
+
+                var tmatch = _rgx.Match(line);
+                var ret = new Dictionary<string, string>();
+
+                // Console.WriteLine("-------- matching string filter {0} -----------------------", this.Name);
+                for (int g = 0; g < tmatch.Groups.Count; g++)
+                {
+                    var tgrp = tmatch.Groups[g];
+                    string name = _rgx.GroupNameFromNumber(g);
+                    // Console.WriteLine("| Group {0} -> Value: {1}", name, tgrp.Value);
+                    ret.Add(name, tgrp.Value);
+                }
+                // Console.WriteLine("-------------------------------------------------------------\n\n");
+                return ret;
             }
-            // Console.WriteLine("-------------------------------------------------------------\n\n");
-            return ret;
         } 
 
         public StringFilter(string name, string expression)

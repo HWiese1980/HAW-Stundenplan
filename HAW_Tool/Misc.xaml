@@ -65,6 +65,15 @@
             </Setter.Value>
         </Setter>
     </Style>
+    	<SolidColorBrush Color="#CA4D4D00" x:Key="DirtyBorderBrush" />
+    	<SolidColorBrush Color="#FFFFFFAF" x:Key="DirtyBrush" />
+    	<SolidColorBrush Color="#CA104900" x:Key="CouchDBEventBorderBrush" />
+    	<SolidColorBrush Color="#FF93CE83" x:Key="CouchDBEventBrush" />
+    	<SolidColorBrush Color="#CA4E0000" x:Key="ObligatoryBrush" />
+    	<SolidColorBrush Color="#CA003039" x:Key="NotTakingPlaceBrush" />
+    	<SolidColorBrush Color="#CC00214D" x:Key="SelectedBrush" />
+
+	
     <SolidColorBrush x:Key="TabControlNormalBorderBrush" Color="#8C8E94" />
     <LinearGradientBrush x:Key="ButtonNormalBackground" EndPoint="0,1" StartPoint="0,0">
         <GradientStop Color="#F3F3F3" Offset="0" />

@@ -7,7 +7,7 @@
     mc:Ignorable="d" xmlns:SeveQsCustomControls="clr-namespace:SeveQsCustomControls;assembly=SeveQsCustomControls"
     xmlns:Cvt="clr-namespace:HAW_Tool.Converters"
     xmlns:k="clr-namespace:Kingsmill.Windows" xmlns:uc="clr-namespace:HAW_Tool.UserControls"
-    xmlns:WPF="clr-namespace:HAW_Tool.HAW.Depending.WPF" xmlns:Native="clr-namespace:HAW_Tool.HAW.Native"
+    xmlns:WPF="clr-namespace:HAW_Tool.HAW.Depending.WPF"
     xmlns:ComponentModel="clr-namespace:System.ComponentModel;assembly=WindowsBase"
     xmlns:Depending="clr-namespace:HAW_Tool.HAW.Depending" x:Class="HAW_Tool.Window1" 
     Name="TheMainWindow"
@@ -37,18 +37,17 @@
         </ControlTemplate>
 
         <DataTemplate x:Key="EventItemTemplate">
-                <uc:EventControl CouchDBDataInvalid="EventCouchDBInvalid"  DataContext="{Binding}" RasterWidth="{Binding RasterWidth, RelativeSource={RelativeSource AncestorType=SeveQsCustomControls:RasteredItemsControl}}" />
+            <uc:EventControl CouchDBDataInvalid="EventCouchDBInvalid"  DataContext="{Binding}" RasterWidth="{Binding RasterWidth, RelativeSource={RelativeSource AncestorType=SeveQsCustomControls:RasteredItemsControl}}" />
         </DataTemplate>
 
         <DataTemplate x:Key="DayItemTemplate">
             <AdornerDecorator>
-                <Grid x:Name="dayGrid" MinWidth="{Binding MinWidth}" MaxWidth="{x:Static Native:Helper.MaxDayWidth}" Height="{DynamicResource DayHeight}" Margin="1" Background="#0F092D4D">
-                    <Button x:Name="AddButton"  Panel.ZIndex="1" HorizontalAlignment="Left" VerticalAlignment="Top" Style="{DynamicResource FlatButton}" Margin="16,28,0,0">Hinzufügen</Button>
+                <Grid x:Name="dayGrid" MinWidth="{Binding MinWidth}" MaxWidth="{x:Static haw:HAWToolHelper.MaxDayWidth}" Height="{DynamicResource DayHeight}" Margin="1" Background="#0F092D4D">
                     <!-- #2F092D4D -->
                     <!--StartDragging="EventDraggingStart" 
                         EndDragging="EventDraggingEnd" 
                         Dragging="EventDragging"-->
-                    <SeveQsCustomControls:RasteredItemsControl
+                    <SeveQsCustomControls:RasteredItemsControl 
                         x:Name="raster"
                         Header="{Binding Date, StringFormat='{}[{0:dd} - {0:ddd}]'}" 
                         FontSize="24" FontWeight="Bold"
@@ -59,6 +58,18 @@
                         Foreground="White" 
                         Padding="0,5,0,10" 
                         FullLineThickness="2" HalfLineThickness="1" QuarterLineThickness="0.5">
+                        <SeveQsCustomControls:RasteredItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <Grid Margin="0,25,0,0" HorizontalAlignment="Left" VerticalAlignment="Top">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="1*" />
+                                        <RowDefinition Height="1*" />
+                                        <RowDefinition Height="1*" />
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                </Grid>
+                            </ItemsPanelTemplate>
+                        </SeveQsCustomControls:RasteredItemsControl.ItemsPanel>
                         <SeveQsCustomControls:RasteredItemsControl.QuarterLineBrush>
                             <!--<SolidColorBrush Color="{DynamicResource LightenUp20}"/>-->
                             <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
@@ -78,13 +89,6 @@
                 <DataTrigger Binding="{Binding Events.Count, Converter={Cvt:CompareConverter Value=1, Operator='LessThan'}}" Value="True">
                     <Setter TargetName="raster" Property="Header" Value="{Binding Date, StringFormat='{}[{0:dd} - {0:ddd}] keine Veranstaltung geplant'}" />
                     <Setter TargetName="dayGrid" Property="Opacity" Value="0.2" />
-                    <Setter TargetName="dayGrid" Property="Height" Value="60" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding HasAdditions}" Value="True">
-                    <Setter TargetName="dayGrid" Property="Background" Value="#2F098D4D" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding HasReplacements}" Value="True">
-                    <Setter TargetName="dayGrid" Property="Background" Value="#2F692D4D" />
                 </DataTrigger>
             </DataTemplate.Triggers>
         </DataTemplate>
@@ -134,7 +138,7 @@
                             </CollectionViewSource>
 
                         </TabItem.Resources>
-                        <SeveQsCustomControls:ResettingTabControl x:Name="CalWeek" SelectedItem="{Binding Current, Mode=OneTime}"  ItemsSource="{Binding Source={StaticResource futureCalendarWeeksView}}" ContentTemplate="{StaticResource SeminarGroupTemplate}" DataContext="{Binding SelectedItem, ElementName=SemGroups}" DisplayMemberPath="LabelShort" d:LayoutOverrides="Width" ItemContainerStyle="{DynamicResource MainTabItemStyle}" Foreground="White" Margin="0" Padding="0">
+                        <SeveQsCustomControls:ResettingTabControl x:Name="CalWeek" ItemsSource="{Binding Source={StaticResource futureCalendarWeeksView}}" ContentTemplate="{StaticResource SeminarGroupTemplate}" DataContext="{Binding SelectedItem, ElementName=SemGroups}" DisplayMemberPath="LabelShort" d:LayoutOverrides="Width" ItemContainerStyle="{DynamicResource MainTabItemStyle}" Foreground="White" Margin="0" Padding="0">
                             <SeveQsCustomControls:ResettingTabControl.Background>
                                 <!--<SolidColorBrush Color="{DynamicResource LightenUp20}"/>-->
                                 <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
@@ -145,7 +149,7 @@
                             </SeveQsCustomControls:ResettingTabControl.BorderBrush>
                         </SeveQsCustomControls:ResettingTabControl>
                     </TabItem>
-                    <TabItem Header="Heute" Foreground="{Binding Foreground, ElementName=tabControl, Mode=Default}">
+                    <!--<TabItem Header="Heute" Foreground="{Binding Foreground, ElementName=tabControl, Mode=Default}">
                         <ScrollViewer BorderThickness="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
                             <ContentControl ContentTemplate="{StaticResource DayItemTemplate}" Content="{Binding Current.Today}" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
                         </ScrollViewer>
@@ -154,7 +158,7 @@
                         <ScrollViewer BorderThickness="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
                             <ContentControl ContentTemplate="{StaticResource DayItemTemplate}" Content="{Binding Current.Tomorrow}" HorizontalAlignment="Stretch" VerticalAlignment="Center" />
                         </ScrollViewer>
-                    </TabItem>
+                    </TabItem>-->
                     <TabItem Header="Wochenzettel" BorderBrush="{x:Null}" Foreground="{Binding Foreground, ElementName=tabControl, Mode=Default}" Visibility="Collapsed">
                         <Grid>
                             <Grid.Background>
@@ -253,16 +257,16 @@
                                 <Label x:Name="copyright" Content="© 2009 by Hendrik Wiese" FontFamily="Trajan Pro" FontSize="13.333" FontWeight="Bold" Foreground="White" Margin="0" VerticalAlignment="Top" Padding="0" Height="13.5"/>
                             </SeveQsCustomControls:ReflectionControl>
                         </DockPanel>
-                        <SeveQsCustomControls:Accordion DockPanel.Dock="Left"  HorizontalAlignment="Left" Width="130" Margin="0,0,0,64" Visibility="Collapsed">
+                        <SeveQsCustomControls:Accordion DockPanel.Dock="Left"  HorizontalAlignment="Left" Width="130">
                             <SeveQsCustomControls:Accordion.Background>
                                 <SolidColorBrush Color="{DynamicResource LightenUp20}"/>
                             </SeveQsCustomControls:Accordion.Background>
-                            <Expander Header="Export" Foreground="White">
+                            <Expander Header="Export" Foreground="White" Visibility="Collapsed">
                                 <Grid>
                                     <Button Content="Als iCalendar (*.ics)" d:LayoutOverrides="Height" Style="{DynamicResource FlatButton}" Foreground="White" Click="ExportEventsClick"/>
                                 </Grid>
                             </Expander>
-                            <Expander Header="akt. Vorlesung" Foreground="White">
+                            <Expander Header="akt. Vorlesung" Foreground="White" Visibility="Collapsed">
                                 <Grid>
                                     <StackPanel d:LayoutOverrides="Width">
                                         <Button Click="SelectedEventShowHideClick" Tag="Show" x:Name="selectedEventShowAllButton" Style="{DynamicResource FlatButton}" ToolTip="Blendet alle Vorlesungen des gewälten Fachs ein" Content="Alle einblenden" d:LayoutOverrides="Height" Foreground="White"/>
@@ -270,10 +274,20 @@
                                     </StackPanel>
                                 </Grid>
                             </Expander>
-                            <Expander Header="Anderer Kram" Foreground="White">
+                            <Expander Header="Anderer Kram" Foreground="White" Visibility="Collapsed">
                                 <Grid>
                                     <TextBlock HorizontalAlignment="Left" Text="Noch nix hier. Mal sehen, was mir noch einfällt..." TextWrapping="Wrap" d:LayoutOverrides="Height" Width="128"/>
                                 </Grid>
+                            </Expander>
+                            <Expander Foreground="White">
+                            	<Grid>
+                            		<Button Style="{DynamicResource FlatButton}" HorizontalAlignment="Left" Click="LoadCouchClick">
+                            			<StackPanel Orientation="Horizontal">
+                            				<Image Height="21.948" Source="Icons/image3093.png" Stretch="Fill" Width="23"/>
+                            				<Label Content="Änderg. laden" Foreground="White" ToolTip="Lade durch die Community bereitgestellte Änderungen vom Server"/>
+                            			</StackPanel>
+                            		</Button>
+                            	</Grid>
                             </Expander>
                         </SeveQsCustomControls:Accordion>
                         <Grid x:Name="stundenplanGrid">

@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Linq;
-using System.Windows;
 using Newtonsoft.Json;
 using SeveQsCustomControls;
 
 namespace HAW_Tool.HAW.Depending
 {
     [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-    public class Event : DirtyableUIElement, IEvent, ISelectable
+    public class Event : EventControlBase, IEvent, ISelectable
     {
         public event EventHandler TimeChanged;
 
-        public void OnTimeChanged(EventArgs e)
+        public void OnTimeChanged(EventArgs e = null)
         {
             var handler = TimeChanged;
             if (handler != null) handler(this, e);
@@ -22,22 +21,12 @@ namespace HAW_Tool.HAW.Depending
             return string.Format("Event {0} {1}", Code, Source);
         }
 
-        public bool IsSelected
+        private void ParseCode(string code)
         {
-            get { return (bool)GetValue(IsSelectedProperty); }
-            set { SetValue(IsSelectedProperty, value); }
-        }
-
-        // Using a DependencyProperty as the backing store for IsSelected.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty IsSelectedProperty =
-            DependencyProperty.Register("IsSelected", typeof(bool), typeof(Event), new UIPropertyMetadata(false));
-
-        private void ParseCode(string Code)
-        {
-            var tParts = Code.Split('/');
+            var tParts = code.Split('/');
             if (tParts.Count() > 1 && GroupID.IsValidGroup(tParts[1]))
             {
-                Group = new GroupID(tParts[1]);
+                Group = new GroupID(tParts[1].Trim());
             }
             ShortCode = tParts[0];
         }
@@ -49,10 +38,13 @@ namespace HAW_Tool.HAW.Depending
         {
             get
             {
-                return (
-                           !String.IsNullOrEmpty(_loadedHashInfo)
+                return (Source == EventSource.CouchDB
                                ? _loadedHashInfo
-                               : String.Format("{0};{1};{2};{3}", Code, Room, CalendarWeek, DayOfWeek)
+                               : String.Format("{0};{1};{2};{3}", 
+                               GetOriginalValue<string>("Code"),
+                               GetOriginalValue<string>("Room"),
+                               GetOriginalValue<Int32>("CalendarWeek"),
+                               GetOriginalValue<Int32>("DayOfWeek"))
                                );
             }
             set
@@ -61,23 +53,32 @@ namespace HAW_Tool.HAW.Depending
             }
         }
 
-        static void HashInvalidatingPropertyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs e)
+        public override void CleanUp()
         {
-            var ev = (Event)obj;
-            ev.ReGenerateHash();
+            if(Source != EventSource.CouchDB)
+            {
+                HashInfo = String.Empty;
+            }
+            base.CleanUp();
         }
+
+        private int _calWeek;
 
         [JsonProperty]
         public int CalendarWeek
         {
-            get { return (int)GetValue(CalendarWeekProperty); }
-            set { SetValue(CalendarWeekProperty, value); }
+            get
+            {
+                return _calWeek;
+            }
+            set
+            {
+                _calWeek = value;
+                OnPropertyChanged("CalendarWeek");
+            }
         }
-
-        // Using a DependencyProperty as the backing store for CalendarWeek.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty CalendarWeekProperty =
-            DependencyProperty.Register("CalendarWeek", typeof(int), typeof(Event), new UIPropertyMetadata(0, HashInvalidatingPropertyChanged));
-
+        
+/*
         static object CoerceTime(DependencyObject d, object value)
         {
             var ts = (TimeSpan)value;
@@ -87,209 +88,268 @@ namespace HAW_Tool.HAW.Depending
 
             return newTime;
         }
+*/
 
+        private string _code;
         [JsonProperty]
         public string Code
         {
-            get { return (string)GetValue(CodeProperty); }
-            set { SetValue(CodeProperty, value); }
+            get
+            {
+                return _code;
+            }
+            set
+            {
+                _code = value;
+                OnPropertyChanged("Code");
+                ParseCode(_code);
+            }
         }
 
-        // Using a DependencyProperty as the backing store for Code.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty CodeProperty =
-            DependencyProperty.Register("Code", typeof(string), typeof(Event), new UIPropertyMetadata("CODE", CodeChanged));
-
-        private static void CodeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            HashInvalidatingPropertyChanged(d, e);
-
-            var evt = (Event) d;
-            evt.ParseCode((string) e.NewValue);
-        }
-
-
-
+        private string _shortCode;
         public string ShortCode
         {
-            get { return (string)GetValue(ShortCodeProperty); }
-            set { SetValue(ShortCodeProperty, value); }
+            get
+            {
+                return _shortCode;
+            }
+            set
+            {
+                _shortCode = value;
+                OnPropertyChanged("ShortCode");
+            }
         }
 
-        // Using a DependencyProperty as the backing store for ShortCode.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty ShortCodeProperty =
-            DependencyProperty.Register("ShortCode", typeof (string), typeof (Event), new UIPropertyMetadata("SCODE"));
-
-
-
-        // Using a DependencyProperty as the backing store for BasicCode.  This enables animation, styling, binding, etc...
-
-
+        private SeminarGroup _semGrp;
         [JsonProperty]
         public SeminarGroup SeminarGroup
         {
-            get { return (SeminarGroup)GetValue(SeminarGroupProperty); }
-            set { SetValue(SeminarGroupProperty, value); }
+            get
+            {
+                return _semGrp;
+            }
+            set
+            {
+                _semGrp = value;
+                OnPropertyChanged("SeminarGroup");
+            }
         }
 
-        // Using a DependencyProperty as the backing store for SeminarGroup.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty SeminarGroupProperty =
-            DependencyProperty.Register("SeminarGroup", typeof (SeminarGroup), typeof (Event),
-                                        new UIPropertyMetadata(default(SeminarGroup)));
-
-
-
+        private EventSource _source;
         public EventSource Source
         {
-            get { return (EventSource)GetValue(SourceProperty); }
-            set { SetValue(SourceProperty, value); }
+            get
+            {
+                return _source;
+            }
+            set
+            {
+                _source = value;
+                OnPropertyChanged("Source");
+            }
         }
 
-        // Using a DependencyProperty as the backing store for Source.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty SourceProperty =
-            DependencyProperty.Register("Source", typeof(EventSource), typeof(Event), new UIPropertyMetadata(EventSource.School));
-
+        private string _room;
         [JsonProperty]
         public string Room
         {
-            get { return (string)GetValue(RoomProperty); }
-            set { SetValue(RoomProperty, value); }
+            get
+            {
+                return _room;
+            }
+            set
+            {
+                _room = value;
+                OnPropertyChanged("Room");
+            }
         }
 
-        // Using a DependencyProperty as the backing store for Room.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty RoomProperty =
-            DependencyProperty.Register("Room", typeof(string), typeof(Event), new UIPropertyMetadata("ROOM"));
-
-
+        private string _tutor;
         [JsonProperty]
         public string Tutor
         {
-            get { return (string)GetValue(TutorProperty); }
-            set { SetValue(TutorProperty, value); }
+            get
+            {
+                return _tutor;
+            }
+            set
+            {
+                _tutor = value;
+                OnPropertyChanged("Tutor");
+            }
         }
 
-        // Using a DependencyProperty as the backing store for Tutor.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty TutorProperty =
-            DependencyProperty.Register("Tutor", typeof(string), typeof(Event), new UIPropertyMetadata("[TUT]"));
-
-        // Using a DependencyProperty as the backing store for Priority.  This enables animation, styling, binding, etc...
-
+        private int _dow;
         public int DayOfWeek
         {
-            get { return (int)GetValue(DayOfWeekProperty); }
-            set { SetValue(DayOfWeekProperty, value); }
+            get
+            {
+                return _dow;
+            }
+            set
+            {
+                _dow = value;
+                OnPropertyChanged("DayOfWeek");
+            }
         }
 
-        // Using a DependencyProperty as the backing store for DayOfWeek.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty DayOfWeekProperty =
-            DependencyProperty.Register("DayOfWeek", typeof(int), typeof(Event), new UIPropertyMetadata(0, HashInvalidatingPropertyChanged));
-
+        private DateTime _date;
         [JsonProperty]
         public DateTime Date
         {
-            get { return (DateTime)GetValue(DateProperty); }
-            set { SetValue(DateProperty, value); }
+            get
+            {
+                return _date;
+            }
+            set
+            {
+                _date = value;
+                OnPropertyChanged("Date");
+            }
         }
 
-        // Using a DependencyProperty as the backing store for Date.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty DateProperty =
-            DependencyProperty.Register("Date", typeof(DateTime), typeof(Event), new UIPropertyMetadata(DateTime.MinValue));
-
-
-        // Using a DependencyProperty as the backing store for OtherDates.  This enables animation, styling, binding, etc...
-
-
+        private TimeSpan _from;
         [JsonProperty]
         public TimeSpan From
         {
-            get { return (TimeSpan)GetValue(FromProperty); }
-            set { SetValue(FromProperty, value); }
+            get
+            {
+                return _from;
+            }
+            set
+            {
+                _from = value;
+                OnPropertyChanged("From");
+                OnTimeChanged();
+            }
         }
 
-        // Using a DependencyProperty as the backing store for From.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty FromProperty =
-            DependencyProperty.Register("From", typeof(TimeSpan), typeof(Event), new UIPropertyMetadata(TimeSpan.Parse("08:10"), OnDepTimeChanged, CoerceTime));
 
+        private TimeSpan _till;
         [JsonProperty]
         public TimeSpan Till
         {
-            get { return (TimeSpan)GetValue(TillProperty); }
-            set { SetValue(TillProperty, value); }
+            get
+            {
+                return _till;
+            }
+            set
+            {
+                _till = value;
+                OnPropertyChanged("Till");
+                OnTimeChanged();
+            }
         }
 
-        // Using a DependencyProperty as the backing store for Till.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty TillProperty =
-            DependencyProperty.Register("Till", typeof(TimeSpan), typeof(Event), new UIPropertyMetadata(TimeSpan.Parse("11:25"), OnDepTimeChanged, CoerceTime));
-
-
-        private static void OnDepTimeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            var evt = (Event)d;
-            evt.OnTimeChanged(new EventArgs());
-        }
-
-
-
+        private Day _day;
         public Day Day
         {
-            get { return (Day)GetValue(DayProperty); }
-            set { SetValue(DayProperty, value); }
+            get
+            {
+                return _day;
+            }
+            set
+            {
+                _day = value;
+                DayChanged(_day);
+                OnPropertyChanged("Day");
+            }
         }
 
-        // Using a DependencyProperty as the backing store for Day.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty DayProperty =
-            DependencyProperty.Register("Day", typeof(Day), typeof(Event), new UIPropertyMetadata(default(Day), DayChanged));
-
-        private static void DayChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private void DayChanged(Day newDay)
         {
-            if(e.NewValue == null) return;
-            var evt = (Event) d;
-            var day = (Day) e.NewValue;
-            evt.DayOfWeek = (int)day.DOW;
+            if (newDay == null) return;
+            DayOfWeek = (int)newDay.DOW;
         }
 
+        private GroupID _group;
         public GroupID Group
         {
-            get { return (GroupID)GetValue(GroupProperty); }
-            set { SetValue(GroupProperty, value); }
+            get
+            {
+                return _group;
+            }
+            set
+            {
+                _group = value;
+                OnPropertyChanged("Group");
+            }
         }
 
-        // Using a DependencyProperty as the backing store for Group.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty GroupProperty =
-            DependencyProperty.Register("Group", typeof(GroupID), typeof(Event), new UIPropertyMetadata(null));
-
+        private bool _isObligatory;
         [JsonProperty]
         public bool IsObligatory
         {
-            get { return (bool)GetValue(IsObligatoryProperty); }
-            set { SetValue(IsObligatoryProperty, value); }
+            get
+            {
+                return _isObligatory;
+            }
+            set
+            {
+                _isObligatory = value;
+                OnPropertyChanged("IsObligatory");
+            }
         }
 
-        // Using a DependencyProperty as the backing store for IsObligatory.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty IsObligatoryProperty =
-            DependencyProperty.Register("IsObligatory", typeof(bool), typeof(Event), new UIPropertyMetadata(false));
-
+        private bool _takesPlace = true;
         [JsonProperty]
         public bool TakesPlace
         {
-            get { return (bool)GetValue(TakesPlaceProperty); }
-            set { SetValue(TakesPlaceProperty, value); }
+            get
+            {
+                return _takesPlace;
+            }
+            set
+            {
+                _takesPlace = value;
+                OnPropertyChanged("TakesPlace");
+            }
         }
 
-        // Using a DependencyProperty as the backing store for TakesPlace.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty TakesPlaceProperty =
-            DependencyProperty.Register("TakesPlace", typeof(bool), typeof(Event), new UIPropertyMetadata(true));
+        public override void Reset()
+        {
+            base.Reset();
+            IsReplaced = false;
+        }
+
+        private bool _isReplaced;
+        public bool IsReplaced
+        {
+            get
+            {
+                return _isReplaced;
+            }
+            set
+            {
+                if (_isReplaced != value)
+                {
+                    _isReplaced = value;
+                    Console.WriteLine(@"{0} wurde ersetzt: {1}", HashInfo, value);
+                    OnPropertyChanged("IsReplaced");
+                }
+            }
+        }
+                        
+        protected override void OnGotDirty()
+        {
+            if(Source == EventSource.CouchDB)
+            {
+                var originalEvent = PlanFile.Instance.GetEventByHashInfo(HashInfo);
+                if(originalEvent != null)
+                {
+                    originalEvent.IsDirty = true;
+                }
+            }
+        }
 
         internal void Save()
         {
             var s = PlanFile.Instance.CouchConnection.CreateSession("haw_events");
 
-            var cdbi = new CouchDBEventInfo();
-            cdbi.Event = this;
-            cdbi.EventInfoHash = HashInfo;
-            cdbi.TimeStamp = DateTime.Now;
+            var cdbi = new CouchDBEventInfo {Event = this, EventInfoHash = HashInfo, TimeStamp = DateTime.Now};
 
             s.Save(cdbi);
-            Reset();
+            IsDirty = false;
         }
     }
 }

@@ -135,9 +135,6 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="UIAutomationProvider">
-      <RequiredTargetFramework>3.0</RequiredTargetFramework>
-    </Reference>
     <Reference Include="WindowsBase">
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
     </Reference>
@@ -155,6 +152,15 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="HAW\Depending\CouchDBInfoComparer.cs" />
+    <Compile Include="HAW\Depending\EventControlBase.cs" />
+    <Compile Include="HAW\Depending\MarkupExtensions\HasValueConverter.cs" />
+    <Compile Include="HAW\Depending\NotifyingObject.cs" />
+    <Compile Include="HAW\Depending\ObservableCollectionEx.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ThreadSafeObservableCollection.cs" />
+    <Compile Include="WPF\ConverterWrapper.cs" />
     <Page Include="ErrorMessage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -219,23 +225,19 @@
     <Compile Include="HAW\Depending\CouchDBEventInfo.cs" />
     <Compile Include="HAW\Depending\Day.cs" />
     <Compile Include="HAW\Depending\Event.cs" />
-    <Compile Include="HAW\Depending\DirtyableUIElement.cs" />
+    <Compile Include="HAW\Depending\DirtyableObject.cs" />
     <Compile Include="HAW\Depending\EventSource.cs" />
     <Compile Include="HAW\Depending\GroupID.cs" />
     <Compile Include="HAW\Depending\IEvent.cs" />
     <Compile Include="HAW\Depending\IWeek.cs" />
     <Compile Include="HAW\Depending\PlanFile.cs" />
-    <Compile Include="HAW\Depending\RowIndex.cs" />
     <Compile Include="HAW\Depending\SeminarGroup.cs" />
     <Compile Include="HAW\Depending\StringFilter.cs" />
     <Compile Include="HAW\Depending\TimeToCoord.cs" />
     <Compile Include="HAW\Depending\TimeToThicknessConverter.cs" />
     <Compile Include="HAW\Depending\WPF\DayTemplateSelector.cs" />
+    <Compile Include="HAW\Helpers.cs" />
     <Compile Include="HAW\LabeledItem.cs" />
-    <Compile Include="HAW\Native\Comparers\WeekEqualityComparer.cs" />
-    <Compile Include="HAW\Native\EventCode.cs" />
-    <Compile Include="HAW\Native\ExportType.cs" />
-    <Compile Include="HAW\Native\PlanFile.cs" />
     <Compile Include="HAW\REST\HAWClient.cs" />
     <Compile Include="UserControls\EventControl.xaml.cs">
       <DependentUpon>EventControl.xaml</DependentUpon>
@@ -251,31 +253,17 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CompactView.cs" />
-    <Compile Include="HAW\Native\Comparers\KeyEqualityComparer.cs" />
     <Compile Include="Converters\CodeToBrushConverter.cs" />
     <Compile Include="Converters\EncodingConverter.cs" />
     <Compile Include="ErrorMessage.xaml.cs">
       <DependentUpon>ErrorMessage.xaml</DependentUpon>
     </Compile>
     <Compile Include="HAWToolException.cs" />
-    <Compile Include="HAW\Native\BaseEvent.cs" />
-    <Compile Include="HAW\Native\CalendarWeek.cs" />
     <Compile Include="HAW\DateTimeToTimeSpan.cs" />
-    <Compile Include="HAW\Native\Day.cs" />
-    <Compile Include="HAW\Native\Event.cs" />
-    <Compile Include="HAW\Native\EventComparer.cs" />
     <Compile Include="HAW\EventItemTemplateSelector.cs" />
     <Compile Include="HAW\FromTillCombiner.cs" />
-    <Compile Include="HAW\Native\GroupID.cs" />
-    <Compile Include="HAW\Native\Helpers.cs" />
-    <Compile Include="HAW\Native\IEvent.cs" />
     <Compile Include="HAW\IIsCurrent.cs" />
-    <Compile Include="HAW\Native\IWeek.cs" />
-    <Compile Include="HAW\REST\RESTEvent.cs" />
     <Compile Include="HAW\REST\HAWRest.cs" />
-    <Compile Include="HAW\REST\RESTWeek.cs" />
-    <Compile Include="HAW\Native\SeminarGroup.cs" />
-    <Compile Include="HAW\Native\TimeToCoord.cs" />
     <Compile Include="HAW\ToStringConverter.cs" />
     <Compile Include="HAW\WeekHelper.cs" />
     <Compile Include="HAW\XElementContainer.cs" />
@@ -301,9 +289,6 @@
     </Compile>
     <Compile Include="UniqueList.cs" />
     <Compile Include="WindowSettings.cs" />
-    <Compile Include="HAW\Native\WPF\ConverterWrapper.cs" />
-    <Compile Include="HAW\Native\WPF\DayTemplateSelector.cs" />
-    <Compile Include="HAW\Native\WPF\TranslatorConverter.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -334,6 +319,7 @@
     <Resource Include="Icons\background2.jpg" />
     <Resource Include="Icons\sky1.jpg" />
     <Resource Include="Icons\sky2.jpg" />
+    <Resource Include="Icons\image3093.png" />
     <Content Include="Licenses\License.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -375,6 +361,10 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\MultithreadedObservableListSample\QuantumBitDesigns.Core\QuantumBitDesigns.Core.csproj">
+      <Project>{CEB9B41C-F4FF-48D1-888E-846DB476E98E}</Project>
+      <Name>QuantumBitDesigns.Core</Name>
+    </ProjectReference>
     <ProjectReference Include="..\LittleHelpers\LittleHelpers.csproj">
       <Project>{DBC10794-05CB-42D7-BF4B-C9872F45D4FA}</Project>
       <Name>LittleHelpers</Name>

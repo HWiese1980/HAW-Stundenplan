@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -282,17 +283,14 @@ namespace HAW_Tool
         {
             DataContext = PlanFile.Instance;
             var semGroupsCvs = (CollectionViewSource)FindResource("seminarGroupsCollectionView");
-            
+
 
 
             var cnt = new HAWClient();
             var schedules = cnt.Schedules();
-            foreach(var schedule in schedules)
-            {
-                PlanFile.Instance.LoadSchedule(schedule);
-            }
-
-            PlanFile.Instance.LoadCouchEvents();
+            // Parallel.ForEach(schedules, (schedule) => PlanFile.Instance.LoadSchedule(schedule));
+            PlanFile.Instance.LoadSchedules(schedules);
+            PlanFile.Instance.AllSchedulesLoaded += (x, y) => PlanFile.Instance.LoadCouchEvents();
         }
 #endif
 
@@ -382,7 +380,7 @@ namespace HAW_Tool
 #elif HAW_DEPENDING
         private void RefreshFiltering(RasteredItemsControl ctl)
         {
-            
+
         }
 #endif
 
@@ -408,7 +406,7 @@ namespace HAW_Tool
                 if (MessageBox.Show("Eine Seminargruppe muss schon ausgewählt sein. Was soll sonst exportiert werden? Alle Semestergruppen? Das willst du nicht, glaub mir!\nOder doch?", "Alles exportieren?", MessageBoxButton.YesNo, MessageBoxImage.Exclamation) == MessageBoxResult.No) return;
             }
 
-            var tDlg = new SaveFileDialog {Filter = "iCalendar Datei (*.ics)|*.ics"};
+            var tDlg = new SaveFileDialog { Filter = "iCalendar Datei (*.ics)|*.ics" };
 
             if ((bool)tDlg.ShowDialog())
             {
@@ -441,7 +439,7 @@ namespace HAW_Tool
 #elif HAW_DEPENDING
         private void SelectedEventShowHideClick(object sender, RoutedEventArgs e)
         {
-            
+
         }
 #endif
 
@@ -582,12 +580,17 @@ namespace HAW_Tool
 
         private void SemGroups_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if(e.AddedItems.Count > 0) PlanFile.Instance.SelectedSeminarGroup = (SeminarGroup)e.AddedItems[0];
+            if (e.AddedItems.Count > 0) PlanFile.Instance.SelectedSeminarGroup = (SeminarGroup)e.AddedItems[0];
         }
 
         private void EventCouchDBInvalid(object sender, EventArgs e)
         {
             PlanFile.Instance.LoadCouchEvents();
+        }
+
+        private void LoadCouchClick(object sender, System.Windows.RoutedEventArgs e)
+        {
+        	PlanFile.Instance.LoadCouchEvents();
         }
     }
 }

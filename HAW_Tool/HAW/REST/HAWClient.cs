@@ -17,6 +17,7 @@ namespace HAW_Tool.HAW.REST
             return Channel.Schedules();
         }
 
+/*
         public RESTEvent[] Events()
         {
             return Channel.Events();
@@ -26,10 +27,11 @@ namespace HAW_Tool.HAW.REST
         {
             return base.Channel.HAWEvents();
         }
+*/
 
         public void ReportException(Exception exp)
         {
-            base.Channel.ReportException(exp);
+            Channel.ReportException(exp);
         }
 
         #endregion

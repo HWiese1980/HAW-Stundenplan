@@ -1,17 +1,25 @@
 ﻿using System;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 
 namespace HAW_Tool.HAW.Depending
 {
-    public class Day : DependencyObject
+    public class Day : NotifyingObject
     {
         public Day()
         {
-            Events = new ObservableCollection<Event>();
-            Events.CollectionChanged += Events_CollectionChanged;
+            Events = new ThreadSafeObservableCollection<Event>(PlanFile.MainDispatcher);
+            Events./*ObservableCollection.*/CollectionChanged += Events_CollectionChanged;
+        }
+
+        private bool IsSpanOccupiedByOthers(Event me, int row)
+        {
+            var occupyingEvents = from e in Events
+                                  where !ReferenceEquals(e, me)
+                                  where (e.Visibility == Visibility.Visible) && (e.Row == row) && ((e.From >= me.From & e.From <= me.Till) | (e.Till >= me.From & e.Till <= me.Till))
+                                  select e;
+
+            return (occupyingEvents.Count() > 0);
         }
 
         void Events_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
@@ -21,7 +29,6 @@ namespace HAW_Tool.HAW.Depending
                 foreach (var item in e.NewItems)
                 {
                     var evt = (Event)item;
-                    //if (evt.Source == EventSource.CouchDB) Debugger.Break();
                     evt.Day = this;
                     evt.TimeChanged += evt_TimeChanged;
                 }
@@ -39,16 +46,18 @@ namespace HAW_Tool.HAW.Depending
 
         public void RemoveAllCouchDBEvents(string hashInfo)
         {
+            // ReSharper disable ForCanBeConvertedToForeach
             var cdbEvt = (from p in Events
-                           where p.Source == EventSource.CouchDB
-                           where p.HashInfo == hashInfo
-                           select p).ToArray();
+                          where p.Source == EventSource.CouchDB
+                          where p.HashInfo == hashInfo
+                          select p).ToArray();
 
             for (int i = 0; i < cdbEvt.Length; i++)
             {
                 var evt = cdbEvt[i];
                 Events.Remove(evt);
             }
+            // ReSharper restore ForCanBeConvertedToForeach
         }
 
         void evt_TimeChanged(object sender, EventArgs e)
@@ -65,51 +74,24 @@ namespace HAW_Tool.HAW.Depending
         {
             if (e.Visibility == Visibility.Hidden) return false;
 
-            bool bOverlappingsFound = false;
-            var idxA = RowIndex.GetRow(e);
-
-            for (; ; )
+            bool bOccupationFound = false;
+            for (; e.Row <= 2 && IsSpanOccupiedByOthers(e, e.Row); e.Row++)
             {
-                var otherEventsSameRow = (from evt in Events
-                                          where !ReferenceEquals(e, evt)
-                                          let idxB = RowIndex.GetRow(evt)
-                                          where idxA == idxB && EventsOverlap(e, evt)
-                                          select evt).ToArray();
-
-                if (otherEventsSameRow.Length <= 0) break;
-
-                foreach (var eB in otherEventsSameRow)
-                {
-                    bOverlappingsFound = true;
-                    RowIndex.SetRow(eB, idxA + 1);
-                }
+                bOccupationFound = true;
             }
-
-            return bOverlappingsFound;
+            return bOccupationFound;
         }
 
         private bool ResetRowIndex(Event e)
         {
-            bool bOverlappingsFound = false;
-            var idxA = RowIndex.GetRow(e);
+            if (e.Visibility == Visibility.Hidden) return false;
 
-            if (idxA > 0)
+            bool bOccupationFound = false;
+            for (; (e.Row - 1) >= 0 && !IsSpanOccupiedByOthers(e, e.Row - 1); e.Row--)
             {
-                var otherEventsOneBelow = from evt in Events
-                                          where !ReferenceEquals(evt, e)
-                                          let idxB = RowIndex.GetRow(evt)
-                                          where idxB == (idxA - 1) && evt.Visibility == Visibility.Visible && EventsOverlap(evt, e)
-                                          select evt;
-
-
-                if (otherEventsOneBelow.Count() <= 0)
-                {
-                    bOverlappingsFound = true;
-                    RowIndex.SetRow(e, idxA - 1);
-                }
+                bOccupationFound = true;
             }
-
-            return bOverlappingsFound;
+            return bOccupationFound;
         }
 
         public void RecalculateRowIndexAll()
@@ -125,61 +107,44 @@ namespace HAW_Tool.HAW.Depending
             } while (bOverlappingsFound);
         }
 
-        private static bool EventsOverlap(Event a, Event b)
-        {
-            bool overlapLeft = (a.Till >= b.From & a.Till <= b.Till);  // B.Anfang < A.Ende < B.Ende
-            bool overlapRight = (a.From >= b.From & a.From <= b.Till); // B.Anfang < A.Anfang < B.Ende
-
-            bool aContainsB = (a.From >= b.From & a.Till <= b.Till); // B.Anfang < A.Anfang/A.Ende < B.Ende
-            bool bContainsA = (b.From >= a.From & b.Till <= a.Till); // A.Anfang < B.Anfang/B.Ende < A.Ende
-
-            bool overlap = overlapLeft | overlapRight | aContainsB | bContainsA;
-
-            return overlap;
-        }
-
+        private DateTime _date;
         public DateTime Date
         {
-            get { return (DateTime)GetValue(DateProperty); }
-            set { SetValue(DateProperty, value); }
+            get { return _date; }
+            set
+            {
+                _date = value;
+                OnPropertyChanged("Date");
+            }
         }
 
-        // Using a DependencyProperty as the backing store for Date.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty DateProperty =
-            DependencyProperty.Register("Date", typeof(DateTime), typeof(Day), new UIPropertyMetadata(DateTime.MinValue));
-
-
-
+        private DayOfWeek _dow;
         public DayOfWeek DOW
         {
-            get { return (DayOfWeek)GetValue(DOWProperty); }
-            set { SetValue(DOWProperty, value); }
+            get { return _dow; }
+            set
+            {
+                _dow = value;
+                OnPropertyChanged("DOW");
+            }
         }
 
-        // Using a DependencyProperty as the backing store for DOW.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty DOWProperty =
-            DependencyProperty.Register("DOW", typeof(DayOfWeek), typeof(Day), new UIPropertyMetadata(default(DayOfWeek)));
-
-
-
+        private CalendarWeek _week;
         public CalendarWeek Week
         {
-            get { return (CalendarWeek)GetValue(WeekProperty); }
-            set { SetValue(WeekProperty, value); }
+            private get { return _week; }
+            set
+            {
+                _week = value;
+                OnPropertyChanged("Week");
+            }
         }
 
-        // Using a DependencyProperty as the backing store for Week.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty WeekProperty =
-            DependencyProperty.Register("Week", typeof(CalendarWeek), typeof(Day),
-                                        new UIPropertyMetadata(default(CalendarWeek)));
-
-
-
-        public ObservableCollection<Event> Events { get; set; }
+        public ThreadSafeObservableCollection<Event> Events { get; private set; }
 
         public override string ToString()
         {
-            return string.Format("Day {0} of Week {1} -> Date {2}", this.DOW, this.Week, this.Date);
+            return string.Format("Day {0} of Week {1} -> Date {2}", DOW, Week, Date);
         }
     }
 }

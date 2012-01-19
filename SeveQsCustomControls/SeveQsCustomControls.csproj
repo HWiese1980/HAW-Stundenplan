@@ -139,6 +139,7 @@
     </Page>
     <Compile Include="ISelectable.cs" />
     <Compile Include="MeasureCanvas.cs" />
+    <None Include="RasteredItemExtension.cs" />
     <Compile Include="SeekFile.cs">
       <SubType>Code</SubType>
     </Compile>

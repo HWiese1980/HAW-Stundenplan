@@ -1,22 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Text;
 using System.Windows;
 using Newtonsoft.Json;
-using Helper = HAW_Tool.HAW.Native.Helper;
+using QuantumBitDesigns.Core;
 
 namespace HAW_Tool.HAW.Depending
 {
     [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-    public class CalendarWeek : DependencyObject
+    public class CalendarWeek : NotifyingObject
     {
         public CalendarWeek()
         {
-            Days = new ObservableCollection<Day>();
-            Days.CollectionChanged += DaysCollectionChanged;
+            Days = new ObservableCollection<Day>(/*Application.Current.MainWindow.Dispatcher*/);
+            Days./*ObservableCollection.*/CollectionChanged += DaysCollectionChanged;
         }
 
         private void DaysCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -27,7 +25,9 @@ namespace HAW_Tool.HAW.Depending
                     {
                         foreach (var day in e.NewItems.Cast<Day>())
                         {
-                            day.Week = this;
+                            Day day1 = day;
+                            day1.Week = this;
+                            // PlanFile.Instance.Dispatcher.Invoke(new Action(() => { day1.Week = this; }));
                         }
                         break;
                     }
@@ -35,7 +35,9 @@ namespace HAW_Tool.HAW.Depending
                     {
                         foreach (var day in e.OldItems.Cast<Day>())
                         {
-                            day.Week = default(CalendarWeek);
+                            Day day1 = day;
+                            day1.Week = default(CalendarWeek);
+                            // PlanFile.Instance.Dispatcher.Invoke(new Action(() => { day1.Week = default(CalendarWeek); }));
                         }
                         break;
                     }
@@ -46,8 +48,8 @@ namespace HAW_Tool.HAW.Depending
         {
             get
             {
-                var a = Helper.StartOfWeek(Week, Year);
-                var b = Helper.EndOfWeek(Week, Year);
+                var a = HAWToolHelper.StartOfWeek(Week, Year);
+                var b = HAWToolHelper.EndOfWeek(Week, Year);
                 return (DateTime.Now.Date >= a & DateTime.Now <= b);
             }
         }
@@ -56,44 +58,91 @@ namespace HAW_Tool.HAW.Depending
         {
             for (int i = 0; i < 7; i++)
             {
-                var d = new Day { Date = Helper.StartOfWeek(Week, Year).AddDays(i), DOW = (DayOfWeek)i };
-                Days.Add(d);
+                var d = new Day { Date = HAWToolHelper.StartOfWeek(Week, Year).AddDays(i), DOW = (DayOfWeek)i };
+                PlanFile.Instance.InvokeUI(() => Days.Add(d));
             }
         }
 
+//         [JsonProperty]
+//         public int Year
+//         {
+//             get { return (int)GetValue(YearProperty); }
+//             set { SetValue(YearProperty, value); }
+//         }
+// 
+//         // Using a DependencyProperty as the backing store for Year.  This enables animation, styling, binding, etc...
+//         public static readonly DependencyProperty YearProperty =
+//             DependencyProperty.Register("Year", typeof(int), typeof(CalendarWeek), new UIPropertyMetadata(0));
+
+        private int _year;
         [JsonProperty]
         public int Year
         {
-            get { return (int)GetValue(YearProperty); }
-            set { SetValue(YearProperty, value); }
+            get
+            {
+                return _year;
+            }
+            set
+            {
+                _year = value;
+                OnPropertyChanged("Year");
+            }
         }
+                        
+                        
 
-        // Using a DependencyProperty as the backing store for Year.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty YearProperty =
-            DependencyProperty.Register("Year", typeof(int), typeof(CalendarWeek), new UIPropertyMetadata(0));
+//         [JsonProperty]
+//         public int Week
+//         {
+//             get { return (int)GetValue(WeekProperty); }
+//             set { SetValue(WeekProperty, value); }
+//         }
+// 
+//         // Using a DependencyProperty as the backing store for Week.  This enables animation, styling, binding, etc...
+//         public static readonly DependencyProperty WeekProperty =
+//             DependencyProperty.Register("Week", typeof(int), typeof(CalendarWeek), new UIPropertyMetadata(0));
 
-
+        private int _week;
         [JsonProperty]
         public int Week
         {
-            get { return (int)GetValue(WeekProperty); }
-            set { SetValue(WeekProperty, value); }
+            get
+            {
+                return _week;
+            }
+            set
+            {
+                _week = value;
+                OnPropertyChanged("Week");
+            }
         }
+                        
+                        
 
-        // Using a DependencyProperty as the backing store for Week.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty WeekProperty =
-            DependencyProperty.Register("Week", typeof(int), typeof(CalendarWeek), new UIPropertyMetadata(0));
+//         public SeminarGroup SeminarGroup
+//         {
+//             get { return (SeminarGroup)GetValue(SeminarGroupProperty); }
+//             set { SetValue(SeminarGroupProperty, value); }
+//         }
+// 
+//         // Using a DependencyProperty as the backing store for SeminarGroup.  This enables animation, styling, binding, etc...
+//         public static readonly DependencyProperty SeminarGroupProperty =
+//             DependencyProperty.Register("SeminarGroup", typeof(SeminarGroup), typeof(CalendarWeek), new UIPropertyMetadata(default(SeminarGroup)));
 
 
+        private SeminarGroup _semGrp;
         public SeminarGroup SeminarGroup
         {
-            get { return (SeminarGroup)GetValue(SeminarGroupProperty); }
-            set { SetValue(SeminarGroupProperty, value); }
+            get
+            {
+                return _semGrp;
+            }
+            set
+            {
+                _semGrp = value;
+                OnPropertyChanged("SeminarGroup");
+            }
         }
-
-        // Using a DependencyProperty as the backing store for SeminarGroup.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty SeminarGroupProperty =
-            DependencyProperty.Register("SeminarGroup", typeof(SeminarGroup), typeof(CalendarWeek), new UIPropertyMetadata(default(SeminarGroup)));
 
         public ObservableCollection<Day> Days { get; set; }
 
@@ -104,12 +153,12 @@ namespace HAW_Tool.HAW.Depending
 
         public string Label
         {
-            get { return string.Format("Woche {0} vom {1} bis {2}", Week, Helper.StartOfWeek(this.Week, this.Year).ToShortDateString(), Helper.EndOfWeek(this.Week, this.Year).ToShortDateString()); }
+            get { return string.Format("Woche {0} vom {1} bis {2}", Week, HAWToolHelper.StartOfWeek(this.Week, this.Year).ToShortDateString(), HAWToolHelper.EndOfWeek(this.Week, this.Year).ToShortDateString()); }
         }
 
         public DateTime GetDateOfWeekday(int day)
         {
-            return Helper.StartOfWeek(Week, Year).AddDays(day);
+            return HAWToolHelper.StartOfWeek(Week, Year).AddDays(day);
         }
 
         public override string ToString()

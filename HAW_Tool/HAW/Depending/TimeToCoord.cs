@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Reflection;
 using System.Windows.Data;
 using System.Windows.Markup;
+using SeveQsCustomControls;
 
 namespace HAW_Tool.HAW.Depending
 {
@@ -65,7 +65,8 @@ namespace HAW_Tool.HAW.Depending
             }
             else
             {
-                var tValue = (int) tEvt.GetValue(RowIndex.RowProperty);
+                // var tValue = (int) tEvt.GetValue(RasteredItemExtension.RowProperty);
+                var tValue = tEvt.Row;
                 tCoord = tValue * _mMultiply;
             }
 

@@ -1,22 +1,10 @@
 ﻿using System;
 using System.Linq;
 
-namespace HAW_Tool.HAW.Native
+namespace HAW_Tool.HAW.Depending
 {
-    public class GroupID: IComparable
+    public class GroupID: NotifyingObject, IComparable
     {
-        public static bool operator ==(GroupID a, GroupID b)
-        {
-            return a.Value == b.Value;
-        }
-
-        public static bool operator !=(GroupID a, GroupID b)
-        {
-            return a.Value != b.Value;
-        }
-
-        public readonly static GroupID Empty = new GroupID();
-
         public GroupID(string value)
         {
             Value = value;
@@ -42,9 +30,34 @@ namespace HAW_Tool.HAW.Native
                 return !(Value.Contains('+'));
             }
         }
+        
+//         public string Value
+//         {
+//             get { return (string)GetValue(ValueProperty); }
+//             set { SetValue(ValueProperty, value ?? ""); }
+//         }
+// 
+//         // Using a DependencyProperty as the backing store for Value.  This enables animation, styling, binding, etc...
+//         public static readonly DependencyProperty ValueProperty =
+//             DependencyProperty.Register("Value", typeof(string), typeof(GroupID), new UIPropertyMetadata("GRP"));
 
-        public string Value { get; set; }
+
+        private string _value;
+        public string Value
+        {
+            get
+            {
+                return _value;
+            }
+            set
+            {
+                _value = value;
+                OnPropertyChanged("Value");
+            }
+        }
+        
         public bool IsValid { get { return Value != String.Empty; } }
+
         public override string ToString() { return (IsValid) ? ((Value.IsNumeric()) ? int.Parse(Value).ToString() : Value) : "keine Gruppe"; }
 
         #region IComparable Members
@@ -56,24 +69,5 @@ namespace HAW_Tool.HAW.Native
 
         #endregion
 
-        public bool Equals(GroupID other)
-        {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-            return Equals(other.Value, Value);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof (GroupID)) return false;
-            return Equals((GroupID) obj);
-        }
-
-        public override int GetHashCode()
-        {
-            return (Value != null ? Value.GetHashCode() : 0);
-        }
     }
 }

@@ -9,6 +9,7 @@ namespace HAW_Tool.HAW.REST
     {
 		#region Operations (5) 
 
+/*
         [OperationContract]
         [WebGet(BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json, UriTemplate = "events")]
         RESTEvent[] Events();
@@ -16,6 +17,7 @@ namespace HAW_Tool.HAW.REST
         [OperationContract]
         [WebGet(BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json, UriTemplate = "hawevents")]
         RESTEvent[] HAWEvents();
+*/
 
         [OperationContract]
         [WebGet(BodyStyle = WebMessageBodyStyle.Bare, ResponseFormat = WebMessageFormat.Json, UriTemplate = "schedules")]

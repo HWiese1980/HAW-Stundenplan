@@ -36,6 +36,7 @@
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <Utf8Output>true</Utf8Output>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -159,7 +160,6 @@
     <Compile Include="HAW\Depending\ObservableCollectionEx.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ThreadSafeObservableCollection.cs" />
     <Compile Include="WPF\ConverterWrapper.cs" />
     <Page Include="ErrorMessage.xaml">
       <SubType>Designer</SubType>
@@ -361,9 +361,9 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\MultithreadedObservableListSample\QuantumBitDesigns.Core\QuantumBitDesigns.Core.csproj">
-      <Project>{CEB9B41C-F4FF-48D1-888E-846DB476E98E}</Project>
-      <Name>QuantumBitDesigns.Core</Name>
+    <ProjectReference Include="..\ChatClient\ChatClient.csproj">
+      <Project>{34A55273-35D2-48D8-9346-5B9583064510}</Project>
+      <Name>ChatClient</Name>
     </ProjectReference>
     <ProjectReference Include="..\LittleHelpers\LittleHelpers.csproj">
       <Project>{DBC10794-05CB-42D7-BF4B-C9872F45D4FA}</Project>

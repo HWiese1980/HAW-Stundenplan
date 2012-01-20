@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
-using System.Windows;
 using Newtonsoft.Json;
-using QuantumBitDesigns.Core;
+using SeveQsCustomControls;
 
 namespace HAW_Tool.HAW.Depending
 {
@@ -14,7 +10,7 @@ namespace HAW_Tool.HAW.Depending
     {
         public SeminarGroup()
         {
-            CalendarWeeks = new ThreadSafeObservableCollection<CalendarWeek>(PlanFile.MainDispatcher);
+            CalendarWeeks = new ThreadSafeObservableCollection<CalendarWeek>();
         }
 
         private string _name = "";

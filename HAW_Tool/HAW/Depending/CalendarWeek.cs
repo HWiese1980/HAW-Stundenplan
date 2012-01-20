@@ -4,7 +4,6 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Windows;
 using Newtonsoft.Json;
-using QuantumBitDesigns.Core;
 
 namespace HAW_Tool.HAW.Depending
 {

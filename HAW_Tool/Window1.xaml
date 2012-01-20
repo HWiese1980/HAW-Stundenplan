@@ -4,13 +4,14 @@
     xmlns:haw="clr-namespace:HAW_Tool.HAW"
     xmlns:local="clr-namespace:HAW_Tool" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-    mc:Ignorable="d" xmlns:SeveQsCustomControls="clr-namespace:SeveQsCustomControls;assembly=SeveQsCustomControls"
+    xmlns:SeveQsCustomControls="clr-namespace:SeveQsCustomControls;assembly=SeveQsCustomControls"
     xmlns:Cvt="clr-namespace:HAW_Tool.Converters"
     xmlns:k="clr-namespace:Kingsmill.Windows" xmlns:uc="clr-namespace:HAW_Tool.UserControls"
     xmlns:WPF="clr-namespace:HAW_Tool.HAW.Depending.WPF"
     xmlns:ComponentModel="clr-namespace:System.ComponentModel;assembly=WindowsBase"
-    xmlns:Depending="clr-namespace:HAW_Tool.HAW.Depending" x:Class="HAW_Tool.Window1" 
-    Name="TheMainWindow"
+    xmlns:Depending="clr-namespace:HAW_Tool.HAW.Depending" xmlns:ChatClient="clr-namespace:ChatClient;assembly=ChatClient" 
+    mc:Ignorable="d" x:Class="HAW_Tool.Window1" 
+    x:Name="TheMainWindow"
     WindowStyle="None" 
     AllowsTransparency="True" 
     Background="{x:Null}" 
@@ -37,7 +38,7 @@
         </ControlTemplate>
 
         <DataTemplate x:Key="EventItemTemplate">
-            <uc:EventControl CouchDBDataInvalid="EventCouchDBInvalid"  DataContext="{Binding}" RasterWidth="{Binding RasterWidth, RelativeSource={RelativeSource AncestorType=SeveQsCustomControls:RasteredItemsControl}}" />
+            <uc:EventControl CouchDBDataInvalid="EventCouchDBInvalid"  DataContext="{Binding}" RasterWidth="{Binding RasterWidth, RelativeSource={RelativeSource AncestorType={x:Type SeveQsCustomControls:RasteredItemsControl}}}" />
         </DataTemplate>
 
         <DataTemplate x:Key="DayItemTemplate">
@@ -49,7 +50,7 @@
                         Dragging="EventDragging"-->
                     <SeveQsCustomControls:RasteredItemsControl 
                         x:Name="raster"
-                        Header="{Binding Date, StringFormat='{}[{0:dd} - {0:ddd}]'}" 
+                        Header="{Binding Date, StringFormat=[\{0:dd\} - \{0:ddd\}]}" 
                         FontSize="24" FontWeight="Bold"
                         Loaded="RasteredItemsControlLoaded" 
                         Raster="{StaticResource RasterH}" 
@@ -86,8 +87,8 @@
                 </Grid>
             </AdornerDecorator>
             <DataTemplate.Triggers>
-                <DataTrigger Binding="{Binding Events.Count, Converter={Cvt:CompareConverter Value=1, Operator='LessThan'}}" Value="True">
-                    <Setter TargetName="raster" Property="Header" Value="{Binding Date, StringFormat='{}[{0:dd} - {0:ddd}] keine Veranstaltung geplant'}" />
+                <DataTrigger Binding="{Binding Events.Count, Converter={Cvt:CompareConverter Operator=LessThan, Value=1}}" Value="True">
+                    <Setter TargetName="raster" Property="Header" Value="{Binding Date, StringFormat=[\{0:dd\} - \{0:ddd\}] keine Veranstaltung geplant}" />
                     <Setter TargetName="dayGrid" Property="Opacity" Value="0.2" />
                 </DataTrigger>
             </DataTemplate.Triggers>
@@ -197,15 +198,58 @@
                 </UniformGrid>
             </Grid>
         </DataTemplate>
+        <Style x:Key="ChatExpander" TargetType="{x:Type Expander}">
+        	<Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
+        	<Setter Property="Background" Value="Transparent"/>
+        	<Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        	<Setter Property="VerticalContentAlignment" Value="Stretch"/>
+        	<Setter Property="BorderBrush" Value="Transparent"/>
+        	<Setter Property="BorderThickness" Value="1"/>
+        	<Setter Property="Template">
+        		<Setter.Value>
+        			<ControlTemplate TargetType="{x:Type Expander}">
+        				<Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" CornerRadius="3" SnapsToDevicePixels="true">
+        					<DockPanel>
+        						<ToggleButton x:Name="HeaderSite" ContentTemplate="{TemplateBinding HeaderTemplate}" ContentTemplateSelector="{TemplateBinding HeaderTemplateSelector}" Content="{TemplateBinding Header}" DockPanel.Dock="Top" Foreground="{TemplateBinding Foreground}" FontWeight="{TemplateBinding FontWeight}" FocusVisualStyle="{StaticResource ExpanderHeaderFocusVisual}" FontStyle="{TemplateBinding FontStyle}" FontStretch="{TemplateBinding FontStretch}" FontSize="{TemplateBinding FontSize}" FontFamily="{TemplateBinding FontFamily}" HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" IsChecked="{Binding IsExpanded, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" Margin="1" MinWidth="0" MinHeight="0" Padding="{TemplateBinding Padding}" Style="{StaticResource ExpanderDownHeaderStyle}" VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
+        						<ContentPresenter x:Name="ExpandSite" DockPanel.Dock="Bottom" Focusable="false" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}" Visibility="Collapsed" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+        					</DockPanel>
+        				</Border>
+        				<ControlTemplate.Triggers>
+        					<Trigger Property="IsExpanded" Value="true">
+        						<Setter Property="Visibility" TargetName="ExpandSite" Value="Visible"/>
+        					</Trigger>
+        					<Trigger Property="ExpandDirection" Value="Right">
+        						<Setter Property="DockPanel.Dock" TargetName="ExpandSite" Value="Right"/>
+        						<Setter Property="DockPanel.Dock" TargetName="HeaderSite" Value="Left"/>
+        						<Setter Property="Style" TargetName="HeaderSite" Value="{StaticResource ExpanderRightHeaderStyle}"/>
+        					</Trigger>
+        					<Trigger Property="ExpandDirection" Value="Up">
+        						<Setter Property="DockPanel.Dock" TargetName="ExpandSite" Value="Top"/>
+        						<Setter Property="DockPanel.Dock" TargetName="HeaderSite" Value="Bottom"/>
+        						<Setter Property="Style" TargetName="HeaderSite" Value="{StaticResource ExpanderUpHeaderStyle}"/>
+        					</Trigger>
+        					<Trigger Property="ExpandDirection" Value="Left">
+        						<Setter Property="DockPanel.Dock" TargetName="ExpandSite" Value="Left"/>
+        						<Setter Property="DockPanel.Dock" TargetName="HeaderSite" Value="Right"/>
+        						<Setter Property="Style" TargetName="HeaderSite" Value="{StaticResource ExpanderLeftHeaderStyle}"/>
+        					</Trigger>
+        					<Trigger Property="IsEnabled" Value="false">
+        						<Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
+        					</Trigger>
+        				</ControlTemplate.Triggers>
+        			</ControlTemplate>
+        		</Setter.Value>
+        	</Setter>
+        </Style>
     </Window.Resources>
     <Window.Title>
         <StaticResource ResourceKey="Title"/>
     </Window.Title>
     <Grid x:Name="MainGrid">
         <Grid.Resources>
-            <Style TargetType="Rectangle" x:Key="ResizeRect">
+            <Style TargetType="{x:Type Rectangle}" x:Key="ResizeRect">
                 <Style.Triggers>
-                    <DataTrigger Binding="{Binding WindowState, RelativeSource={RelativeSource FindAncestor, AncestorType='Window'}}" Value="Maximized">
+                    <DataTrigger Binding="{Binding WindowState, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}" Value="Maximized">
                         <Setter Property="IsEnabled" Value="false" />
                     </DataTrigger>
                 </Style.Triggers>
@@ -232,13 +276,9 @@
                     <DockPanel>
                         <DockPanel DockPanel.Dock="Bottom"  VerticalAlignment="Bottom" Height="60">
                             <ProgressBar x:Name="progressStatusBar" HorizontalAlignment="Center" VerticalAlignment="Center" Width="40" Height="15" Minimum="0" Maximum="100" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Visibility="Collapsed"/>
-                            <StatusBarItem x:Name="MainStatus" Content="[...]" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Center">
-                                <StatusBarItem.Background>
-                                    <SolidColorBrush/>
-                                </StatusBarItem.Background>
-                            </StatusBarItem>
-                            <StatusBarItem Content="{Binding SelectedItem.Code, ElementName='TheWeek'}" />
-                            <StatusBarItem Content="{Binding SelectedItem.Hash, ElementName='TheWeek'}" />
+                            <StatusBarItem x:Name="MainStatus" Content="[...]" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Center" Background="#00000000"/>
+                            <StatusBarItem Content="{Binding SelectedItem.Code, ElementName=TheWeek}" />
+                            <StatusBarItem Content="{Binding SelectedItem.Hash, ElementName=TheWeek}" />
                             <Grid Margin="0,6,5,6" Width="24" DockPanel.Dock="Right">
                                 <SeveQsCustomControls:ReflectionControl HorizontalAlignment="Right" VerticalAlignment="Center" ReflectionMask="{DynamicResource DefaultReflectionBrush}" Margin="0">
                                     <Button x:Name="aboutButton" Margin="0" Style="{DynamicResource FlatButton}" ToolTip="Über">
@@ -257,7 +297,7 @@
                                 <Label x:Name="copyright" Content="© 2009 by Hendrik Wiese" FontFamily="Trajan Pro" FontSize="13.333" FontWeight="Bold" Foreground="White" Margin="0" VerticalAlignment="Top" Padding="0" Height="13.5"/>
                             </SeveQsCustomControls:ReflectionControl>
                         </DockPanel>
-                        <SeveQsCustomControls:Accordion DockPanel.Dock="Left"  HorizontalAlignment="Left" Width="130">
+                        <SeveQsCustomControls:Accordion DataContext="{Binding Path='SelectedSeminarGroup', Source={x:Static Depending:PlanFile.Instance}}"   DockPanel.Dock="Left"  HorizontalAlignment="Left" Width="130">
                             <SeveQsCustomControls:Accordion.Background>
                                 <SolidColorBrush Color="{DynamicResource LightenUp20}"/>
                             </SeveQsCustomControls:Accordion.Background>
@@ -279,15 +319,30 @@
                                     <TextBlock HorizontalAlignment="Left" Text="Noch nix hier. Mal sehen, was mir noch einfällt..." TextWrapping="Wrap" d:LayoutOverrides="Height" Width="128"/>
                                 </Grid>
                             </Expander>
-                            <Expander Foreground="White">
-                            	<Grid>
-                            		<Button Style="{DynamicResource FlatButton}" HorizontalAlignment="Left" Click="LoadCouchClick">
+                            <Expander Foreground="White" Header="Community">
+                            	<StackPanel>
+                            		<Button Style="{DynamicResource FlatButton}" Click="LoadCouchClick">
                             			<StackPanel Orientation="Horizontal">
                             				<Image Height="21.948" Source="Icons/image3093.png" Stretch="Fill" Width="23"/>
                             				<Label Content="Änderg. laden" Foreground="White" ToolTip="Lade durch die Community bereitgestellte Änderungen vom Server"/>
                             			</StackPanel>
                             		</Button>
-                            	</Grid>
+                            		<Expander x:Name="expander" Header="" ExpandDirection="Right" HorizontalAlignment="Left" Style="{DynamicResource ChatExpander}">
+                            			<Popup Placement="Right" IsOpen="{Binding IsExpanded, ElementName=expander}" AllowsTransparency="True">
+                            				<Border CornerRadius="5" BorderThickness="3" Padding="5" Margin="10,10,0,0">
+                            					<Border.BorderBrush>
+                            						<SolidColorBrush Color="{DynamicResource DarkenDown80}"/>
+                            					</Border.BorderBrush>
+                            					<Border.Background>
+                            						<SolidColorBrush Color="{DynamicResource DarkenDown40}"/>
+                            					</Border.Background>
+                            					<Grid>
+                            						<uc:EventDetails d:LayoutOverrides="Width, Height"/>
+                            					</Grid>
+                            				</Border>
+                            			</Popup>
+                            		</Expander>
+                            	</StackPanel>
                             </Expander>
                         </SeveQsCustomControls:Accordion>
                         <Grid x:Name="stundenplanGrid">
@@ -315,7 +370,7 @@
                                             Padding="2,0,0,0" 
                                             Panel.ZIndex="10" 
                                             Style="{DynamicResource ScrollableTabstrip}" 
-                                            SelectedItem="{Binding Source={x:Static Depending:PlanFile.Instance}, Path='SelectedSeminarGroup'}"
+                                            SelectedItem="{Binding SelectedSeminarGroup, Source={x:Static Depending:PlanFile.Instance}}"
                                             >
                                             <SeveQsCustomControls:ResettingTabControl.BorderBrush>
                                                 <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
@@ -326,14 +381,12 @@
                                         </SeveQsCustomControls:ResettingTabControl>
                                     </SeveQsCustomControls:RasteredGroup>
                                 </TabItem>
-                                <TabItem Header="Veranstaltung" ToolTip="Details zur gewählten Veranstaltung">
-                                    <uc:EventDetails DataContext="{Binding SelectedItem, ElementName='TheWeek'}"/>
+                                <TabItem Header="Chat" ToolTip="Details zur gewählten Veranstaltung">
+                                    <ChatClient:ChatClientControl Channel="{Binding Path='SelectedSeminarGroup.Name', Mode=OneWayToSource, Source={x:Static Depending:PlanFile.Instance}}" Foreground="White"/>
                                 </TabItem>
                                 <TabItem Header="Kompakt" Foreground="White" ToolTip="Kompakte Ansicht" Visibility="Collapsed">
                                     <Grid>
-                                        <SeveQsCustomControls:ResettingTabControl SelectedIndex="{Binding SelectedIndex, ElementName='SemGroups', Mode=TwoWay}" DisplayMemberPath="FullName" x:Name="SemGroupsCompact" ItemsSource="{Binding SeminarGroups}" ContentTemplate="{StaticResource CompactSeminarGroupTemplate}" TabStripPlacement="Left" ItemContainerStyle="{DynamicResource MainTabItemStyle}" BorderThickness="0" Padding="2,0,0,0" Panel.ZIndex="10" Style="{DynamicResource ScrollableTabstrip}">
-
-                                        </SeveQsCustomControls:ResettingTabControl>
+                                        <SeveQsCustomControls:ResettingTabControl SelectedIndex="{Binding SelectedIndex, ElementName=SemGroups, Mode=TwoWay}" DisplayMemberPath="FullName" x:Name="SemGroupsCompact" ItemsSource="{Binding SeminarGroups}" ContentTemplate="{StaticResource CompactSeminarGroupTemplate}" TabStripPlacement="Left" ItemContainerStyle="{DynamicResource MainTabItemStyle}" BorderThickness="0" Padding="2,0,0,0" Panel.ZIndex="10" Style="{DynamicResource ScrollableTabstrip}"/>
                                     </Grid>
                                 </TabItem>
                                 <TabItem Header="Gruppen" Style="{DynamicResource MainTabItemStyle}" Foreground="White">
@@ -385,21 +438,8 @@
                                                 <SolidColorBrush Color="{DynamicResource LightenUp20}"/>
                                             </Rectangle.Fill>
                                         </Rectangle>
-                                        <Label x:Name="aboutTitle" VerticalAlignment="Top" HorizontalAlignment="Center" FontSize="40" Foreground="White" FontFamily="Ravie" Content="HAW Stundenplan">
-                                            <Label.Background>
-                                                <SolidColorBrush/>
-                                            </Label.Background>
-                                        </Label>
-                                        <TextBlock TextWrapping="Wrap" Margin="80,70,80,0" FontFamily="Hobo Std" FontSize="16" TextAlignment="Center" VerticalAlignment="Top" Width="350" MinHeight="55">
-                                        <Run Text="Copyright (c) 2009-2010 by Hendrik Wiese"/><LineBreak/>
-                                        <Hyperlink Foreground="Wheat" Click="MailMe" NavigateUri="mailto:hendrik.wiese@haw-hamburg.de">
-                                            <Run Text="hendrik.wiese@haw-hamburg.de"/>
-                                        </Hyperlink>
-                                        <LineBreak /><LineBreak />
-                                        <Run Text="Alle Angaben zu Veranstaltungen in diesem Programm beziehen sich auf die von der HAW gelieferten Vorlesungspläne in Textform. Der Entwickler dieser Software übernimmt keine Gewähr auf die Korrektheit der Angaben. Es liegt in der Verantwortung des Benutzers, die Angaben im Zweifelsfall zu verifiziern." FontSize="10" FontFamily="Verdana" />
-                                        <LineBreak /><LineBreak />
-                                        <Run Text="Diese Software ist Freeware. Der Urheber behält sich das Recht vor, das gewählte Lizenzmodell jederzeit zu wechseln. Jede bis dahin veröffentlichte Version behält ihren Status; d.h. jede Lizenzänderung bezieht sich ausschließlich auf zukünftige Versionen." FontSize="10" FontFamily="Verdana" />
-                                        </TextBlock>
+                                        <Label x:Name="aboutTitle" VerticalAlignment="Top" HorizontalAlignment="Center" FontSize="40" Foreground="White" FontFamily="Ravie" Content="HAW Stundenplan" Background="#00000000"/>
+                                        <TextBlock TextWrapping="Wrap" Margin="80,70,80,0" FontFamily="Hobo Std" FontSize="16" TextAlignment="Center" VerticalAlignment="Top" Width="350" MinHeight="55"><Run Text="Copyright (c) 2009-2010 by Hendrik Wiese"/><LineBreak/><Hyperlink Foreground="Wheat" Click="MailMe" NavigateUri="mailto:hendrik.wiese@haw-hamburg.de"><Run Text="hendrik.wiese@haw-hamburg.de"/></Hyperlink><LineBreak /><LineBreak /><Run Text="Alle Angaben zu Veranstaltungen in diesem Programm beziehen sich auf die von der HAW gelieferten Vorlesungspläne in Textform. Der Entwickler dieser Software übernimmt keine Gewähr auf die Korrektheit der Angaben. Es liegt in der Verantwortung des Benutzers, die Angaben im Zweifelsfall zu verifiziern." FontSize="10" FontFamily="Verdana" /><LineBreak /><LineBreak /><Run Text="Diese Software ist Freeware. Der Urheber behält sich das Recht vor, das gewählte Lizenzmodell jederzeit zu wechseln. Jede bis dahin veröffentlichte Version behält ihren Status; d.h. jede Lizenzänderung bezieht sich ausschließlich auf zukünftige Versionen." FontSize="10" FontFamily="Verdana" /></TextBlock>
                                         <Button Content="Spenden (PayPal)" VerticalAlignment="Bottom" Height="30" FontWeight="Bold" FontFamily="Dotum" Click="DonateButtonClick" HorizontalAlignment="Center" Margin="0,0,0,60" Width="180" >
                                             <Button.Background>
                                                 <LinearGradientBrush EndPoint="0,1" StartPoint="0,0">

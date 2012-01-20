@@ -65,6 +65,11 @@ namespace HAW_Tool
             Application.Current.Resources.Add("PlanFileInstance", PlanFile.Instance);
             InitializeComponent();
 
+            ThreadSafeObservableCollection<SeminarGroup>.UIDispatcher = Dispatcher;
+            ThreadSafeObservableCollection<Event>.UIDispatcher = Dispatcher;
+            ThreadSafeObservableCollection<CalendarWeek>.UIDispatcher = Dispatcher;
+            ThreadSafeObservableCollection<CouchDBEventInfo>.UIDispatcher = Dispatcher;
+
             SourceInitialized += SourceInitializedHandler;
 
 #if HAW_NATIVE || HAW_DEPENDING

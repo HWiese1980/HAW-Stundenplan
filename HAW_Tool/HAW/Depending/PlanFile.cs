@@ -15,6 +15,7 @@ using System.Text.RegularExpressions;
 using System.IO;
 using System.Windows;
 using RedBranch.Hammock;
+using SeveQsCustomControls;
 
 namespace HAW_Tool.HAW.Depending
 {
@@ -41,9 +42,9 @@ namespace HAW_Tool.HAW.Depending
             MainDispatcher = Application.Current.MainWindow.Dispatcher;
 
             CouchConnection = new Connection(new Uri("http://seveq.de:5984"));
-            SeminarGroups = new ThreadSafeObservableCollection<SeminarGroup>(MainDispatcher);
-            ReplacedSchoolEvents = new ThreadSafeObservableCollection<Event>(MainDispatcher);
-            CouchDBEvents = new ThreadSafeObservableCollection<CouchDBEventInfo>(MainDispatcher);
+            SeminarGroups = new ThreadSafeObservableCollection<SeminarGroup>();
+            ReplacedSchoolEvents = new ThreadSafeObservableCollection<Event>();
+            CouchDBEvents = new ThreadSafeObservableCollection<CouchDBEventInfo>();
 
             CouchDBEvents.CollectionChanged += CleanUpDays;
 

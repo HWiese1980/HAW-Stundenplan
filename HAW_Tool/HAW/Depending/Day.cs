@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Windows;
+using SeveQsCustomControls;
 
 namespace HAW_Tool.HAW.Depending
 {
@@ -8,7 +9,7 @@ namespace HAW_Tool.HAW.Depending
     {
         public Day()
         {
-            Events = new ThreadSafeObservableCollection<Event>(PlanFile.MainDispatcher);
+            Events = new ThreadSafeObservableCollection<Event>();
             Events./*ObservableCollection.*/CollectionChanged += Events_CollectionChanged;
         }
 

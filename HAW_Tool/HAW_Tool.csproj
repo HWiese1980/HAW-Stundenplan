@@ -89,12 +89,18 @@
     <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
     <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>HAW_Tool.App</StartupObject>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="AvalonControlsLibrary">
       <HintPath>..\..\..\..\Downloads\Release V2\AvalonControlsLibrary\bin\Release\AvalonControlsLibrary.dll</HintPath>
     </Reference>
-    <Reference Include="DDay.iCal">
-      <HintPath>bin\Debug\DDay.iCal.dll</HintPath>
+    <Reference Include="FabTab">
+      <HintPath>U:\Unshared\Firefox\FabTab\FabTab\bin\FabTab.dll</HintPath>
+    </Reference>
+    <Reference Include="Meebey.SmartIrc4net">
+      <HintPath>..\..\Meebey.SmartIrc4net.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Expression.Interactions" />
     <Reference Include="Newtonsoft.Json">
@@ -109,9 +115,6 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
-    <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
     <Reference Include="System.Drawing" />
     <Reference Include="System.IdentityModel" />
     <Reference Include="System.Printing">
@@ -153,6 +156,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="HAW\ChatClient\ChatClientControl.xaml.cs">
+      <DependentUpon>ChatClientControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="HAW\ChatClient\ChatRoom.cs" />
     <Compile Include="HAW\Depending\CouchDBInfoComparer.cs" />
     <Compile Include="HAW\Depending\EventControlBase.cs" />
     <Compile Include="HAW\Depending\MarkupExtensions\HasValueConverter.cs" />
@@ -160,10 +167,16 @@
     <Compile Include="HAW\Depending\ObservableCollectionEx.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="HAW\ChatClient\JSONObjectReceivedEventArgs.cs" />
+    <Compile Include="HAW\Depending\ThreadSafeObservableDictionary.cs" />
     <Compile Include="WPF\ConverterWrapper.cs" />
     <Page Include="ErrorMessage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="HAW\ChatClient\ChatClientControl.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -361,10 +374,6 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ChatClient\ChatClient.csproj">
-      <Project>{34A55273-35D2-48D8-9346-5B9583064510}</Project>
-      <Name>ChatClient</Name>
-    </ProjectReference>
     <ProjectReference Include="..\LittleHelpers\LittleHelpers.csproj">
       <Project>{DBC10794-05CB-42D7-BF4B-C9872F45D4FA}</Project>
       <Name>LittleHelpers</Name>

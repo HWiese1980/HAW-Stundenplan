@@ -574,10 +574,7 @@ namespace HAW_Tool.HAW.Depending
                                     CalendarWeek cw2 = cw;
                                     //var day =(Day)Dispatcher.Invoke(new Func<Day>(() => cw2.Days.Where(d => d.DOW == (DayOfWeek)(iDOW)).FirstOrDefault()));
                                     var day = cw2.Days.Where(d => d.DOW == (DayOfWeek)(iDOW)).FirstOrDefault();
-                                    if (day == null)
-                                    {
-                                        Debugger.Break();
-                                    }
+                                    if (day == null) break;
 
                                     try
                                     {
@@ -588,10 +585,6 @@ namespace HAW_Tool.HAW.Depending
                                     {
                                         Debugger.Break();
                                     }
-
-                                    if (day == null)
-                                        throw new Exception(
-                                            "Day is null! Verify why!");
 
                                     SeminarGroup @group = currentSeminarGroup;
                                     CalendarWeek cw1 = cw;

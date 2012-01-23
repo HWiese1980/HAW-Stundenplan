@@ -2,11 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using HAW_Tool.HAW.Depending;
 using LHelper = LittleHelpers.Helper;
 using System.Globalization;
-using DDayEvent = DDay.iCal.Event;
-using HAW_Tool.HAW.REST;
 using System.Xml.Linq;
 
 namespace HAW_Tool.HAW

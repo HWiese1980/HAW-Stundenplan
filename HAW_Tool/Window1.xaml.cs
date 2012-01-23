@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -13,7 +12,6 @@ using SeveQsCustomControls;
 using System.Reflection;
 using System.Printing;
 using LittleHelpers;
-using System.Threading;
 using Microsoft.Win32;
 using HAW_Tool.HAW.REST;
 using System.Runtime.InteropServices;

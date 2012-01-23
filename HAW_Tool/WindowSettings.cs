@@ -18,7 +18,7 @@ namespace Kingsmill.Windows
         public class WindowApplicationSettings : ApplicationSettingsBase
         {
             public WindowApplicationSettings(WindowSettings windowSettings)
-                : base(windowSettings._window.PersistId.ToString())
+                : base(windowSettings._window.Uid.ToString())
             {
             }
 

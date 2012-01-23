@@ -4,7 +4,7 @@
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
     xmlns:local="clr-namespace:HAW_Tool" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" xmlns:HAW_Tool_HAW="clr-namespace:HAW_Tool.HAW" xmlns:Microsoft_Windows_Themes="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero"
     xmlns:Depending="clr-namespace:HAW_Tool.HAW.Depending"
-    xmlns:UserControls="clr-namespace:HAW_Tool.UserControls">
+    xmlns:UserControls="clr-namespace:HAW_Tool.UserControls" xmlns:ChatClient="clr-namespace:HAW_Tool.HAW.ChatClient">
 
     <sys:Double x:Key="RasterH">90</sys:Double>
     <sys:Double x:Key="RasterV">50</sys:Double>
@@ -28,7 +28,7 @@
     <Depending:TimeToCoord x:Key="TimeToTop" Multiplier="{StaticResource RasterV}" />
     <Depending:TimeToThicknessConverter x:Key="TimeToLeftMargin" Multiplier="{StaticResource RasterH}" />
     <BorderGapMaskConverter x:Key="BorderGapMaskConverter"/>
-    
+
     <Style x:Key="HAWGroupBoxStyle" TargetType="{x:Type GroupBox}">
         <Setter Property="BorderBrush" Value="#D5DFE5"/>
         <Setter Property="BorderThickness" Value="1"/>
@@ -198,9 +198,22 @@
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type UserControls:RangeSlider}">
                     <Canvas Background="{x:Null}">
-                		<Thumb Canvas.Left="{Binding LeftThumbPos, RelativeSource={RelativeSource TemplatedParent}}" x:Name="PART_LeftThumb" Width="10" Height="20" d:LayoutOverrides="Width" />
+                        <Thumb Canvas.Left="{Binding LeftThumbPos, RelativeSource={RelativeSource TemplatedParent}}" x:Name="PART_LeftThumb" Width="10" Height="20" d:LayoutOverrides="Width" />
                         <Thumb Canvas.Right="{Binding RightThumbPos, RelativeSource={RelativeSource TemplatedParent}}" x:Name="PART_RightThumb" Width="10" Height="20" d:LayoutOverrides="Width" />
-                	</Canvas>
+                    </Canvas>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="{x:Type ChatClient:ChatRoom}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type ChatClient:ChatRoom}">
+                    <DockPanel>
+                        <ListBox Width="150" x:Name="PART_UserList" DockPanel.Dock="Right" />
+                        <RichTextBox x:Name="PART_ChatLog" />
+                    </DockPanel>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

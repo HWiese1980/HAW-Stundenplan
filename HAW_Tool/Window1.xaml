@@ -9,8 +9,9 @@
     xmlns:k="clr-namespace:Kingsmill.Windows" xmlns:uc="clr-namespace:HAW_Tool.UserControls"
     xmlns:WPF="clr-namespace:HAW_Tool.HAW.Depending.WPF"
     xmlns:ComponentModel="clr-namespace:System.ComponentModel;assembly=WindowsBase"
-    xmlns:Depending="clr-namespace:HAW_Tool.HAW.Depending" xmlns:ChatClient="clr-namespace:ChatClient;assembly=ChatClient" 
-    mc:Ignorable="d" x:Class="HAW_Tool.Window1" 
+    xmlns:Depending="clr-namespace:HAW_Tool.HAW.Depending"
+    xmlns:ChatClient="clr-namespace:HAW_Tool.HAW.ChatClient" mc:Ignorable="d" x:Class="HAW_Tool.Window1" 
+    Uid="HAWToolMainWindow"
     x:Name="TheMainWindow"
     WindowStyle="None" 
     AllowsTransparency="True" 
@@ -381,8 +382,8 @@
                                         </SeveQsCustomControls:ResettingTabControl>
                                     </SeveQsCustomControls:RasteredGroup>
                                 </TabItem>
-                                <TabItem Header="Chat" ToolTip="Details zur gewählten Veranstaltung">
-                                    <ChatClient:ChatClientControl Channel="{Binding Path='SelectedSeminarGroup.Name', Mode=OneWayToSource, Source={x:Static Depending:PlanFile.Instance}}" Foreground="White"/>
+                                <TabItem DataContext="{Binding Source={x:Static Depending:PlanFile.Instance}}" Header="Chat" ToolTip="Kleiner Chatclient für Benutzer dieses Tools">
+                                    <ChatClient:ChatClientControl Channel="{Binding Path='SelectedSeminarGroup.Name'}"  Foreground="White"/>
                                 </TabItem>
                                 <TabItem Header="Kompakt" Foreground="White" ToolTip="Kompakte Ansicht" Visibility="Collapsed">
                                     <Grid>

@@ -128,6 +128,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IPriorized.cs" />
+    <Compile Include="PriorityObservableCollection.cs" />
     <Compile Include="SpecialException.cs" />
     <Compile Include="ThreadSafeObservableCollection.cs" />
     <Page Include="Themes\Generic.xaml">

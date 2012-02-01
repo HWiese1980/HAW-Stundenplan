@@ -7,9 +7,10 @@ namespace HAW_Tool.HAW.Depending
 {
     public enum EventSource
     {
+        Other,
         School,
         CouchDB,
+        MongoDB,
         Local,
-        Other,
     }
 }

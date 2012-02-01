@@ -13,10 +13,11 @@ namespace HAW_Tool.HAW.Depending
         {
             return _rgx.IsMatch(line);
         }
-        object _threadSafety = new object();
+        
+        // object _threadSafety = new object();
         public IDictionary<string, string> GetValues(string line)
         {
-            lock(_threadSafety)
+            // lock(_threadSafety)
             {
                 if (!_rgx.IsMatch(line)) return null;
 

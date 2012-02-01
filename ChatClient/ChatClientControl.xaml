@@ -21,7 +21,7 @@
 					</Style>
 				</DockPanel.Style>
     			<Label Content="Benutzername" Foreground="White" FontWeight="Bold" Width="100"/>
-    			<Button x:Name="JoinButton" DockPanel.Dock="Right" Content="Beitreten" Width="75" Click="JoinButton_Click">
+    			<Button x:Name="JoinButton" DockPanel.Dock="Right" Content="Beitreten" Width="140" Click="JoinButton_Click">
     				<Button.Background>
     					<LinearGradientBrush EndPoint="0,1" StartPoint="0,0">
     						<GradientStop Color="#FFF3F3F3" Offset="0"/>
@@ -45,11 +45,14 @@
 				</DockPanel.Style>
     			<DockPanel Margin="0" DockPanel.Dock="Bottom">
     				<Label Content="Nachricht:" VerticalContentAlignment="Center" Padding="5,5,10,5" Foreground="White" Width="100" FontWeight="Bold"/>
-    				<Button x:Name="SendButton" DockPanel.Dock="Right" Content="Senden" Width="75" Click="SendButton_Click" />
+    				<Button x:Name="SendButton" DockPanel.Dock="Right" Content="Senden" Width="{Binding ActualWidth, ElementName=JoinButton}" Click="SendButton_Click" />
     				<TextBox x:Name="messageBox" FontFamily="Courier10 BT" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" Padding="3" MinWidth="240" VerticalContentAlignment="Center" KeyUp="messageBox_KeyUp"/>
     			</DockPanel>
     			<DockPanel MinHeight="260">
-    				<ListBox x:Name="peerList"  Width="75" DockPanel.Dock="Right" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" />
+    				<DockPanel DockPanel.Dock="Right" Background="{Binding Background, ElementName=ChatControl}" Width="{Binding ActualWidth, ElementName=JoinButton}">
+    					<HeaderedContentControl DockPanel.Dock="Top" Header="Akt. Kanal:" Content="{Binding Channel}" Foreground="White" FontWeight="Bold" Padding="0" Margin="5"/>
+    					<ListBox x:Name="peerList" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" />
+    				</DockPanel>
     				<RichTextBox x:Name="messageWindow" Focusable="False" IsHitTestVisible="False" IsTabStop="False" VerticalScrollBarVisibility="Visible">
     					<FlowDocument AllowDrop="False" OverridesDefaultStyle="True" PagePadding="5,0" PageWidth="{Binding ActualWidth, ElementName=messageWindow}" PageHeight="{Binding ActualHeight, ElementName=messageWindow}" Focusable="False" Language="de-de" />
     				</RichTextBox>

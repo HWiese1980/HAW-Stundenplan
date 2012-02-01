@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using HAW_Tool.HAW.Depending;
 using LittleHelpers;
+using MongoDB.Driver;
 using SeveQsCustomControls;
 
 namespace HAW_Tool.UserControls
@@ -13,10 +14,12 @@ namespace HAW_Tool.UserControls
     /// </summary>
     public partial class EventControl
     {
+        private Event EventContext { get { return (Event)DataContext; } }
+
         private static void OnDepPropChg(DependencyObject obj, DependencyPropertyChangedEventArgs e)
         {
         }
-        
+
         public int ZIndex
         {
             get { return (int)GetValue(ZIndexProperty); }
@@ -29,15 +32,15 @@ namespace HAW_Tool.UserControls
 
         private static void ZIndexChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var ctl = (EventControl) d;
-            var evt = (Event) ctl.DataContext;
+            var ctl = (EventControl)d;
+            var evt = (Event)ctl.DataContext;
             var contentPresenter = ctl.GetParent<ListBoxItem>();
-            var nval = (int) e.NewValue;
+            var nval = (int)e.NewValue;
 
             Console.WriteLine(@"Changing ZIndex of {0} to {1}", evt.ShortCode, nval);
             Panel.SetZIndex(contentPresenter, nval);
         }
-        
+
         public Brush EventBorderBackground
         {
             get { return (Brush)GetValue(EventBorderBackgroundProperty); }
@@ -163,14 +166,7 @@ namespace HAW_Tool.UserControls
 
         public EventControl()
         {
-            DataContextChanged += EventControl_DataContextChanged;
             InitializeComponent();
-        }
-
-        void EventControl_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
-        {
-            var evt = (Event)DataContext;
-            _evtDelta = evt.Till - evt.From;
         }
 
         private double TimePerPixel
@@ -190,66 +186,77 @@ namespace HAW_Tool.UserControls
         {
             var minutesPerPixel = TimePerPixel;
 
-            var evt = (Event)DataContext;
-            evt.From = evt.From.Add(TimeSpan.FromMinutes(minutesPerPixel * e.HorizontalChange));
-            _evtDelta = evt.Till - evt.From;
+            EventContext.From = EventContext.From.Add(TimeSpan.FromMinutes(minutesPerPixel * e.HorizontalChange));
         }
 
         private void RightDelta(object sender, System.Windows.Controls.Primitives.DragDeltaEventArgs e)
         {
             var minutesPerPixel = TimePerPixel;
 
-            var evt = (Event)DataContext;
-            evt.Till = evt.Till.Add(TimeSpan.FromMinutes(minutesPerPixel * e.HorizontalChange));
-            _evtDelta = evt.Till - evt.From;
+            EventContext.Till = EventContext.Till.Add(TimeSpan.FromMinutes(minutesPerPixel * e.HorizontalChange));
         }
 
-        private TimeSpan _evtDelta;
         private void BothDelta(object sender, System.Windows.Controls.Primitives.DragDeltaEventArgs e)
         {
             var minutesPerPixel = TimePerPixel;
-            var evt = (Event)DataContext;
 
             var ts = TimeSpan.FromMinutes(minutesPerPixel * e.HorizontalChange);
-            evt.From = evt.From.Add(ts);
-            evt.Till = evt.From.Add(_evtDelta);
+            EventContext.From = EventContext.From.Add(ts);
+            EventContext.Till = EventContext.Till.Add(ts);
         }
 
         private void MyEventControl_Loaded(object sender, RoutedEventArgs e)
         {
-            var evt = (Event)DataContext;
-            if(evt.Day != null) evt.Day.RecalculateRowIndexAll();
+            if (EventContext.Day != null) EventContext.Day.RecalculateRowIndexAll();
         }
 
         private void SaveChanges(object sender, RoutedEventArgs e)
         {
-            var evt = DataContext as Event;
-
-            evt.Save();
+            EventContext.Save();
 
             OnCouchDBDataInvalid(new EventArgs());
         }
 
         private void ResetChanges(object sender, RoutedEventArgs e)
         {
-            var evt = (Event)DataContext;
-            switch (evt.Source)
+            switch (EventContext.Source)
             {
-                case EventSource.School: evt.Reset();
+                case EventSource.School: EventContext.Reset();
                     break;
+                case EventSource.MongoDB:
+                    {
+                        var originalEvent = PlanFile.Instance.GetEventFromMongoEvent(EventContext);
+
+                        EventContext.Visibility = Visibility.Hidden;
+                        EventContext.Day.Events.Remove(EventContext);
+                        
+                        var s = PlanFile.Instance.MongoConnection.GetDatabase("HAWEvents");
+                        var c = s.GetCollection<CouchDBEventInfo>("CouchDBEvents");
+                        var qry = new QueryDocument("eventinfohash", EventContext.HashInfo);
+                        c.Remove(qry);
+
+                        if(originalEvent != null)
+                        {
+                            originalEvent.Visibility = Visibility.Visible;
+                            originalEvent.Reset();
+                            originalEvent.SetDayByDate();
+                        }
+
+                        break;
+                    }
                 case EventSource.CouchDB:
                     {
                         var originalEvent =
-                            PlanFile.Instance.GetEventByHashInfo(evt.HashInfo);
+                            PlanFile.Instance.GetEventByHashInfo(EventContext.HashInfo);
 
-                        evt.Visibility = Visibility.Hidden;
-                        
+                        EventContext.Visibility = Visibility.Hidden;
+
                         var s = PlanFile.Instance.CouchConnection.CreateSession("haw_events");
                         var docs = s.ListDocuments();
-                        foreach(var doc in docs)
+                        foreach (var doc in docs)
                         {
                             var elm = s.Load<CouchDBEventInfo>(doc.Id);
-                            if(elm.EventInfoHash == evt.HashInfo) 
+                            if (elm.EventInfoHash == EventContext.HashInfo)
                                 s.Delete(elm);
                         }
 
@@ -264,6 +271,16 @@ namespace HAW_Tool.UserControls
             }
 
             OnCouchDBDataInvalid(new EventArgs());
+        }
+
+        private void DecreaseDayButtonClick(object sender, RoutedEventArgs e)
+        {
+            EventContext.Date = EventContext.Date.AddDays(-1);
+        }
+
+        private void IncreaseDayButtonClick(object sender, RoutedEventArgs e)
+        {
+            EventContext.Date = EventContext.Date.AddDays(1);
         }
     }
 }

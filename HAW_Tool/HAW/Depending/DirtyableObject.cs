@@ -2,19 +2,38 @@
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
+using MongoDB.Bson.Serialization.Attributes;
 using Newtonsoft.Json;
 
 namespace HAW_Tool.HAW.Depending
 {
     public abstract class DirtyableObject : NotifyingObject
     {
-        private bool _initializing = true;
+        public Guid GUID { get; set; }
+
+        private bool _initializing;
+        public bool IsInitializing
+        {
+            get
+            {
+                return _initializing;
+            }
+            set
+            {
+                _initializing = value;
+                OnPropertyChanged("IsInitializing");
+            }
+        }
+                        
         public void EndCleanInit()
         {
             _initializing = false;
         }
 
+        [BsonIgnore]
         public abstract string HashInfo { get; set; }
+
+        [BsonIgnore]
         private byte[] ID
         {
             get { return Encoding.ASCII.GetBytes(HashInfo); }
@@ -35,6 +54,7 @@ namespace HAW_Tool.HAW.Depending
         }
 
         private bool _isDirty;
+        [BsonIgnore]
         public bool IsDirty
         {
             get
@@ -66,8 +86,11 @@ namespace HAW_Tool.HAW.Depending
             foreach (var originalValuePropertyName in _originalValues.Keys)
             {
                 if (_cleanProperties.Contains(originalValuePropertyName)) continue;
+                
+                var origval = _originalValues[originalValuePropertyName];
+                
                 var property = GetType().GetProperty(originalValuePropertyName);
-                property.SetValue(this, _originalValues[originalValuePropertyName], null);
+                property.SetValue(this, origval, null);
             }
             CleanUp();
         }
@@ -77,6 +100,7 @@ namespace HAW_Tool.HAW.Depending
         protected DirtyableObject()
         {
             IsDirty = false;
+            GUID = Guid.NewGuid();
         }
 
         protected virtual void OnGotDirty()
@@ -96,7 +120,7 @@ namespace HAW_Tool.HAW.Depending
 
         protected override void OnPropertyChanged(string property)
         {
-            if (_initializing)
+            if (_initializing && !_cleanProperties.Contains(property))
             {
                 var prop = GetType().GetProperty(property);
                 var orig = prop.GetValue(this, null);

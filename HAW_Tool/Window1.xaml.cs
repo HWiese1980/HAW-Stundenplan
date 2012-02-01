@@ -63,6 +63,11 @@ namespace HAW_Tool
             Application.Current.Resources.Add("PlanFileInstance", PlanFile.Instance);
             InitializeComponent();
 
+            VisualStateManager.GoToState(this, "Booting", false);
+            PlanFile.Instance.Loaded += Instance_Loaded;
+
+
+            ThreadSafeObservableCollection<Day>.UIDispatcher = Dispatcher;
             ThreadSafeObservableCollection<SeminarGroup>.UIDispatcher = Dispatcher;
             ThreadSafeObservableCollection<Event>.UIDispatcher = Dispatcher;
             ThreadSafeObservableCollection<CalendarWeek>.UIDispatcher = Dispatcher;
@@ -77,6 +82,11 @@ namespace HAW_Tool
 
             Loaded += StartUp;
             Closing += ClosingAppSaveSettings;
+        }
+
+        void Instance_Loaded(object sender, EventArgs e)
+        {
+            VisualStateManager.GoToState(this, "Ready", true);
         }
 
         private void SourceInitializedHandler(object sender, EventArgs e)
@@ -284,16 +294,16 @@ namespace HAW_Tool
 #elif HAW_DEPENDING
         private void LoadPlanFile()
         {
+            VisualStateManager.GoToState(this, "Booting", true);
+
             DataContext = PlanFile.Instance;
             var semGroupsCvs = (CollectionViewSource)FindResource("seminarGroupsCollectionView");
-
-
 
             var cnt = new HAWClient();
             var schedules = cnt.Schedules();
             // Parallel.ForEach(schedules, (schedule) => PlanFile.Instance.LoadSchedule(schedule));
             PlanFile.Instance.LoadSchedules(schedules);
-            PlanFile.Instance.AllSchedulesLoaded += (x, y) => PlanFile.Instance.LoadCouchEvents();
+            PlanFile.Instance.AllSchedulesLoaded += (x, y) => VisualStateManager.GoToState(this, "Ready", true);
         }
 #endif
 
@@ -578,7 +588,7 @@ namespace HAW_Tool
                 return;
             }
 
-            e.Accepted = (cw.GetDateOfWeekday(6).Date >= DateTime.Now.Date);
+            e.Accepted = true; //(cw.GetDateOfWeekday(6).Date >= DateTime.Now.Date);
         }
 
         private void SemGroups_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -589,11 +599,13 @@ namespace HAW_Tool
         private void EventCouchDBInvalid(object sender, EventArgs e)
         {
             PlanFile.Instance.LoadCouchEvents();
+            PlanFile.Instance.LoadMongoEvents();
         }
 
         private void LoadCouchClick(object sender, System.Windows.RoutedEventArgs e)
         {
         	PlanFile.Instance.LoadCouchEvents();
+            PlanFile.Instance.LoadMongoEvents();
         }
     }
 }

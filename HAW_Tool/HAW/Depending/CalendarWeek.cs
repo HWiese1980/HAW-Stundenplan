@@ -1,19 +1,23 @@
 ﻿using System;
-using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Windows;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
+using SeveQsCustomControls;
 
 namespace HAW_Tool.HAW.Depending
 {
     [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
     public class CalendarWeek : NotifyingObject
     {
-        public CalendarWeek()
+        public CalendarWeek(int week, int year)
         {
-            Days = new ObservableCollection<Day>(/*Application.Current.MainWindow.Dispatcher*/);
-            Days./*ObservableCollection.*/CollectionChanged += DaysCollectionChanged;
+            Year = year;
+            Week = week;
+
+            Days = new ThreadSafeObservableCollection<Day>();
+            Days.CollectionChanged += DaysCollectionChanged;
+            InitializeDays();
         }
 
         private void DaysCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -26,7 +30,6 @@ namespace HAW_Tool.HAW.Depending
                         {
                             Day day1 = day;
                             day1.Week = this;
-                            // PlanFile.Instance.Dispatcher.Invoke(new Action(() => { day1.Week = this; }));
                         }
                         break;
                     }
@@ -36,7 +39,6 @@ namespace HAW_Tool.HAW.Depending
                         {
                             Day day1 = day;
                             day1.Week = default(CalendarWeek);
-                            // PlanFile.Instance.Dispatcher.Invoke(new Action(() => { day1.Week = default(CalendarWeek); }));
                         }
                         break;
                     }
@@ -55,23 +57,29 @@ namespace HAW_Tool.HAW.Depending
 
         public void InitializeDays()
         {
+            var days = new Day[7];
+            //Parallel.For(0, 7, i =>
+            //                       {
+            //                           var d = new Day
+            //                                       {
+            //                                           Date = HAWToolHelper.StartOfWeek(Week, Year).AddDays(i),
+            //                                           DOW = (DayOfWeek) i
+            //                                       };
+            //                           days[i] = d;
+            //                       });
+
+            var startDate = HAWToolHelper.StartOfWeek(Week, Year);
             for (int i = 0; i < 7; i++)
             {
-                var d = new Day { Date = HAWToolHelper.StartOfWeek(Week, Year).AddDays(i), DOW = (DayOfWeek)i };
-                PlanFile.Instance.InvokeUI(() => Days.Add(d));
+                var d = new Day
+                {
+                    Date = startDate.AddDays(i),
+                    DOW = (DayOfWeek)i
+                };
+                days[i] = d;
             }
+            Days.AddItems(days);
         }
-
-//         [JsonProperty]
-//         public int Year
-//         {
-//             get { return (int)GetValue(YearProperty); }
-//             set { SetValue(YearProperty, value); }
-//         }
-// 
-//         // Using a DependencyProperty as the backing store for Year.  This enables animation, styling, binding, etc...
-//         public static readonly DependencyProperty YearProperty =
-//             DependencyProperty.Register("Year", typeof(int), typeof(CalendarWeek), new UIPropertyMetadata(0));
 
         private int _year;
         [JsonProperty]
@@ -143,7 +151,7 @@ namespace HAW_Tool.HAW.Depending
             }
         }
 
-        public ObservableCollection<Day> Days { get; set; }
+        public ThreadSafeObservableCollection<Day> Days { get; set; }
 
         public string LabelShort
         {
@@ -159,6 +167,8 @@ namespace HAW_Tool.HAW.Depending
         {
             return HAWToolHelper.StartOfWeek(Week, Year).AddDays(day);
         }
+
+        public string WeekSort { get { return string.Format("{0}.{1}", Year, Week); } }
 
         public override string ToString()
         {

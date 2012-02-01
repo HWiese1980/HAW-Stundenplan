@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Specialized;
 using System.Linq;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using SeveQsCustomControls;
 
 namespace HAW_Tool.HAW.Depending
@@ -11,6 +14,18 @@ namespace HAW_Tool.HAW.Depending
         public SeminarGroup()
         {
             CalendarWeeks = new ThreadSafeObservableCollection<CalendarWeek>();
+            CalendarWeeks.CollectionChanged += CalendarWeeks_CollectionChanged;
+        }
+
+        void CalendarWeeks_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if(e.Action == NotifyCollectionChangedAction.Add)
+            {
+                foreach (var item in e.NewItems.Cast<CalendarWeek>())
+                {
+                    item.SeminarGroup = this;
+                }
+            }
         }
 
         private string _name = "";

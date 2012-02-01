@@ -10,7 +10,7 @@
     xmlns:WPF="clr-namespace:HAW_Tool.HAW.Depending.WPF"
     xmlns:ComponentModel="clr-namespace:System.ComponentModel;assembly=WindowsBase"
     xmlns:Depending="clr-namespace:HAW_Tool.HAW.Depending"
-    xmlns:ChatClient="clr-namespace:HAW_Tool.HAW.ChatClient" mc:Ignorable="d" x:Class="HAW_Tool.Window1" 
+    xmlns:ChatClient="clr-namespace:HAW_Tool.HAW.ChatClient" xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions" mc:Ignorable="d" x:Class="HAW_Tool.Window1" 
     Uid="HAWToolMainWindow"
     x:Name="TheMainWindow"
     WindowStyle="None" 
@@ -88,7 +88,7 @@
                 </Grid>
             </AdornerDecorator>
             <DataTemplate.Triggers>
-                <DataTrigger Binding="{Binding Events.Count, Converter={Cvt:CompareConverter Operator=LessThan, Value=1}}" Value="True">
+                <DataTrigger Binding="{Binding HasVisibleEvents}" Value="False">
                     <Setter TargetName="raster" Property="Header" Value="{Binding Date, StringFormat=[\{0:dd\} - \{0:ddd\}] keine Veranstaltung geplant}" />
                     <Setter TargetName="dayGrid" Property="Opacity" Value="0.2" />
                 </DataTrigger>
@@ -135,7 +135,7 @@
                         <TabItem.Resources>
                             <CollectionViewSource Source="{Binding CalendarWeeks}" x:Key="futureCalendarWeeksView" Filter="CollectionViewSource_Filter">
                                 <CollectionViewSource.SortDescriptions>
-                                    <ComponentModel:SortDescription Direction="Ascending" PropertyName="Week" />
+                                    <ComponentModel:SortDescription Direction="Ascending" PropertyName="WeekSort" />
                                 </CollectionViewSource.SortDescriptions>
                             </CollectionViewSource>
 
@@ -246,7 +246,7 @@
     <Window.Title>
         <StaticResource ResourceKey="Title"/>
     </Window.Title>
-    <Grid x:Name="MainGrid">
+    <Grid x:Name="MainGrid" Background="{x:Null}">
         <Grid.Resources>
             <Style TargetType="{x:Type Rectangle}" x:Key="ResizeRect">
                 <Style.Triggers>
@@ -256,6 +256,29 @@
                 </Style.Triggers>
             </Style>
         </Grid.Resources>
+    	<VisualStateManager.VisualStateGroups>
+    		<VisualStateGroup x:Name="MainStates" ei:ExtendedVisualStateManager.UseFluidLayout="True">
+    			<VisualStateGroup.Transitions>
+    				<VisualTransition GeneratedDuration="0:0:0.5">
+    					<VisualTransition.GeneratedEasingFunction>
+    						<QuarticEase EasingMode="EaseInOut"/>
+    					</VisualTransition.GeneratedEasingFunction>
+    				</VisualTransition>
+    			</VisualStateGroup.Transitions>
+    			<VisualState x:Name="Booting">
+    				<Storyboard>
+    					<ColorAnimationUsingKeyFrames Storyboard.TargetProperty="(TextElement.Foreground).(SolidColorBrush.Color)" Storyboard.TargetName="framelessTitleBar">
+    						<EasingColorKeyFrame KeyTime="0" Value="#FFFFC700"/>
+    					</ColorAnimationUsingKeyFrames>
+    				</Storyboard>
+    			</VisualState>
+    			<VisualState x:Name="Ready"/>
+    		</VisualStateGroup>
+    	</VisualStateManager.VisualStateGroups>
+
+    	<VisualStateManager.CustomVisualStateManager>
+    		<ei:ExtendedVisualStateManager/>
+    	</VisualStateManager.CustomVisualStateManager>
 
         <Rectangle Style="{StaticResource ResizeRect}" MouseLeftButtonDown="ResizeInit" Cursor="SizeNWSE" Tag="NW" HorizontalAlignment="Left" VerticalAlignment="Top" Width="4" Height="4" Fill="Black" />
         <Rectangle Style="{StaticResource ResizeRect}" MouseLeftButtonDown="ResizeInit" Cursor="SizeNS" Tag="N" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="4,0,4,0" Height="4" Fill="Black" />
@@ -271,7 +294,7 @@
                 <ImageBrush ImageSource="Icons/sky2.jpg" Stretch="Fill"/>
             </Border.Background>
             <Grid>
-                <SeveQsCustomControls:FramelessTitleBar DoubleClick="FramelessTitleBarDoubleClick" VerticalAlignment="Top" Foreground="White"/>
+                <SeveQsCustomControls:FramelessTitleBar x:Name="framelessTitleBar" DoubleClick="FramelessTitleBarDoubleClick" VerticalAlignment="Top" Foreground="White" FontSize="13.333" FontWeight="Bold"/>
                 <CheckBox Click="CbIsFilteredClick" IsChecked="{Binding IsGroupFilterActive, Mode=TwoWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:Window1}}}" Content="nach Gruppen filtern" x:Name="CBIsFiltered" Foreground="White" ScrollViewer.VerticalScrollBarVisibility="Disabled" HorizontalAlignment="Right" Margin="0,13,70,0" VerticalAlignment="Top" Padding="5,0,10,0" RenderTransformOrigin="1,1" d:LayoutOverrides="HorizontalAlignment" />
                 <Grid Margin="8,37.96,8,0">
                     <DockPanel>
@@ -298,7 +321,7 @@
                                 <Label x:Name="copyright" Content="© 2009 by Hendrik Wiese" FontFamily="Trajan Pro" FontSize="13.333" FontWeight="Bold" Foreground="White" Margin="0" VerticalAlignment="Top" Padding="0" Height="13.5"/>
                             </SeveQsCustomControls:ReflectionControl>
                         </DockPanel>
-                        <SeveQsCustomControls:Accordion DataContext="{Binding Path='SelectedSeminarGroup', Source={x:Static Depending:PlanFile.Instance}}"   DockPanel.Dock="Left"  HorizontalAlignment="Left" Width="130">
+                        <SeveQsCustomControls:Accordion DataContext="{Binding SelectedSeminarGroup, Source={x:Static Depending:PlanFile.Instance}}"   DockPanel.Dock="Left"  HorizontalAlignment="Left" Width="130">
                             <SeveQsCustomControls:Accordion.Background>
                                 <SolidColorBrush Color="{DynamicResource LightenUp20}"/>
                             </SeveQsCustomControls:Accordion.Background>
@@ -383,7 +406,7 @@
                                     </SeveQsCustomControls:RasteredGroup>
                                 </TabItem>
                                 <TabItem DataContext="{Binding Source={x:Static Depending:PlanFile.Instance}}" Header="Chat" ToolTip="Kleiner Chatclient für Benutzer dieses Tools">
-                                    <ChatClient:ChatClientControl Channel="{Binding Path='SelectedSeminarGroup.Name'}"  Foreground="White"/>
+                                    <ChatClient:ChatClientControl Channel="{Binding SelectedSeminarGroup.Name}"  Foreground="White"/>
                                 </TabItem>
                                 <TabItem Header="Kompakt" Foreground="White" ToolTip="Kompakte Ansicht" Visibility="Collapsed">
                                     <Grid>

@@ -9,29 +9,34 @@ namespace HAW_Tool.HAW.Depending
     {
         public Day()
         {
-            Events = new ThreadSafeObservableCollection<Event>();
-            Events./*ObservableCollection.*/CollectionChanged += Events_CollectionChanged;
+            Events = new PriorityObservableCollection<Event> { UniquePropertyName = "HashInfo" };
+            Events.CollectionChanged += EventsCollectionChanged;
         }
 
         private bool IsSpanOccupiedByOthers(Event me, int row)
         {
             var occupyingEvents = from e in Events
                                   where !ReferenceEquals(e, me)
-                                  where (e.Visibility == Visibility.Visible) && (e.Row == row) && ((e.From >= me.From & e.From <= me.Till) | (e.Till >= me.From & e.Till <= me.Till))
+                                  where (e.Visibility == Visibility.Visible)
+                                  && (e.Row == row)
+                                  && ((e.From >= me.From & e.From <= me.Till)
+                                  | (e.Till >= me.From & e.Till <= me.Till)
+                                  | (me.From >= e.From & me.From <= e.Till)
+                                  | (me.Till >= e.From & me.Till <= e.Till))
                                   select e;
 
             return (occupyingEvents.Count() > 0);
         }
 
-        void Events_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        void EventsCollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             if (e.NewItems != null)
             {
                 foreach (var item in e.NewItems)
                 {
                     var evt = (Event)item;
-                    evt.Day = this;
                     evt.TimeChanged += evt_TimeChanged;
+                    evt.PropertyChanged += evt_PropertyChanged;
                 }
             }
 
@@ -41,15 +46,40 @@ namespace HAW_Tool.HAW.Depending
                 {
                     var evt = (Event)item;
                     evt.TimeChanged -= evt_TimeChanged;
+                    evt.PropertyChanged -= evt_PropertyChanged;
                 }
             }
+
+            RecalculateRowIndexAll();
+            OnPropertyChanged("HasVisibleEvents");
         }
+
+        void evt_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == "Visibility") 
+                OnPropertyChanged("HasVisibleEvents");
+
+            if(PlanFile.Instance.Logging)
+            {
+                var prop = sender.GetType().GetProperty(e.PropertyName);
+                var newVal = prop.GetValue(sender, null);
+
+                Console.WriteLine("Property Changed: {0} changed Property {1} to {2}", (Event)sender, e.PropertyName, newVal);
+            }
+        }
+
+        /*
+        private int AlreadyContainsEvent(string Hash)
+        {
+            
+        }
+         * */
 
         public void RemoveAllCouchDBEvents(string hashInfo)
         {
             // ReSharper disable ForCanBeConvertedToForeach
             var cdbEvt = (from p in Events
-                          where p.Source == EventSource.CouchDB
+                          where p.Source == EventSource.CouchDB | p.Source == EventSource.MongoDB
                           where p.HashInfo == hashInfo
                           select p).ToArray();
 
@@ -133,7 +163,7 @@ namespace HAW_Tool.HAW.Depending
         private CalendarWeek _week;
         public CalendarWeek Week
         {
-            private get { return _week; }
+            get { return _week; }
             set
             {
                 _week = value;
@@ -141,7 +171,12 @@ namespace HAW_Tool.HAW.Depending
             }
         }
 
-        public ThreadSafeObservableCollection<Event> Events { get; private set; }
+        public PriorityObservableCollection<Event> Events { get; private set; }
+
+        public bool HasVisibleEvents
+        {
+            get { return ((from p in Events where p.Visibility == Visibility.Visible select p).Count() > 0); }
+        }
 
         public override string ToString()
         {

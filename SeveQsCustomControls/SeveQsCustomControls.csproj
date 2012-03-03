@@ -131,6 +131,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CombinedObservableCollection.cs" />
+    <Compile Include="IKeyedObject.cs" />
     <Compile Include="SpecialException.cs" />
     <Compile Include="ThreadSafeObservableCollection.cs" />
     <Page Include="Themes\Generic.xaml">

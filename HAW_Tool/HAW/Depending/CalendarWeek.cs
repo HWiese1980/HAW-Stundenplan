@@ -2,13 +2,12 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Windows;
-using Newtonsoft.Json;
+using SeveQsCustomControls;
 
 namespace HAW_Tool.HAW.Depending
 {
-    [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-    public class CalendarWeek : NotifyingObject
+    // [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
+    public class CalendarWeek : NotifyingObject, IKeyedObject
     {
         public CalendarWeek()
         {
@@ -58,23 +57,12 @@ namespace HAW_Tool.HAW.Depending
             for (int i = 0; i < 7; i++)
             {
                 var d = new Day { Date = HAWToolHelper.StartOfWeek(Week, Year).AddDays(i), DOW = (DayOfWeek)i };
-                PlanFile.Instance.InvokeUI(() => Days.Add(d));
+                Days.Add(d);
             }
         }
 
-//         [JsonProperty]
-//         public int Year
-//         {
-//             get { return (int)GetValue(YearProperty); }
-//             set { SetValue(YearProperty, value); }
-//         }
-// 
-//         // Using a DependencyProperty as the backing store for Year.  This enables animation, styling, binding, etc...
-//         public static readonly DependencyProperty YearProperty =
-//             DependencyProperty.Register("Year", typeof(int), typeof(CalendarWeek), new UIPropertyMetadata(0));
-
         private int _year;
-        [JsonProperty]
+        // [JsonProperty]
         public int Year
         {
             get
@@ -102,7 +90,7 @@ namespace HAW_Tool.HAW.Depending
 //             DependencyProperty.Register("Week", typeof(int), typeof(CalendarWeek), new UIPropertyMetadata(0));
 
         private int _week;
-        [JsonProperty]
+        // [JsonProperty]
         public int Week
         {
             get
@@ -164,5 +152,14 @@ namespace HAW_Tool.HAW.Depending
         {
             return string.Format("[{0}:{1}]", Week, Year);
         }
+
+        #region Implementation of IKeyedObject
+
+        public string Key
+        {
+            get { return ToString(); }
+        }
+
+        #endregion
     }
 }

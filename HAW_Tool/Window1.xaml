@@ -9,8 +9,7 @@
     xmlns:k="clr-namespace:Kingsmill.Windows" xmlns:uc="clr-namespace:HAW_Tool.UserControls"
     xmlns:WPF="clr-namespace:HAW_Tool.HAW.Depending.WPF"
     xmlns:ComponentModel="clr-namespace:System.ComponentModel;assembly=WindowsBase"
-    xmlns:Depending="clr-namespace:HAW_Tool.HAW.Depending" xmlns:ChatClient="clr-namespace:ChatClient;assembly=ChatClient" 
-    mc:Ignorable="d" x:Class="HAW_Tool.Window1" 
+    xmlns:Depending="clr-namespace:HAW_Tool.HAW.Depending" mc:Ignorable="d" x:Class="HAW_Tool.Window1" 
     x:Name="TheMainWindow"
     WindowStyle="None" 
     AllowsTransparency="True" 
@@ -25,7 +24,6 @@
             </CollectionViewSource.SortDescriptions>
         </CollectionViewSource>
 
-        <haw:EventItemTemplateSelector x:Key="EventItemTemplateSelector" />
         <Cvt:EncodingConverter x:Key="EncodingCvt" />
 
         <haw:FromTillCombiner x:Key="FromTillCombiner" />
@@ -42,56 +40,7 @@
         </DataTemplate>
 
         <DataTemplate x:Key="DayItemTemplate">
-            <AdornerDecorator>
-                <Grid x:Name="dayGrid" MinWidth="{Binding MinWidth}" MaxWidth="{x:Static haw:HAWToolHelper.MaxDayWidth}" Height="{DynamicResource DayHeight}" Margin="1" Background="#0F092D4D">
-                    <!-- #2F092D4D -->
-                    <!--StartDragging="EventDraggingStart" 
-                        EndDragging="EventDraggingEnd" 
-                        Dragging="EventDragging"-->
-                    <SeveQsCustomControls:RasteredItemsControl 
-                        x:Name="raster"
-                        Header="{Binding Date, StringFormat=[\{0:dd\} - \{0:ddd\}]}" 
-                        FontSize="24" FontWeight="Bold"
-                        Loaded="RasteredItemsControlLoaded" 
-                        Raster="{StaticResource RasterH}" 
-                        ItemsSource="{Binding Events}" 
-                        ItemTemplateSelector="{StaticResource EventItemTemplateSelector}" 
-                        Foreground="White" 
-                        Padding="0,5,0,10" 
-                        FullLineThickness="2" HalfLineThickness="1" QuarterLineThickness="0.5">
-                        <SeveQsCustomControls:RasteredItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <Grid Margin="0,25,0,0" HorizontalAlignment="Left" VerticalAlignment="Top">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="1*" />
-                                        <RowDefinition Height="1*" />
-                                        <RowDefinition Height="1*" />
-                                        <RowDefinition Height="*"/>
-                                    </Grid.RowDefinitions>
-                                </Grid>
-                            </ItemsPanelTemplate>
-                        </SeveQsCustomControls:RasteredItemsControl.ItemsPanel>
-                        <SeveQsCustomControls:RasteredItemsControl.QuarterLineBrush>
-                            <!--<SolidColorBrush Color="{DynamicResource LightenUp20}"/>-->
-                            <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
-                        </SeveQsCustomControls:RasteredItemsControl.QuarterLineBrush>
-                        <SeveQsCustomControls:RasteredItemsControl.HalfLineBrush>
-                            <!--<SolidColorBrush Color="{DynamicResource LightenUp50}"/>-->
-                            <SolidColorBrush Color="{DynamicResource DarkenDown40}"/>
-                        </SeveQsCustomControls:RasteredItemsControl.HalfLineBrush>
-                        <SeveQsCustomControls:RasteredItemsControl.LineBrush>
-                            <!--<SolidColorBrush Color="{DynamicResource LightenUp50}"/>-->
-                            <SolidColorBrush Color="{DynamicResource DarkenDown40}"/>
-                        </SeveQsCustomControls:RasteredItemsControl.LineBrush>
-                    </SeveQsCustomControls:RasteredItemsControl>
-                </Grid>
-            </AdornerDecorator>
-            <DataTemplate.Triggers>
-                <DataTrigger Binding="{Binding Events.Count, Converter={Cvt:CompareConverter Operator=LessThan, Value=1}}" Value="True">
-                    <Setter TargetName="raster" Property="Header" Value="{Binding Date, StringFormat=[\{0:dd\} - \{0:ddd\}] keine Veranstaltung geplant}" />
-                    <Setter TargetName="dayGrid" Property="Opacity" Value="0.2" />
-                </DataTrigger>
-            </DataTemplate.Triggers>
+            <uc:DayControl Header="{Binding Date, StringFormat=[\{0:dd\} - \{0:ddd\}]}" DataContext="{Binding}" />
         </DataTemplate>
 
         <WPF:DayTemplateSelector x:Key="DayTemplateSelect" EmptyDayTemplate="{StaticResource DayItemTemplate}" NotEmptyDayTemplate="{StaticResource DayItemTemplate}" />
@@ -106,7 +55,7 @@
                 <ScrollViewer Margin="0,41.96,0,0" VerticalAlignment="Stretch" Width="Auto" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
                     <ItemsControl Height="Auto" ItemsSource="{Binding Days}" ItemTemplateSelector="{StaticResource DayTemplateSelect}" />
                 </ScrollViewer>
-                <Button VerticalAlignment="Top" HorizontalAlignment="Right" Content="Woche drucken" Click="PrintWeekButtonPressed" Style="{DynamicResource FlatButton}" Margin="0,8,8,0" Foreground="White" >
+                <Button Visibility="Collapsed" VerticalAlignment="Top" HorizontalAlignment="Right" Content="Woche drucken" Click="PrintWeekButtonPressed" Style="{DynamicResource FlatButton}" Margin="0,8,8,0" Foreground="White" >
                     <Button.Background>
                         <LinearGradientBrush EndPoint="0,1" StartPoint="0,0">
                             <GradientStop Color="#FFF3F3F3" Offset="0"/>
@@ -132,7 +81,7 @@
                     </SeveQsCustomControls:ResettingTabControl.Background>
                     <TabItem Header="Wochenübersicht" Foreground="White">
                         <TabItem.Resources>
-                            <CollectionViewSource Source="{Binding CalendarWeeks}" x:Key="futureCalendarWeeksView" Filter="CollectionViewSource_Filter">
+                            <CollectionViewSource Source="{Binding CalendarWeeks}" x:Key="futureCalendarWeeksView" Filter="CalendarWeekFilter">
                                 <CollectionViewSource.SortDescriptions>
                                     <ComponentModel:SortDescription Direction="Ascending" PropertyName="Week" />
                                 </CollectionViewSource.SortDescriptions>
@@ -199,47 +148,47 @@
             </Grid>
         </DataTemplate>
         <Style x:Key="ChatExpander" TargetType="{x:Type Expander}">
-        	<Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
-        	<Setter Property="Background" Value="Transparent"/>
-        	<Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-        	<Setter Property="VerticalContentAlignment" Value="Stretch"/>
-        	<Setter Property="BorderBrush" Value="Transparent"/>
-        	<Setter Property="BorderThickness" Value="1"/>
-        	<Setter Property="Template">
-        		<Setter.Value>
-        			<ControlTemplate TargetType="{x:Type Expander}">
-        				<Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" CornerRadius="3" SnapsToDevicePixels="true">
-        					<DockPanel>
-        						<ToggleButton x:Name="HeaderSite" ContentTemplate="{TemplateBinding HeaderTemplate}" ContentTemplateSelector="{TemplateBinding HeaderTemplateSelector}" Content="{TemplateBinding Header}" DockPanel.Dock="Top" Foreground="{TemplateBinding Foreground}" FontWeight="{TemplateBinding FontWeight}" FocusVisualStyle="{StaticResource ExpanderHeaderFocusVisual}" FontStyle="{TemplateBinding FontStyle}" FontStretch="{TemplateBinding FontStretch}" FontSize="{TemplateBinding FontSize}" FontFamily="{TemplateBinding FontFamily}" HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" IsChecked="{Binding IsExpanded, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" Margin="1" MinWidth="0" MinHeight="0" Padding="{TemplateBinding Padding}" Style="{StaticResource ExpanderDownHeaderStyle}" VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
-        						<ContentPresenter x:Name="ExpandSite" DockPanel.Dock="Bottom" Focusable="false" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}" Visibility="Collapsed" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
-        					</DockPanel>
-        				</Border>
-        				<ControlTemplate.Triggers>
-        					<Trigger Property="IsExpanded" Value="true">
-        						<Setter Property="Visibility" TargetName="ExpandSite" Value="Visible"/>
-        					</Trigger>
-        					<Trigger Property="ExpandDirection" Value="Right">
-        						<Setter Property="DockPanel.Dock" TargetName="ExpandSite" Value="Right"/>
-        						<Setter Property="DockPanel.Dock" TargetName="HeaderSite" Value="Left"/>
-        						<Setter Property="Style" TargetName="HeaderSite" Value="{StaticResource ExpanderRightHeaderStyle}"/>
-        					</Trigger>
-        					<Trigger Property="ExpandDirection" Value="Up">
-        						<Setter Property="DockPanel.Dock" TargetName="ExpandSite" Value="Top"/>
-        						<Setter Property="DockPanel.Dock" TargetName="HeaderSite" Value="Bottom"/>
-        						<Setter Property="Style" TargetName="HeaderSite" Value="{StaticResource ExpanderUpHeaderStyle}"/>
-        					</Trigger>
-        					<Trigger Property="ExpandDirection" Value="Left">
-        						<Setter Property="DockPanel.Dock" TargetName="ExpandSite" Value="Left"/>
-        						<Setter Property="DockPanel.Dock" TargetName="HeaderSite" Value="Right"/>
-        						<Setter Property="Style" TargetName="HeaderSite" Value="{StaticResource ExpanderLeftHeaderStyle}"/>
-        					</Trigger>
-        					<Trigger Property="IsEnabled" Value="false">
-        						<Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
-        					</Trigger>
-        				</ControlTemplate.Triggers>
-        			</ControlTemplate>
-        		</Setter.Value>
-        	</Setter>
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Expander}">
+                        <Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" CornerRadius="3" SnapsToDevicePixels="true">
+                            <DockPanel>
+                                <ToggleButton x:Name="HeaderSite" ContentTemplate="{TemplateBinding HeaderTemplate}" ContentTemplateSelector="{TemplateBinding HeaderTemplateSelector}" Content="{TemplateBinding Header}" DockPanel.Dock="Top" Foreground="{TemplateBinding Foreground}" FontWeight="{TemplateBinding FontWeight}" FocusVisualStyle="{StaticResource ExpanderHeaderFocusVisual}" FontStyle="{TemplateBinding FontStyle}" FontStretch="{TemplateBinding FontStretch}" FontSize="{TemplateBinding FontSize}" FontFamily="{TemplateBinding FontFamily}" HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" IsChecked="{Binding IsExpanded, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" Margin="1" MinWidth="0" MinHeight="0" Padding="{TemplateBinding Padding}" Style="{StaticResource ExpanderDownHeaderStyle}" VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                                <ContentPresenter x:Name="ExpandSite" DockPanel.Dock="Bottom" Focusable="false" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}" Visibility="Collapsed" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                            </DockPanel>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsExpanded" Value="true">
+                                <Setter Property="Visibility" TargetName="ExpandSite" Value="Visible"/>
+                            </Trigger>
+                            <Trigger Property="ExpandDirection" Value="Right">
+                                <Setter Property="DockPanel.Dock" TargetName="ExpandSite" Value="Right"/>
+                                <Setter Property="DockPanel.Dock" TargetName="HeaderSite" Value="Left"/>
+                                <Setter Property="Style" TargetName="HeaderSite" Value="{StaticResource ExpanderRightHeaderStyle}"/>
+                            </Trigger>
+                            <Trigger Property="ExpandDirection" Value="Up">
+                                <Setter Property="DockPanel.Dock" TargetName="ExpandSite" Value="Top"/>
+                                <Setter Property="DockPanel.Dock" TargetName="HeaderSite" Value="Bottom"/>
+                                <Setter Property="Style" TargetName="HeaderSite" Value="{StaticResource ExpanderUpHeaderStyle}"/>
+                            </Trigger>
+                            <Trigger Property="ExpandDirection" Value="Left">
+                                <Setter Property="DockPanel.Dock" TargetName="ExpandSite" Value="Left"/>
+                                <Setter Property="DockPanel.Dock" TargetName="HeaderSite" Value="Right"/>
+                                <Setter Property="Style" TargetName="HeaderSite" Value="{StaticResource ExpanderLeftHeaderStyle}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="false">
+                                <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
     </Window.Resources>
     <Window.Title>
@@ -256,6 +205,13 @@
             </Style>
         </Grid.Resources>
 
+        <Border Padding="5"  BorderThickness="3"  Margin="10" Opacity="0.9" Panel.ZIndex="200" HorizontalAlignment="Left" VerticalAlignment="Top" BorderBrush="#FFAA4444" Background="#FFFF7777" CornerRadius="5">
+            <TextBlock Foreground="#FFAA4444" FontWeight="Bold">
+                <Run>Bei dieser Version handelt es sich</Run> <LineBreak />
+                <Run>um einen sehr eingeschränkten Alpha-Release!</Run>
+            </TextBlock>
+        </Border>
+
         <Rectangle Style="{StaticResource ResizeRect}" MouseLeftButtonDown="ResizeInit" Cursor="SizeNWSE" Tag="NW" HorizontalAlignment="Left" VerticalAlignment="Top" Width="4" Height="4" Fill="Black" />
         <Rectangle Style="{StaticResource ResizeRect}" MouseLeftButtonDown="ResizeInit" Cursor="SizeNS" Tag="N" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="4,0,4,0" Height="4" Fill="Black" />
         <Rectangle Style="{StaticResource ResizeRect}" MouseLeftButtonDown="ResizeInit" Cursor="SizeNESW" Tag="NE" HorizontalAlignment="Right" VerticalAlignment="Top" Width="4" Height="4" Fill="Black" />
@@ -271,7 +227,7 @@
             </Border.Background>
             <Grid>
                 <SeveQsCustomControls:FramelessTitleBar DoubleClick="FramelessTitleBarDoubleClick" VerticalAlignment="Top" Foreground="White"/>
-                <CheckBox Click="CbIsFilteredClick" IsChecked="{Binding IsGroupFilterActive, Mode=TwoWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:Window1}}}" Content="nach Gruppen filtern" x:Name="CBIsFiltered" Foreground="White" ScrollViewer.VerticalScrollBarVisibility="Disabled" HorizontalAlignment="Right" Margin="0,13,70,0" VerticalAlignment="Top" Padding="5,0,10,0" RenderTransformOrigin="1,1" d:LayoutOverrides="HorizontalAlignment" />
+                <CheckBox Visibility="Collapsed" Click="CbIsFilteredClick" IsChecked="{Binding IsGroupFilterActive, Mode=TwoWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:Window1}}}" Content="nach Gruppen filtern" x:Name="CBIsFiltered" Foreground="White" ScrollViewer.VerticalScrollBarVisibility="Disabled" HorizontalAlignment="Right" Margin="0,13,70,0" VerticalAlignment="Top" Padding="5,0,10,0" RenderTransformOrigin="1,1" d:LayoutOverrides="HorizontalAlignment" />
                 <Grid Margin="8,37.96,8,0">
                     <DockPanel>
                         <DockPanel DockPanel.Dock="Bottom"  VerticalAlignment="Bottom" Height="60">
@@ -319,35 +275,35 @@
                                     <TextBlock HorizontalAlignment="Left" Text="Noch nix hier. Mal sehen, was mir noch einfällt..." TextWrapping="Wrap" d:LayoutOverrides="Height" Width="128"/>
                                 </Grid>
                             </Expander>
-                            <Expander Foreground="White" Header="Community">
-                            	<StackPanel>
-                            		<Button Style="{DynamicResource FlatButton}" Click="LoadCouchClick">
-                            			<StackPanel Orientation="Horizontal">
-                            				<Image Height="21.948" Source="Icons/image3093.png" Stretch="Fill" Width="23"/>
-                            				<Label Content="Änderg. laden" Foreground="White" ToolTip="Lade durch die Community bereitgestellte Änderungen vom Server"/>
-                            			</StackPanel>
-                            		</Button>
-                            		<Expander x:Name="expander" Header="" ExpandDirection="Right" HorizontalAlignment="Left" Style="{DynamicResource ChatExpander}">
-                            			<Popup Placement="Right" IsOpen="{Binding IsExpanded, ElementName=expander}" AllowsTransparency="True">
-                            				<Border CornerRadius="5" BorderThickness="3" Padding="5" Margin="10,10,0,0">
-                            					<Border.BorderBrush>
-                            						<SolidColorBrush Color="{DynamicResource DarkenDown80}"/>
-                            					</Border.BorderBrush>
-                            					<Border.Background>
-                            						<SolidColorBrush Color="{DynamicResource DarkenDown40}"/>
-                            					</Border.Background>
-                            					<Grid>
-                            						<uc:EventDetails d:LayoutOverrides="Width, Height"/>
-                            					</Grid>
-                            				</Border>
-                            			</Popup>
-                            		</Expander>
-                            	</StackPanel>
+                            <Expander Foreground="White" Header="Community" Visibility="Collapsed">
+                                <StackPanel>
+                                    <!--                             		<Button Style="{DynamicResource FlatButton}" Click="LoadCouchClick"> -->
+                                    <!--                             			<StackPanel Orientation="Horizontal"> -->
+                                    <!--                             				<Image Height="21.948" Source="Icons/image3093.png" Stretch="Fill" Width="23"/> -->
+                                    <!--                             				<Label Content="Änderg. laden" Foreground="White" ToolTip="Lade durch die Community bereitgestellte Änderungen vom Server"/> -->
+                                    <!--                             			</StackPanel> -->
+                                    <!--                             		</Button> -->
+                                    <Expander x:Name="expander" Header="" ExpandDirection="Right" HorizontalAlignment="Left" Style="{DynamicResource ChatExpander}">
+                                        <Popup Placement="Right" IsOpen="{Binding IsExpanded, ElementName=expander}" AllowsTransparency="True">
+                                            <Border CornerRadius="5" BorderThickness="3" Padding="5" Margin="10,10,0,0">
+                                                <Border.BorderBrush>
+                                                    <SolidColorBrush Color="{DynamicResource DarkenDown80}"/>
+                                                </Border.BorderBrush>
+                                                <Border.Background>
+                                                    <SolidColorBrush Color="{DynamicResource DarkenDown40}"/>
+                                                </Border.Background>
+                                                <Grid>
+                                                    <uc:EventDetails d:LayoutOverrides="Width, Height"/>
+                                                </Grid>
+                                            </Border>
+                                        </Popup>
+                                    </Expander>
+                                </StackPanel>
                             </Expander>
                         </SeveQsCustomControls:Accordion>
                         <Grid x:Name="stundenplanGrid">
                             <Border x:Name="tabFadeBorder" HorizontalAlignment="Left" VerticalAlignment="Top" Width="{Binding ActualWidth, ElementName=tabControl, Mode=Default}" Height="{Binding ActualHeight, ElementName=tabControl, Mode=Default}" Panel.ZIndex="50" Visibility="Collapsed"/>
-                            <TabControl x:Name="tabControl" PreviewMouseDown="TabControlFadeSetBackground" SelectionChanged="TabControlFadeSelection" TabStripPlacement="Right" ItemContainerStyle="{DynamicResource MainTabItemStyle}" Foreground="White" Padding="0" BorderThickness="0" Panel.ZIndex="10" Margin="0">
+                            <TabControl x:Name="tabControl" TabStripPlacement="Right" ItemContainerStyle="{DynamicResource MainTabItemStyle}" Foreground="White" Padding="0" BorderThickness="0" Panel.ZIndex="10" Margin="0">
                                 <TabControl.BorderBrush>
                                     <SolidColorBrush Color="{DynamicResource DarkenDown20}"/>
                                 </TabControl.BorderBrush>
@@ -381,15 +337,12 @@
                                         </SeveQsCustomControls:ResettingTabControl>
                                     </SeveQsCustomControls:RasteredGroup>
                                 </TabItem>
-                                <TabItem Header="Chat" ToolTip="Details zur gewählten Veranstaltung">
-                                    <ChatClient:ChatClientControl Channel="{Binding Path='SelectedSeminarGroup.Name', Mode=OneWayToSource, Source={x:Static Depending:PlanFile.Instance}}" Foreground="White"/>
-                                </TabItem>
                                 <TabItem Header="Kompakt" Foreground="White" ToolTip="Kompakte Ansicht" Visibility="Collapsed">
                                     <Grid>
                                         <SeveQsCustomControls:ResettingTabControl SelectedIndex="{Binding SelectedIndex, ElementName=SemGroups, Mode=TwoWay}" DisplayMemberPath="FullName" x:Name="SemGroupsCompact" ItemsSource="{Binding SeminarGroups}" ContentTemplate="{StaticResource CompactSeminarGroupTemplate}" TabStripPlacement="Left" ItemContainerStyle="{DynamicResource MainTabItemStyle}" BorderThickness="0" Padding="2,0,0,0" Panel.ZIndex="10" Style="{DynamicResource ScrollableTabstrip}"/>
                                     </Grid>
                                 </TabItem>
-                                <TabItem Header="Gruppen" Style="{DynamicResource MainTabItemStyle}" Foreground="White">
+                                <TabItem Header="Gruppen" Style="{DynamicResource MainTabItemStyle}" Visibility="Collapsed" Foreground="White">
                                     <Grid>
                                         <ListBox x:Name="KnownEventsList" ItemsSource="{Binding GroupedBaseEvents}" DisplayMemberPath="BasicCode" Margin="8,37.96,0,27.96" HorizontalAlignment="Left" Width="150" BorderBrush="{x:Null}" BorderThickness="0">
                                             <ListBox.Foreground>
@@ -439,7 +392,7 @@
                                             </Rectangle.Fill>
                                         </Rectangle>
                                         <Label x:Name="aboutTitle" VerticalAlignment="Top" HorizontalAlignment="Center" FontSize="40" Foreground="White" FontFamily="Ravie" Content="HAW Stundenplan" Background="#00000000"/>
-                                        <TextBlock TextWrapping="Wrap" Margin="80,70,80,0" FontFamily="Hobo Std" FontSize="16" TextAlignment="Center" VerticalAlignment="Top" Width="350" MinHeight="55"><Run Text="Copyright (c) 2009-2010 by Hendrik Wiese"/><LineBreak/><Hyperlink Foreground="Wheat" Click="MailMe" NavigateUri="mailto:hendrik.wiese@haw-hamburg.de"><Run Text="hendrik.wiese@haw-hamburg.de"/></Hyperlink><LineBreak /><LineBreak /><Run Text="Alle Angaben zu Veranstaltungen in diesem Programm beziehen sich auf die von der HAW gelieferten Vorlesungspläne in Textform. Der Entwickler dieser Software übernimmt keine Gewähr auf die Korrektheit der Angaben. Es liegt in der Verantwortung des Benutzers, die Angaben im Zweifelsfall zu verifiziern." FontSize="10" FontFamily="Verdana" /><LineBreak /><LineBreak /><Run Text="Diese Software ist Freeware. Der Urheber behält sich das Recht vor, das gewählte Lizenzmodell jederzeit zu wechseln. Jede bis dahin veröffentlichte Version behält ihren Status; d.h. jede Lizenzänderung bezieht sich ausschließlich auf zukünftige Versionen." FontSize="10" FontFamily="Verdana" /></TextBlock>
+                                        <TextBlock TextWrapping="Wrap" Margin="80,70,80,0" FontFamily="Hobo Std" FontSize="16" TextAlignment="Center" VerticalAlignment="Top" Width="350" MinHeight="55"><Run Text="Copyright (c) 2009-2010 by Hendrik Wiese"/><LineBreak/><Hyperlink Foreground="Wheat" Click="MailMe" NavigateUri="mailto:hendrik.wiese@haw-hamburg.de"><Run Text="hendrik.wiese@haw-hamburg.de"/></Hyperlink><LineBreak /><LineBreak /><Run Text="Alle Angaben zu Veranstaltungen in diesem Programm beziehen sich auf die von der HAW gelieferten Vorlesungspläne in Textform. Der Entwickler dieser Software übernimmt keine Gewähr auf die Korrektheit der Angaben. Es liegt in der Verantwortung des Benutzers, die Angaben im Zweifelsfall zu verifiziern." FontSize="10" FontFamily="Verdana" /><LineBreak /><LineBreak /><Run Text="Diese Software ist Freeware. Der Urheber behält sich das Recht vor, das gewählte Lizenzmodell jederzeit zu wechseln. Jede bis dahin veröffentlichte Version behält ihren Status; d.h. jede Lizenzänderung bezieht sich ausschließlich auf zukünftige Versionen." FontSize="10" FontFamily="Verdana" /></TextBlock> 
                                         <Button Content="Spenden (PayPal)" VerticalAlignment="Bottom" Height="30" FontWeight="Bold" FontFamily="Dotum" Click="DonateButtonClick" HorizontalAlignment="Center" Margin="0,0,0,60" Width="180" >
                                             <Button.Background>
                                                 <LinearGradientBrush EndPoint="0,1" StartPoint="0,0">
@@ -452,13 +405,13 @@
                                         </Button>
                                     </Grid>
                                 </TabItem>
-                                <TabItem DataContext="{Binding Source={x:Static Depending:PlanFile.Instance}}"  Header="Debugging" Visibility="Visible">
+                                <TabItem DataContext="{Binding Source={x:Static Depending:PlanFile.Instance}}"  Header="Debugging" Visibility="Collapsed">
                                     <TabItem.Foreground>
                                         <SolidColorBrush Color="{DynamicResource WIPForeground}"/>
                                     </TabItem.Foreground>
                                     <Grid>
                                         <Grid Margin="8,34.04,8,8">
-                                            <DataGrid ItemsSource="{Binding CouchDBEvents}" AutoGenerateColumns="True" />
+                                            <DataGrid ItemsSource="{Binding Replacements}" AutoGenerateColumns="True" />
                                         </Grid>
                                         <TextBlock Margin="9,10.08,8,0" VerticalAlignment="Top" Text="Hier sind nur Informationen zur Fehlerbereinigung zu sehen. Nichts interessantes eigentlich für den Endbenutzer, nur für den Entwickler. " Foreground="White" Background="#FF841313" Padding="2" TextTrimming="WordEllipsis"/>
                                     </Grid>

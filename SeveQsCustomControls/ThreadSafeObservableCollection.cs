@@ -10,14 +10,22 @@ namespace SeveQsCustomControls
     /// 
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class ThreadSafeObservableCollection<T> : ObservableCollection<T>
+    public class ThreadSafeObservableCollection<T> : ObservableCollection<T>, IKeyedObject where T : IKeyedObject
     {
         /// <summary>
         /// The dispatcher of the UI thread. Needed for multi thread purposes
         /// </summary>
         public static Dispatcher UIDispatcher { get; set; }
 
-        public string UniquePropertyName { get; set; }
+        public IEnumerable<T> this[string key]
+        {
+            get
+            {
+                return from item in this
+                       where item.Key == key
+                       select item;
+            }
+        }
 
         protected override void InsertItem(int index, T item)
         {
@@ -29,21 +37,6 @@ namespace SeveQsCustomControls
             {
                 UIDispatcher.Invoke(new Action(() => base.InsertItem(index, item)));
             }
-        }
-
-        bool CheckUniqueContains(T obj)
-        {
-            if(string.IsNullOrEmpty(UniquePropertyName)) return false;
-            var prop = obj.GetType().GetProperty(UniquePropertyName);
-            if (prop == null) return false;
-
-            var val = prop.GetValue(obj, null);
-            foreach(T item in this)
-            {
-                var otherval = prop.GetValue(item, null);
-                if (otherval.Equals(val)) return true;
-            }
-            return false;
         }
 
         protected override void ClearItems()
@@ -123,6 +116,13 @@ namespace SeveQsCustomControls
         public void Trim()
         {
             RemoveItems(this.Where(p => p == null).ToArray());
+        }
+
+        private Guid _guid = Guid.NewGuid();
+
+        public string Key
+        {
+            get { return _guid.ToString(); }
         }
     }
 }

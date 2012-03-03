@@ -14,7 +14,7 @@ using LittleHelpers;
 using System.Text.RegularExpressions;
 using System.IO;
 using System.Windows;
-using RedBranch.Hammock;
+using MongoDB.Driver;
 using SeveQsCustomControls;
 
 namespace HAW_Tool.HAW.Depending
@@ -23,71 +23,55 @@ namespace HAW_Tool.HAW.Depending
     {
         public static Dispatcher MainDispatcher { get; set; }
 
-        public void InvokeUI(Action a)
-        {
-            MainDispatcher.Invoke(a);
-        }
-
-        private static readonly object CouchDbLock = new object();
-
-        public void RefreshTimer(bool On)
-        {
-            _refreshCouchDBTimer.Enabled = On;
-        }
-
-        private readonly Timer _refreshCouchDBTimer;
-
         private PlanFile()
         {
             MainDispatcher = Application.Current.MainWindow.Dispatcher;
 
-            CouchConnection = new Connection(new Uri("http://seveq.de:5984"));
             SeminarGroups = new ThreadSafeObservableCollection<SeminarGroup>();
-            ReplacedSchoolEvents = new ThreadSafeObservableCollection<Event>();
-            CouchDBEvents = new ThreadSafeObservableCollection<CouchDBEventInfo>();
+            Replacements = new ThreadSafeObservableCollection<Replacement>();
+            //Events = new ThreadSafeObservableCollection<Event>();
 
-            CouchDBEvents.CollectionChanged += CleanUpDays;
-
-            _refreshCouchDBTimer = new Timer { Interval = (2000) };
-            _refreshCouchDBTimer.Elapsed += (x, y) => LoadCouchEvents();
+            //Events.CollectionChanged += Events_CollectionChanged;
         }
 
-        private void CleanUpDays(object sender, NotifyCollectionChangedEventArgs e)
+        public event EventHandler<ValueEventArgs<Event>> EventSaved;
+
+        private void OnEventSaved(object sender, ValueEventArgs<Event> e)
         {
-            if(e.Action == NotifyCollectionChangedAction.Remove)
+            if (EventSaved != null) EventSaved(sender, e);
+        }
+
+        void Events_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            switch (e.Action)
             {
-                foreach(var item in e.OldItems.Cast<CouchDBEventInfo>())
-                {
-                    var day = item.Event.Day;
-                    if(day == null) continue;
-
-                    day.Events.Remove(item.Event);
-
-                    var originalEvent = GetEventByHashInfo(item.EventInfoHash);
-                    if(originalEvent != null)
+                case NotifyCollectionChangedAction.Add:
+                    foreach (var evt in e.NewItems.Cast<Event>())
                     {
-                        originalEvent.Reset();
-                        originalEvent.Visibility = Visibility.Visible;
+                        evt.EventSaved += evt_EventSaved;
                     }
-                }
+                    break;
+                case NotifyCollectionChangedAction.Remove:
+                    foreach (var evt in e.OldItems.Cast<Event>())
+                    {
+                        evt.EventSaved -= evt_EventSaved;
+                    }
+                    break;
             }
         }
 
-        private void ResetCouchDBEvents()
+        void evt_EventSaved(object sender, ValueEventArgs<Replacement> e)
         {
-            CouchDBEvents.Clear();
+            LoadReplacements();
+            OnEventSaved(this, new ValueEventArgs<Event> { Value = (Event)sender });
         }
 
-        private IEnumerable<Event> GetAllEvents()
-        {
-            return from s in SeminarGroups
-                   from c in s.CalendarWeeks
-                   from d in c.Days
-                   from e in d.Events
-                   where e.Source == EventSource.School
-                   // where e.IsDirty
-                   select e;
-        }
+        //private IEnumerable<Event> GetAllEvents()
+        //{
+        //    return from e in Events
+        //           where e.Source == EventSource.School
+        //           select e;
+        //}
 
         static PlanFile()
         {
@@ -101,16 +85,6 @@ namespace HAW_Tool.HAW.Depending
                                };
 
         }
-
-        //public SeminarGroup SelectedSeminarGroup
-        //{
-        //    get { return (SeminarGroup)GetValue(SelectedSeminarGroupProperty); }
-        //    set { SetValue(SelectedSeminarGroupProperty, value); }
-        //}
-
-        //// Using a DependencyProperty as the backing store for SelectedSeminarGroup.  This enables animation, styling, binding, etc...
-        //public static readonly DependencyProperty SelectedSeminarGroupProperty =
-        //    DependencyProperty.Register("SelectedSeminarGroup", typeof(SeminarGroup), typeof(PlanFile), new UIPropertyMetadata(null, SeminarGroupChanged));
 
         private SeminarGroup _selectedSeminarGroup;
         public SeminarGroup SelectedSeminarGroup
@@ -165,136 +139,9 @@ namespace HAW_Tool.HAW.Depending
             {
                 OnStatusMessageChanged("Laden von {0} fehlgeschlagen: {1}", schedule.Substring(schedule.Length - 20),
                                        exp.Message);
-                Debugger.Break();
+                // Debugger.Break();
             }
 
-        }
-
-        public Connection CouchConnection { get; private set; }
-
-        internal void LoadCouchEvents()
-        {
-            if (Helper.IsInDesignModeStatic || SeminarGroups == null || SeminarGroups.Count <= 0) return;
-            if (SelectedSeminarGroup == null) SelectedSeminarGroup = SeminarGroups.FirstOrDefault();
-
-            lock (CouchDbLock)
-            {
-                Console.WriteLine("Lade CouchDB Events");
-                try
-                {
-                    var tWrk = new BackgroundWorker();
-                    var couchS = CouchConnection.CreateSession("haw_events");
-                    IList<Document> cdbDocs = null;
-                    tWrk.DoWork += (x, y) =>
-                    {
-                        cdbDocs = couchS.ListDocuments();
-                    };
-                    tWrk.RunWorkerCompleted += (x, y) =>
-                    {
-                        // ResetCouchDBEvents();
-
-                        var buffer = new List<CouchDBEventInfo>();
-
-                        foreach (var cdbDoc in cdbDocs)
-                        {
-                            if (!cdbDoc.Id.StartsWith("couchdbeventinfo")) continue;
-
-                            var evtdoc = couchS.Load<CouchDBEventInfo>(cdbDoc.Id);
-                            evtdoc.Event.Source = EventSource.CouchDB;
-
-                            buffer.Add(evtdoc);
-                        }
-
-                        // if (buffer.Count <= 0) return;
-
-                        // gucken, ob items aus der bisherigen CouchDBListe nicht mehr in der neuen sind
-
-                        var comparer = new CouchDBInfoComparer();
-
-                        var removed = CouchDBEvents.Except(buffer, comparer).ToArray();
-                        if (removed.Length > 0)
-                        {
-                            Console.WriteLine("Removing {0} items from the CouchDB List", removed.Length);
-                            CouchDBEvents.RemoveItems(removed);
-                        }
-
-                        var added = buffer.Except(CouchDBEvents, comparer).ToArray();
-                        if (added.Length > 0)
-                        {
-                            Console.WriteLine("Adding {0} items to the CouchDB List", added.Length);
-                            CouchDBEvents.AddItems(added);
-                        }
-
-                        CleanUpCouchDBEvents();
-                        ReplaceSchoolEvents();
-                    };
-
-                    tWrk.RunWorkerAsync();
-                }
-                catch
-                {
-                    return;
-                }
-            }
-        }
-
-        private void ReplaceSchoolEvents()
-        {
-            foreach (var evtinfo in CouchDBEvents)
-            {
-                var originalEvent = GetEventByHashInfo(evtinfo.EventInfoHash);
-                if (originalEvent != null)
-                {
-                    if (originalEvent.IsDirty) continue;
-
-                    var ext = /*RasteredItemExtension.GetIsExpanded(originalEvent);*/ originalEvent.IsExpanded;
-                    /*RasteredItemExtension.SetIsExpanded(evtinfo.Event, ext);*/
-                    evtinfo.Event.IsExpanded = ext;
-
-                    originalEvent.Reset();
-                    originalEvent.IsReplaced = true;
-                    originalEvent.Visibility = Visibility.Hidden;
-                }
-
-                var itemDay = GetDayByDate(evtinfo.Event.Date.Date, evtinfo.Event.SeminarGroup.Name);
-
-                itemDay.RemoveAllCouchDBEvents(evtinfo.EventInfoHash);
-                itemDay.Events.Add(evtinfo.Event);
-                evtinfo.Event.EndCleanInit();
-                evtinfo.Event.CleanUp();
-            }
-        }
-
-        void CleanUpCouchDBEvents()
-        {
-            // ReSharper disable AccessToModifiedClosure
-            var dirtyHashes = new List<string>();
-            foreach (var item in CouchDBEvents)
-            {
-                if (!dirtyHashes.Contains(item.EventInfoHash)) dirtyHashes.Add(item.EventInfoHash);
-            }
-
-            foreach (var infohash in dirtyHashes)
-            {
-                var eventsByStamp = CouchDBEvents.Where(evt => evt.EventInfoHash == infohash).OrderByDescending(evt => evt.TimeStamp);
-
-                while (true)
-                {
-                    var older = eventsByStamp.Skip(1).ToArray();
-                    if (older.Length <= 0)
-                    {
-                        var newestEvent = eventsByStamp.FirstOrDefault();
-                        if (newestEvent != null) Console.WriteLine(@"{0} already clean", newestEvent.Event.Code);
-                        break;
-                    }
-
-                    for (int i = 0; i < older.Length; i++)
-                    {
-                        CouchDBEvents.Remove(older[i]);
-                    }
-                }
-            }
-            // ReSharper restore AccessToModifiedClosure
         }
 
         public Day GetDayByDate(DateTime date, string seminargroupname)
@@ -388,7 +235,9 @@ namespace HAW_Tool.HAW.Depending
             var dateFormats = new[]
                                   {
                                       "dd.MM.yyyy",
-                                      "dd.MM.yy"
+                                      "dd.MM.yy",
+                                      "dd.M.yyyy",
+                                      "dd.M.yy"
                                   };
 
             foreach (string dateFormat in dateFormats)
@@ -609,6 +458,7 @@ namespace HAW_Tool.HAW.Depending
                                                            SeminarGroup = @group
                                                        };
                                     newEvent.Day.Events.Add(newEvent);
+                                    // Events.Add(newEvent);
                                     newEvent.EndCleanInit();
                                     newEvent.CleanUp();
                                 }
@@ -628,12 +478,18 @@ namespace HAW_Tool.HAW.Depending
         #region Daten
 
         public ThreadSafeObservableCollection<SeminarGroup> SeminarGroups { get; set; }
-        public ThreadSafeObservableCollection<CouchDBEventInfo> CouchDBEvents { get; set; }
-        public ThreadSafeObservableCollection<Event> ReplacedSchoolEvents { get; set; }
+        //public ThreadSafeObservableCollection<Event> Events { get; set; }
+        public ThreadSafeObservableCollection<Replacement> Replacements { get; private set; }
 
         #endregion
 
-
+        private MongoServer _mongoServer = MongoServer.Create("mongodb://seveq.de");
+        public void MongoStore(Replacement rpl)
+        {
+            var db = _mongoServer.GetDatabase("HAW");
+            var coll = db.GetCollection<Replacement>("Replacements");
+            coll.Insert(rpl);
+        }
 
         internal void LoadSchedules(string[] schedules)
         {
@@ -645,6 +501,7 @@ namespace HAW_Tool.HAW.Depending
                 if (workers.Count <= 0)
                 {
                     tcheck.Enabled = false;
+                    LoadReplacements();
                     OnAllSchedulesLoaded();
                 }
             };
@@ -661,12 +518,64 @@ namespace HAW_Tool.HAW.Depending
             tcheck.Enabled = true;
         }
 
+        private void LoadReplacements()
+        {
+            /*
+            OnStatusMessageChanged("Lade Änderungen am Stundenplan...");
+            var db = _mongoServer.GetDatabase("HAW");
+            var coll = db.GetCollection<Replacement>("Replacements");
+            var items = coll.FindAllAs<Replacement>().ToArray();
+
+            Replacements.Clear();
+            Replacements.AddItems(items.Select(p =>
+            {
+                OnStatusMessageChanged(
+                    "Lade Änderungen am Stundenplan... fülle Replacementliste; Änderung: {0}",
+                    p.Event);
+                p.Event.Source = EventSource.ReplacementDB;
+                return p;
+            }).ToArray());
+
+            foreach (var item in items)
+            {
+                OnStatusMessageChanged("Lade Änderungen am Stundenplan... Änderung: {0}", item.Event);
+                if (item.Event.SeminarGroup == null) continue;
+
+                var day = item.Event.SeminarGroup.GetDayByDate(item.Event.Date.Date);
+                item.Event.Day = day;
+                item.Event.Source = EventSource.ReplacementDB;
+                day.Events.Add(item.Event);
+                item.Event.EndCleanInit();
+            }
+             * */
+
+            //Events.RemoveItems(Events.Where(p => p.Source == EventSource.ReplacementDB).ToArray());
+        //    Events.AddItems(items.Select(p =>
+        //                                     {
+        //                                         OnStatusMessageChanged(
+        //                                             "Lade Änderungen am Stundenplan... platziere Änderungen in Eventliste; Änderung: {0}",
+        //                                             p.Event);
+        //                                         p.Event.Source = EventSource.ReplacementDB;
+        //                                         return p.Event;
+        //                                     }).ToArray());
+        }
+
         public event EventHandler AllSchedulesLoaded;
 
         public void OnAllSchedulesLoaded()
         {
             EventHandler handler = AllSchedulesLoaded;
             if (handler != null) handler(this, default(EventArgs));
+        }
+
+        public IEnumerable<Event> GetEventsByHashInfo(string hash)
+        {
+            return from s in SeminarGroups
+                   from c in s.CalendarWeeks
+                   from d in c.Days
+                   from e in d.Events
+                   where e.HashInfo == hash
+                   select e;
         }
     }
 }

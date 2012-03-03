@@ -93,10 +93,9 @@
     <Reference Include="AvalonControlsLibrary">
       <HintPath>..\..\..\..\Downloads\Release V2\AvalonControlsLibrary\bin\Release\AvalonControlsLibrary.dll</HintPath>
     </Reference>
-    <Reference Include="DDay.iCal">
-      <HintPath>bin\Debug\DDay.iCal.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.Expression.Interactions" />
+    <Reference Include="MongoDB.Bson, Version=1.3.1.4349, Culture=neutral, PublicKeyToken=f686731cfb9cc103, processorArchitecture=MSIL" />
+    <Reference Include="MongoDB.Driver, Version=1.3.1.4349, Culture=neutral, PublicKeyToken=f686731cfb9cc103, processorArchitecture=MSIL" />
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\..\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -126,6 +125,7 @@
     <Reference Include="System.ServiceModel.Web">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.Web" />
     <Reference Include="System.Windows.Interactivity" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml.Linq">
@@ -153,12 +153,15 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="HAW\Depending\CouchDBInfoComparer.cs" />
     <Compile Include="HAW\Depending\EventControlBase.cs" />
     <Compile Include="HAW\Depending\MarkupExtensions\HasValueConverter.cs" />
     <Compile Include="HAW\Depending\NotifyingObject.cs" />
     <Compile Include="HAW\Depending\ObservableCollectionEx.cs">
       <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="HAW\Depending\Replacement.cs" />
+    <Compile Include="UserControls\DayControl.xaml.cs">
+      <DependentUpon>DayControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="WPF\ConverterWrapper.cs" />
     <Page Include="ErrorMessage.xaml">
@@ -197,6 +200,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="UserControls\DayControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="UserControls\EventControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -220,9 +227,7 @@
     <Compile Include="Converters\CompareConverter.cs" />
     <Compile Include="Converters\ListBoxItemToContentConverter.cs" />
     <Compile Include="Converters\TimeToValueConverter.cs" />
-    <Compile Include="HAW\Depending\AttachedEventProperties.cs" />
     <Compile Include="HAW\Depending\CalendarWeek.cs" />
-    <Compile Include="HAW\Depending\CouchDBEventInfo.cs" />
     <Compile Include="HAW\Depending\Day.cs" />
     <Compile Include="HAW\Depending\Event.cs" />
     <Compile Include="HAW\Depending\DirtyableObject.cs" />
@@ -361,10 +366,6 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ChatClient\ChatClient.csproj">
-      <Project>{34A55273-35D2-48D8-9346-5B9583064510}</Project>
-      <Name>ChatClient</Name>
-    </ProjectReference>
     <ProjectReference Include="..\LittleHelpers\LittleHelpers.csproj">
       <Project>{DBC10794-05CB-42D7-BF4B-C9872F45D4FA}</Project>
       <Name>LittleHelpers</Name>

@@ -5,17 +5,23 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:SeveQsCustomControls="clr-namespace:SeveQsCustomControls;assembly=SeveQsCustomControls"
              xmlns:UserControls="clr-namespace:HAW_Tool.UserControls" mc:Ignorable="d" x:Name="MyEventControl"
-             Visibility="{Binding Visibility}" Loaded="MyEventControl_Loaded"
+             Loaded="MyEventControl_Loaded"
              d:DataContext="{d:DesignInstance Type=Depending:Event, IsDesignTimeCreatable=True}"
              xmlns:Depending="clr-namespace:HAW_Tool.HAW.Depending"
              xmlns:MarkupExtensions="clr-namespace:HAW_Tool.HAW.Depending.MarkupExtensions" d:DesignHeight="140.2" d:DesignWidth="388" Background="{x:Null}">
 	<UserControl.Style>
         <Style TargetType="{x:Type UserControls:EventControl}">
             <Style.Triggers>
+                <DataTrigger Binding="{Binding Visibility}" Value="Hidden">
+                    <Setter Property="Opacity" Value="0.1" />
+                    <Setter Property="EventBorderBrush" Value="{StaticResource NotTakingPlaceBrush}" />
+                    <Setter Property="StrikeOutVisibility" Value="Visible" />
+                    <Setter Property="IsHitTestVisible" Value="False" />
+                </DataTrigger>
                 <DataTrigger Binding="{Binding IsEnabled}" Value="False">
                     <Setter Property="Opacity" Value="0.3" />
                 </DataTrigger>
-                <DataTrigger Binding="{Binding Path='Source'}" Value="CouchDB">
+                <DataTrigger Binding="{Binding Path='Source'}" Value="MongoDB">
                     <Setter Property="EventBorderBrush" Value="{StaticResource CouchDBEventBorderBrush}" />
                     <!--<Setter Property="EventBorderBackground" Value="{StaticResource CouchDBEventBrush}" />-->
                     <Setter Property="ResetCouchDBButtonVisibility" Value="Visible" />
@@ -148,7 +154,7 @@
             </Setter>
         </Style>
     </UserControl.Resources>
-    <Grid Tag="EventControl">
+    <Grid x:Name="grid" Tag="EventControl" Margin="0 0 0 20">
         <!--         <Grid d:LayoutOverrides="Width" Grid.Row="{Binding (SeveQsCustomControls:RasteredItemExtension.Row)}" HorizontalAlignment="Left" VerticalAlignment="Top"> -->
         <Grid d:LayoutOverrides="Width" Grid.Row="{Binding Row}" HorizontalAlignment="Left" VerticalAlignment="Top">
             <Grid.Width>
@@ -184,7 +190,7 @@
                         <Expander Header="Details" Foreground="White" MaxHeight="150" IsExpanded="{Binding IsExpanded}">
                             <Grid>
                                 <StackPanel Orientation="Vertical" Width="63.783" Margin="20,0" VerticalAlignment="Top">
-                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Visibility="{Binding GroupVisibility, ElementName='MyEventControl'}">
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Visibility="{Binding GroupVisibility, ElementName=MyEventControl}">
                                         <Label Content="Grp.: " Foreground="White" FontSize="13.333" FontWeight="Bold" Padding="0" VerticalContentAlignment="Center"/>
                                         <Label Content="{Binding Group.Value, Mode=OneWay}" FontSize="13.333" Foreground="White" VerticalContentAlignment="Center" Padding="0"/>
                                     </StackPanel>
@@ -217,10 +223,51 @@
                     </StackPanel>
                 </Grid>
             </Border>
-            <Border IsHitTestVisible="False"  Visibility="{Binding BackBorderVisibility, ElementName='MyEventControl'}"  Opacity="0.33"  VerticalAlignment="Stretch" HorizontalAlignment="Stretch" x:Name="backBorder" Background="#FF330000" />
-            <Thumb DragDelta="LeftDelta"  VerticalAlignment="Center" HorizontalAlignment="Left" Cursor="SizeWE" Style="{DynamicResource EventThumb}" />
+            <Border IsHitTestVisible="False"  Visibility="{Binding BackBorderVisibility, ElementName=MyEventControl}"  Opacity="0.33"  VerticalAlignment="Stretch" HorizontalAlignment="Stretch" x:Name="backBorder" Background="#FF330000" />
+            <!--<Thumb DragDelta="LeftDelta"  VerticalAlignment="Center" HorizontalAlignment="Left" Cursor="SizeWE" Style="{DynamicResource EventThumb}" />
             <Thumb DragDelta="RightDelta" VerticalAlignment="Center" HorizontalAlignment="Right" Cursor="SizeWE" Style="{DynamicResource EventThumb}" />
             <Thumb DragDelta="BothDelta" VerticalAlignment="Bottom" Cursor="ScrollWE" Style="{DynamicResource EventThumb}" />
+            <Button Click="DecreaseDayButtonClick"  d:LayoutOverrides="Height" VerticalAlignment="Top" Padding="0" HorizontalAlignment="Right" Style="{DynamicResource FlatButton}">
+            	<Path x:Name="arrow" Data="M1,5L4.5,1.5 8,5" HorizontalAlignment="Center" SnapsToDevicePixels="false" Stroke="#666" StrokeThickness="2" VerticalAlignment="Center"/>
+            </Button>
+            <Button Click="IncreaseDayButtonClick"  d:LayoutOverrides="Height" VerticalAlignment="Bottom" Padding="0" HorizontalAlignment="Right" Style="{DynamicResource FlatButton}">
+            	<Path x:Name="arrow_Copy" Data="M 1,1.5 L 4.5,5 L 8,1.5" HorizontalAlignment="Center" SnapsToDevicePixels="false" Stroke="#666" StrokeThickness="2" VerticalAlignment="Center"/>
+            </Button>
+            <Border HorizontalAlignment="Center" Margin="0,-16,0,0" VerticalAlignment="Top" d:LayoutOverrides="Width" CornerRadius="5,5,0,0" BorderThickness="2,2,2,0" BorderBrush="Black" Height="16" >
+            	<Border.Background>
+            		<SolidColorBrush Color="{DynamicResource Marked}"/>
+            	</Border.Background>
+            	<Label Content="{Binding Source}" Padding="2" Foreground="#66FFFFFF" FontWeight="Bold" FontSize="8" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+            </Border>-->
+            <Grid HorizontalAlignment="Left" Margin="2,-20,0,0" VerticalAlignment="Top" Height="20">
+            	<Border VerticalAlignment="Bottom" RenderTransformOrigin="0.5,0.5" Padding="0" BorderThickness="2,2,2,0" BorderBrush="Black" CornerRadius="2,2,0,0" HorizontalAlignment="Center" >
+            		<Border.Background>
+            			<SolidColorBrush Color="{DynamicResource Marked}"/>
+            		</Border.Background>
+            		<Label Content="{Binding From, Converter={StaticResource ShortTime}}" RenderTransformOrigin="0.5,0.5" Padding="0" HorizontalAlignment="Center" FontSize="10.667" Foreground="#66FFFFFF" Margin="2,0,2,2"/>
+            	</Border>
+            </Grid>
+            <Grid HorizontalAlignment="Right" Margin="0,-20,2,0" VerticalAlignment="Top" Height="20">
+            	<Border VerticalAlignment="Bottom" RenderTransformOrigin="0.5,0.5" Padding="0" BorderThickness="2,2,2,0" BorderBrush="Black" CornerRadius="2,2,0,0" HorizontalAlignment="Center" >
+            		<Border.Background>
+            			<SolidColorBrush Color="{DynamicResource Marked}"/>
+            		</Border.Background>
+            		<Label Content="{Binding Till, Converter={StaticResource ShortTime}}" RenderTransformOrigin="0.5,0.5" Padding="0" HorizontalAlignment="Center" FontSize="10.667" Foreground="#66FFFFFF" Margin="2,0,2,2"/>
+            	</Border>
+            </Grid>
+            <!--<Grid Height="50" VerticalAlignment="Bottom" Margin="0,0,0,-50">
+            	<Border VerticalAlignment="Top" RenderTransformOrigin="0.5,0.5" Padding="0" BorderThickness="2,0,2,2" BorderBrush="Black" CornerRadius="0,0,2,2" HorizontalAlignment="Center" >
+            		<Border.Background>
+            			<SolidColorBrush Color="{DynamicResource Marked}"/>
+            		</Border.Background>
+            		<StackPanel Orientation="Vertical">
+            			<Label Content="{Binding Day, Mode=OneWay}" RenderTransformOrigin="0.5,0.5" Padding="0" HorizontalAlignment="Center" FontSize="10.667" Foreground="#66FFFFFF" Margin="2,0"/>
+            			<Label Content="{Binding Date}" RenderTransformOrigin="0.5,0.5" Padding="0" HorizontalAlignment="Center" FontSize="10.667" Foreground="#66FFFFFF" Margin="2,0"/>
+            			<Label Content="{Binding Day.Date}" RenderTransformOrigin="0.5,0.5" Padding="0" HorizontalAlignment="Center" FontSize="10.667" Foreground="#66FFFFFF" Margin="2,0"/>
+            		</StackPanel>
+            	</Border>
+            </Grid>-->
+            <!--<Ellipse x:Name="ellipse" Stroke="#666" Width="5" Height="5" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="2,2,0,0" Fill="Black"/>-->
         </Grid>
         <!--</Canvas>-->
     </Grid>

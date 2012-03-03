@@ -52,7 +52,7 @@ namespace SeveQsCustomControls
 
         private void InitializeAccordion()
         {
-            foreach (UIElement element in Children)
+            foreach (DependencyObject element in Children)
             {
                 var selectedExpander = element as Expander;
                 if (selectedExpander != null)
@@ -70,7 +70,7 @@ namespace SeveQsCustomControls
             if (selectedExpander != null)
             {
                 ContentPresenter contentPresenter;
-                foreach (UIElement element in Children)
+                foreach (DependencyObject element in Children)
                 {
                     var otherExpander = element as Expander;
                     if (otherExpander != null & otherExpander != selectedExpander)

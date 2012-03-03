@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using SeveQsCustomControls;
@@ -7,10 +8,23 @@ namespace HAW_Tool.HAW.Depending
 {
     public class Day : NotifyingObject
     {
+        public static readonly DependencyProperty CurrentDayProperty =
+            DependencyProperty.RegisterAttached("CurrentDay", typeof (Day), typeof (Day), new PropertyMetadata(default(Day)));
+
+        public static void SetCurrentDay(DependencyObject element, Day value)
+        {
+            element.SetValue(CurrentDayProperty, value);
+        }
+
+        public static Day GetCurrentDay(DependencyObject element)
+        {
+            return (Day) element.GetValue(CurrentDayProperty);
+        }
+
         public Day()
         {
             Events = new ThreadSafeObservableCollection<Event>();
-            Events./*ObservableCollection.*/CollectionChanged += Events_CollectionChanged;
+            // Events./*ObservableCollection.*/CollectionChanged += Events_CollectionChanged;
         }
 
         private bool IsSpanOccupiedByOthers(Event me, int row)
@@ -23,60 +37,46 @@ namespace HAW_Tool.HAW.Depending
             return (occupyingEvents.Count() > 0);
         }
 
-        void Events_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-        {
-            if (e.NewItems != null)
-            {
-                foreach (var item in e.NewItems)
-                {
-                    var evt = (Event)item;
-                    evt.Day = this;
-                    evt.TimeChanged += evt_TimeChanged;
-                }
-            }
+        //void Events_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        //{
+        //    if (e.NewItems != null)
+        //    {
+        //        foreach (var item in e.NewItems)
+        //        {
+        //            var evt = (Event)item;
+        //            evt.Day = this;
+        //            evt.TimeChanged += evt_TimeChanged;
+        //        }
+        //    }
 
-            if (e.OldItems != null)
-            {
-                foreach (var item in e.OldItems)
-                {
-                    var evt = (Event)item;
-                    evt.TimeChanged -= evt_TimeChanged;
-                }
-            }
-        }
+        //    if (e.OldItems != null)
+        //    {
+        //        foreach (var item in e.OldItems)
+        //        {
+        //            var evt = (Event)item;
+        //            evt.TimeChanged -= evt_TimeChanged;
+        //        }
+        //    }
+        //}
 
-        public void RemoveAllCouchDBEvents(string hashInfo)
-        {
-            // ReSharper disable ForCanBeConvertedToForeach
-            var cdbEvt = (from p in Events
-                          where p.Source == EventSource.CouchDB
-                          where p.HashInfo == hashInfo
-                          select p).ToArray();
+        //void evt_TimeChanged(object sender, EventArgs e)
+        //{
+        //    var evt = (Event)sender;
+        //    RecalculateRowIndex(evt);
+        //    foreach (var otherEvt in Events)
+        //    {
+        //        ResetRowIndex(otherEvt);
+        //    }
+        //}
 
-            for (int i = 0; i < cdbEvt.Length; i++)
-            {
-                var evt = cdbEvt[i];
-                Events.Remove(evt);
-            }
-            // ReSharper restore ForCanBeConvertedToForeach
-        }
-
-        void evt_TimeChanged(object sender, EventArgs e)
-        {
-            var evt = (Event)sender;
-            RecalculateRowIndex(evt);
-            foreach (var otherEvt in Events)
-            {
-                ResetRowIndex(otherEvt);
-            }
-        }
-
-        private bool RecalculateRowIndex(Event e)
+        public bool RecalculateRowIndex(Event e)
         {
             if (e.Visibility == Visibility.Hidden) return false;
 
+            ResetRowIndex(e);
+
             bool bOccupationFound = false;
-            for (; e.Row <= 2 && IsSpanOccupiedByOthers(e, e.Row); e.Row++)
+            for (; e.Row <= 5 && IsSpanOccupiedByOthers(e, e.Row); e.Row++)
             {
                 bOccupationFound = true;
             }
@@ -108,6 +108,11 @@ namespace HAW_Tool.HAW.Depending
             } while (bOverlappingsFound);
         }
 
+//         public IEnumerable<Event> Events
+//         {
+//             get { return from p in PlanFile.Instance.Events where ReferenceEquals(p.Day, this) select p; }
+//         }
+
         private DateTime _date;
         public DateTime Date
         {
@@ -133,7 +138,7 @@ namespace HAW_Tool.HAW.Depending
         private CalendarWeek _week;
         public CalendarWeek Week
         {
-            private get { return _week; }
+            get { return _week; }
             set
             {
                 _week = value;

@@ -22,12 +22,12 @@ namespace SeveQsCustomControls
         {
         }
 
-        public static void SetRow(UIElement element, Int32 value)
+        public static void SetRow(DependencyObject element, Int32 value)
         {
             element.SetValue(RowProperty, value);
         }
 
-        public static Int32 GetRow(UIElement element)
+        public static Int32 GetRow(DependencyObject element)
         {
             return (Int32) element.GetValue(RowProperty);
         }
@@ -35,12 +35,12 @@ namespace SeveQsCustomControls
         public static readonly DependencyProperty IsExpandedProperty =
             DependencyProperty.RegisterAttached("IsExpanded", typeof (bool), typeof (RasteredItemExtension), new PropertyMetadata(default(bool)));
 
-        public static void SetIsExpanded(UIElement element, bool value)
+        public static void SetIsExpanded(DependencyObject element, bool value)
         {
             element.SetValue(IsExpandedProperty, value);
         }
 
-        public static bool GetIsExpanded(UIElement element)
+        public static bool GetIsExpanded(DependencyObject element)
         {
             return (bool) element.GetValue(IsExpandedProperty);
         }

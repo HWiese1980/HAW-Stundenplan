@@ -221,49 +221,29 @@ namespace HAW_Tool.UserControls
             if(evt.Day != null) evt.Day.RecalculateRowIndexAll();
         }
 
-        private void SaveChanges(object sender, RoutedEventArgs e)
-        {
-            var evt = DataContext as Event;
-
-            evt.Save();
-
-            OnCouchDBDataInvalid(new EventArgs());
-        }
-
         private void ResetChanges(object sender, RoutedEventArgs e)
         {
-            var evt = (Event)DataContext;
-            switch (evt.Source)
-            {
-                case EventSource.School: evt.Reset();
-                    break;
-                case EventSource.CouchDB:
-                    {
-                        var originalEvent =
-                            PlanFile.Instance.GetEventByHashInfo(evt.HashInfo);
 
-                        evt.Visibility = Visibility.Hidden;
-                        
-                        var s = PlanFile.Instance.CouchConnection.CreateSession("haw_events");
-                        var docs = s.ListDocuments();
-                        foreach(var doc in docs)
-                        {
-                            var elm = s.Load<CouchDBEventInfo>(doc.Id);
-                            if(elm.EventInfoHash == evt.HashInfo) 
-                                s.Delete(elm);
-                        }
+        }
 
-                        if (originalEvent != null)
-                        {
-                            originalEvent.Visibility = Visibility.Visible;
-                            originalEvent.Reset();
-                        }
+        private void SaveChanges(object sender, RoutedEventArgs e)
+        {
+            EventContext.Save();
+        }
 
-                        break;
-                    }
-            }
+        protected Event EventContext
+        {
+            get { return (Event) DataContext; }
+        }
 
-            OnCouchDBDataInvalid(new EventArgs());
+        private void DecreaseDayButtonClick(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void IncreaseDayButtonClick(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }

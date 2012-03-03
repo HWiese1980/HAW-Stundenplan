@@ -681,7 +681,7 @@
             </Trigger>
         </Style.Triggers>
     </Style>
-	<Style x:Key="RangeSliderStyle1" TargetType="{x:Type Custom:RangeSlider}">
+	<!--<Style x:Key="RangeSliderStyle1" TargetType="{x:Type Custom:RangeSlider}">
 		<Setter Property="Template">
 			<Setter.Value>
 				<ControlTemplate TargetType="{x:Type Custom:RangeSlider}">
@@ -697,7 +697,7 @@
 				</ControlTemplate>
 			</Setter.Value>
 		</Setter>
-	</Style>
+	</Style>-->
 	<Style x:Key="ExpanderRightHeaderStyle" TargetType="{x:Type ToggleButton}">
 		<Setter Property="Template">
 			<Setter.Value>

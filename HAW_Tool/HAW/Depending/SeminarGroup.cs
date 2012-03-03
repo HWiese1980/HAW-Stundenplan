@@ -1,21 +1,39 @@
 ﻿using System;
 using System.Linq;
-using Newtonsoft.Json;
+using System.Windows;
 using SeveQsCustomControls;
 
 namespace HAW_Tool.HAW.Depending
 {
-    [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-    public class SeminarGroup : NotifyingObject
+    //[JsonObject(MemberSerialization = MemberSerialization.OptIn)]
+    public class SeminarGroup : NotifyingObject, IKeyedObject
     {
+        public static readonly DependencyProperty CurrentSeminarGroupProperty =
+            DependencyProperty.RegisterAttached("CurrentSeminarGroup", typeof (SeminarGroup), typeof (SeminarGroup), new PropertyMetadata(default(SeminarGroup)));
+
+        public static void SetCurrentSeminarGroup(DependencyObject element, SeminarGroup value)
+        {
+            element.SetValue(CurrentSeminarGroupProperty, value);
+        }
+
+        public static SeminarGroup GetCurrentSeminarGroup(DependencyObject element)
+        {
+            return (SeminarGroup) element.GetValue(CurrentSeminarGroupProperty);
+        }
+
         public SeminarGroup()
         {
             CalendarWeeks = new ThreadSafeObservableCollection<CalendarWeek>();
+            CalendarWeeks.CollectionChanged += (x, y) =>
+                                                   {
+                                                       foreach (var cw in y.NewItems.Cast<CalendarWeek>())
+                                                           cw.SeminarGroup = this;
+                                                   };
         }
 
         private string _name = "";
 
-        [JsonProperty]
+        //[JsonProperty]
         public string Name
         {
             get { return _name; }
@@ -87,6 +105,20 @@ namespace HAW_Tool.HAW.Depending
                        where dy.Date.Date == date.Date
                        select dy).FirstOrDefault();
             return day;
+        }
+
+        #region Implementation of IKeyedObject
+
+        public string Key
+        {
+            get { return Name; }
+        }
+
+        #endregion
+
+        public override string ToString()
+        {
+            return Name;
         }
     }
 }

@@ -1,30 +1,36 @@
-﻿using System;
+﻿#region Usings
+
+using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Printing;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Web;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Shapes;
-using System.ComponentModel;
-using SeveQsCustomControls;
-using System.Reflection;
-using System.Printing;
-using LittleHelpers;
-using System.Threading;
-using Microsoft.Win32;
+using HAW_Tool.HAW.Depending;
 using HAW_Tool.HAW.REST;
-using System.Runtime.InteropServices;
-using System.Windows.Interop;
 using HAW_Tool.Properties;
-
+using HAW_Tool.UserControls;
+using LittleHelpers;
+using Microsoft.Win32;
+using SeveQsCustomControls;
+using System.Runtime.InteropServices;
 #if HAW_NATIVE
 using HAW_Tool.HAW.Native;
 #elif HAW_DEPENDING
-using HAW_Tool.HAW.Depending;
+
 #endif
+
+#endregion
+
 // using PlanFile = HAW_Tool.HAW.Native.PlanFile;
 
 // Version 0.0.1: {48119271-97D3-4E03-9D11-58A18F31D5D0}
@@ -33,10 +39,13 @@ using HAW_Tool.HAW.Depending;
 namespace HAW_Tool
 {
     /// <summary>
-    /// Interaction logic for Window1.xaml
+    ///   Interaction logic for Window1.xaml
     /// </summary>
     public partial class Window1
     {
+        [DllImport("shell32.dll")]
+        public static extern IntPtr ShellExecute(IntPtr hwnd, string lpOperation, string lpFile, string lpParameters, string lpDirectory, int nShowCmd);
+
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         private static extern IntPtr SendMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
@@ -68,17 +77,27 @@ namespace HAW_Tool
             ThreadSafeObservableCollection<SeminarGroup>.UIDispatcher = Dispatcher;
             ThreadSafeObservableCollection<Event>.UIDispatcher = Dispatcher;
             ThreadSafeObservableCollection<CalendarWeek>.UIDispatcher = Dispatcher;
-            ThreadSafeObservableCollection<CouchDBEventInfo>.UIDispatcher = Dispatcher;
+            ThreadSafeObservableCollection<Replacement>.UIDispatcher = Dispatcher;
 
             SourceInitialized += SourceInitializedHandler;
 
 #if HAW_NATIVE || HAW_DEPENDING
             PlanFile.StatusMessageChanged += PlanFileStatusChanged;
             PlanFile.StatusProgressChanged += PlanFileProgressChanged;
+            PlanFile.Instance.EventSaved += Instance_EventSaved;
 #endif
 
             Loaded += StartUp;
             Closing += ClosingAppSaveSettings;
+        }
+
+        void Instance_EventSaved(object sender, ValueEventArgs<Event> e)
+        {
+            var daycontrols = this.GetChildren<DayControl>();
+            foreach (var daycontrol in daycontrols)
+            {
+                daycontrol.Refresh();
+            }
         }
 
         private void SourceInitializedHandler(object sender, EventArgs e)
@@ -131,22 +150,23 @@ namespace HAW_Tool
             var tWrk = new BackgroundWorker();
 
             tWrk.DoWork += (x, y) =>
-            {
-                try
-                {
-                    string tVerStr = new HAWClient().Version();
-                    if (tVerStr == null) return;
+                               {
+                                   try
+                                   {
+                                       var tVerStr = new HAWClient().Version();
+                                       if (tVerStr == null) return;
 
-                    var tVer = new Version(tVerStr);
-                    var tMe = Assembly.GetExecutingAssembly().GetName().Version;
-                    if (tMe.IsNewerThan(tVer))
-                    {
-                        Dispatcher.Invoke(new Action(() => new NewVersionNotify().ShowDialog()));
-                    }
-                }
-                catch (Exception)
-                { }
-            };
+                                       var tVer = new Version(tVerStr);
+                                       var tMe = Assembly.GetExecutingAssembly().GetName().Version;
+                                       if (tMe.IsNewerThan(tVer))
+                                       {
+                                           Dispatcher.Invoke(new Action(() => new NewVersionNotify().ShowDialog()));
+                                       }
+                                   }
+                                   catch (Exception)
+                                   {
+                                   }
+                               };
 
             tWrk.RunWorkerAsync();
 
@@ -156,7 +176,7 @@ namespace HAW_Tool
             SetValue(IsGroupFilterActiveProperty, tSet.FilterByGroup);
         }
 
-        void ClosingAppSaveSettings(object sender, EventArgs e)
+        private void ClosingAppSaveSettings(object sender, EventArgs e)
         {
 #if HAW_NATIVE
             if (PlanFile.Instance != null) PlanFile.Instance.SaveSettings();
@@ -171,11 +191,16 @@ namespace HAW_Tool
 
         // Using a DependencyProperty as the backing store for IsGroupFilterActive.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty IsGroupFilterActiveProperty =
-            DependencyProperty.Register("IsGroupFilterActive", typeof(bool), typeof(Window1), new UIPropertyMetadata(false, (d, o) =>
-            {
-                var tSet = new Settings { FilterByGroup = (bool)o.NewValue };
-                tSet.Save();
-            }));
+            DependencyProperty.Register("IsGroupFilterActive", typeof(bool), typeof(Window1),
+                                        new UIPropertyMetadata(false, (d, o) =>
+                                                                          {
+                                                                              var tSet = new Settings
+                                                                                             {
+                                                                                                 FilterByGroup =
+                                                                                                     (bool)o.NewValue
+                                                                                             };
+                                                                              tSet.Save();
+                                                                          }));
 
         private string Status
         {
@@ -183,12 +208,11 @@ namespace HAW_Tool
             {
                 try
                 {
-                    Dispatcher.Invoke(new Action(() =>
-                        {
-                            MainStatus.Content = value;
-                        }));
+                    Dispatcher.Invoke(new Action(() => { MainStatus.Content = value; }));
                 }
-                catch { }
+                catch
+                {
+                }
             }
         }
 
@@ -197,12 +221,12 @@ namespace HAW_Tool
             set
             {
                 Dispatcher.Invoke(new Action(() =>
-                    {
-                        if (progressStatusBar.Visibility == Visibility.Visible)
-                        {
-                            progressStatusBar.Value = value;
-                        }
-                    }));
+                                                 {
+                                                     if (progressStatusBar.Visibility == Visibility.Visible)
+                                                     {
+                                                         progressStatusBar.Value = value;
+                                                     }
+                                                 }));
             }
         }
 
@@ -210,10 +234,9 @@ namespace HAW_Tool
         {
             set
             {
-                Dispatcher.Invoke(new Action(() =>
-                    {
-                        progressStatusBar.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
-                    }));
+                Dispatcher.Invoke(
+                    new Action(
+                        () => { progressStatusBar.Visibility = value ? Visibility.Visible : Visibility.Collapsed; }));
             }
         }
 
@@ -290,18 +313,15 @@ namespace HAW_Tool
             var semGroupsCvs = (CollectionViewSource)FindResource("seminarGroupsCollectionView");
 
 
-
             var cnt = new HAWClient();
             var schedules = cnt.Schedules();
             // Parallel.ForEach(schedules, (schedule) => PlanFile.Instance.LoadSchedule(schedule));
             PlanFile.Instance.LoadSchedules(schedules);
-            PlanFile.Instance.AllSchedulesLoaded += (x, y) => PlanFile.Instance.LoadCouchEvents();
         }
 #endif
 
         private void PrintWeekButtonPressed(object sender, RoutedEventArgs e)
         {
-
             var tDlg = new PrintDialog { PrintQueue = LocalPrintServer.GetDefaultPrintQueue() };
             tDlg.PrintTicket = tDlg.PrintQueue.DefaultPrintTicket;
             tDlg.PrintTicket.PageOrientation = PageOrientation.Landscape;
@@ -311,7 +331,6 @@ namespace HAW_Tool
 
             if ((bool)tDlg.ShowDialog())
             {
-
                 var tBut = sender as DependencyObject;
                 var tPrintVis = tBut.GetParent<Grid>().GetChildren<RasteredGroup>().FirstOrDefault();
 
@@ -348,7 +367,9 @@ namespace HAW_Tool
 
                     var sz = new Size(tCaps.PageImageableArea.ExtentWidth, tCaps.PageImageableArea.ExtentHeight);
                     tGrid.Measure(sz);
-                    tGrid.Arrange(new Rect(new Point(tCaps.PageImageableArea.OriginWidth, tCaps.PageImageableArea.OriginHeight), sz));
+                    tGrid.Arrange(
+                        new Rect(new Point(tCaps.PageImageableArea.OriginWidth, tCaps.PageImageableArea.OriginHeight),
+                                 sz));
 
                     try
                     {
@@ -356,7 +377,8 @@ namespace HAW_Tool
                     }
                     catch (Exception exp)
                     {
-                        MessageBox.Show(String.Format("Beim Drucken trat ein Fehler auf: {0}", exp.Message), "Drucken", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show(String.Format("Beim Drucken trat ein Fehler auf: {0}", exp.Message), "Drucken",
+                                        MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
             }
@@ -385,7 +407,6 @@ namespace HAW_Tool
 #elif HAW_DEPENDING
         private void RefreshFiltering(RasteredItemsControl ctl)
         {
-
         }
 #endif
 
@@ -408,7 +429,11 @@ namespace HAW_Tool
             var tGrp = SemGroups.SelectedItem as SeminarGroup;
             if (tGrp == null)
             {
-                if (MessageBox.Show("Eine Seminargruppe muss schon ausgewählt sein. Was soll sonst exportiert werden? Alle Semestergruppen? Das willst du nicht, glaub mir!\nOder doch?", "Alles exportieren?", MessageBoxButton.YesNo, MessageBoxImage.Exclamation) == MessageBoxResult.No) return;
+                if (
+                    MessageBox.Show(
+                        "Eine Seminargruppe muss schon ausgewählt sein. Was soll sonst exportiert werden? Alle Semestergruppen? Das willst du nicht, glaub mir!\nOder doch?",
+                        "Alles exportieren?", MessageBoxButton.YesNo, MessageBoxImage.Exclamation) ==
+                    MessageBoxResult.No) return;
             }
 
             var tDlg = new SaveFileDialog { Filter = "iCalendar Datei (*.ics)|*.ics" };
@@ -444,7 +469,6 @@ namespace HAW_Tool
 #elif HAW_DEPENDING
         private void SelectedEventShowHideClick(object sender, RoutedEventArgs e)
         {
-
         }
 #endif
 
@@ -499,14 +523,30 @@ namespace HAW_Tool
 
             switch (rect.Tag.ToString())
             {
-                case "N": ResizeWindow(ResizeDirection.Top); break;
-                case "NE": ResizeWindow(ResizeDirection.TopRight); break;
-                case "E": ResizeWindow(ResizeDirection.Right); break;
-                case "SE": ResizeWindow(ResizeDirection.BottomRight); break;
-                case "S": ResizeWindow(ResizeDirection.Bottom); break;
-                case "SW": ResizeWindow(ResizeDirection.BottomLeft); break;
-                case "W": ResizeWindow(ResizeDirection.Left); break;
-                case "NW": ResizeWindow(ResizeDirection.TopLeft); break;
+                case "N":
+                    ResizeWindow(ResizeDirection.Top);
+                    break;
+                case "NE":
+                    ResizeWindow(ResizeDirection.TopRight);
+                    break;
+                case "E":
+                    ResizeWindow(ResizeDirection.Right);
+                    break;
+                case "SE":
+                    ResizeWindow(ResizeDirection.BottomRight);
+                    break;
+                case "S":
+                    ResizeWindow(ResizeDirection.Bottom);
+                    break;
+                case "SW":
+                    ResizeWindow(ResizeDirection.BottomLeft);
+                    break;
+                case "W":
+                    ResizeWindow(ResizeDirection.Left);
+                    break;
+                case "NW":
+                    ResizeWindow(ResizeDirection.TopLeft);
+                    break;
             }
         }
 
@@ -533,45 +573,35 @@ namespace HAW_Tool
         {
             switch (WindowState)
             {
-                case WindowState.Normal: WindowState = WindowState.Maximized; break;
-                case WindowState.Maximized: WindowState = WindowState.Normal; break;
+                case WindowState.Normal:
+                    WindowState = WindowState.Maximized;
+                    break;
+                case WindowState.Maximized:
+                    WindowState = WindowState.Normal;
+                    break;
             }
         }
 
         private void DonateButtonClick(object sender, RoutedEventArgs e)
         {
-            string url = "";
+            var url = "";
             const string business = "7.e.q@syncro-community.de";
             const string description = "HAW%20Stundenplantool%20Spende";
             const string country = "DE";
             const string currency = "EUR";
 
             url += "https://www.paypal.com/cgi-bin/webscr" +
-                "?cmd=" + "_donations" +
-                "&business=" + business +
-                "&lc=" + country +
-                "&item_name=" + description +
-                "&currency_code=" + currency +
-                "&bn=" + "PP%2dDonationsBF";
+                   "?cmd=" + "_donations" +
+                   "&business=" + business +
+                   "&lc=" + country +
+                   "&item_name=" + description +
+                   "&currency_code=" + currency +
+                   "&bn=" + "PP%2dDonationsBF";
 
             Process.Start(url);
         }
 
-        private void MailMe(object sender, RoutedEventArgs e)
-        {
-
-        }
-
-        private void TabControlFadeSetBackground(object sender, MouseButtonEventArgs e)
-        {
-        }
-
-        private void TabFadeCompleted(object sender, EventArgs e)
-        {
-            tabFadeBorder.Visibility = Visibility.Collapsed;
-        }
-
-        private void CollectionViewSource_Filter(object sender, System.Windows.Data.FilterEventArgs e)
+        private void CalendarWeekFilter(object sender, FilterEventArgs e)
         {
             var cw = e.Item as CalendarWeek;
             if (cw == null)
@@ -580,22 +610,23 @@ namespace HAW_Tool
                 return;
             }
 
-            e.Accepted = (cw.GetDateOfWeekday(6).Date >= DateTime.Now.Date);
-        }
-
-        private void SemGroups_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (e.AddedItems.Count > 0) PlanFile.Instance.SelectedSeminarGroup = (SeminarGroup)e.AddedItems[0];
+            e.Accepted = true;
         }
 
         private void EventCouchDBInvalid(object sender, EventArgs e)
         {
-            PlanFile.Instance.LoadCouchEvents();
         }
 
-        private void LoadCouchClick(object sender, System.Windows.RoutedEventArgs e)
+        private void MailMe(object sender, RoutedEventArgs e)
         {
-        	PlanFile.Instance.LoadCouchEvents();
+            var version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            ShellExecute(IntPtr.Zero, "open", "mailto:hendrik.wiese@haw-hamburg.de" +
+                                              "?subject=" + Uri.EscapeUriString(
+                                                String.Format("HAW Stundenplan Tool Version: {0}", version)
+                                              ) +
+                                              "&body="+ Uri.EscapeUriString(
+                                                String.Format("HAW Stundenplan Tool Version: {0}", version)
+                                              ), "", "", 4);
         }
     }
 }
